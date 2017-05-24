@@ -1,0 +1,88 @@
+##### set up working directory
+rm(list = ls())
+
+
+
+#### load libraries
+library(shiny)
+library(ggplot2)
+library(corrplot)
+library(TTR)
+library(plyr)
+library(BBmisc)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(data.table)
+library(DBI)
+library(RSQLite)
+library(RCurl)
+library(rjson)
+library(dplyr)
+library(rvest)
+library(car)  # for leveneTest()
+library(lsr)  # for cohensD()
+library(gridExtra)  # for expand.grid()
+
+
+
+#### load functions and classes
+source('./code/functions.R')
+source('./code/classes.R')
+
+
+#### load keys & mappers
+TeamCityConfDf <- read.csv('./data/teams_cities_conferences.csv', stringsAsFactors=TRUE)
+TEAMS <- as.character(TeamCityConfDf$Team)
+CITY_ABBR <- as.character(TeamCityConfDf$CityAbbr)
+
+
+
+#### load data
+
+## load data already collected
+games <- read.csv('./data/games.csv', stringsAsFactors=FALSE)
+# spreads <- read.csv('./data/spreads.csv', stringsAsFactors=TRUE)
+# totals <- read.csv('./data/totals.csv', stringsAsFactors=TRUE)
+
+## proper data types for date
+games$date <- as.Date(games$date)
+# spreads$date <- as.Date(spreads$date)
+# totals$date <- as.Date(totals$date)
+
+## other proper data types
+games$site <- as.factor(games$site)
+games$playoffs <- as.factor(games$playoffs)
+games$team <- as.factor(games$team)
+games$o_team <- as.factor(games$o_team)
+
+## see range of dates by dataset
+range(games$date)
+# range(spreads$date)
+# range(totals$date)
+
+## add latest data to the dfs
+games <- addLatestData(games, 
+                       func='getRawGamesDataViaApi',
+                       non_date_args=list())
+# spreads <- addLatestData(spreads, 
+#                          func='scrapeDataFrSportsbookReviewByDate',
+#                          non_date_args=list(relTeams=TEAMS, type='point-spread'))
+# totals <- addLatestData(totals, 
+#                         func='scrapeDataFrSportsbookReviewByDate',
+#                         non_date_args=list(relTeams=TEAMS, type='total-points'))
+
+
+
+#### save data feed dfs into csv
+write.csv(games, './data/games.csv', row.names=FALSE)
+# write.csv(spreads, './data/spreads.csv', row.names=FALSE)
+# write.csv(totals, './data/totals.csv', row.names=FALSE)
+
+
+
+
+#### create odds df (contains odds-makers' projections)
+# odds <- createOddsDf(spreads=spreads, totals=totals)
+
+

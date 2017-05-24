@@ -1,0 +1,10 @@
+data*
+.RData
+.RHistory
+.Rproj.user
+.metadata
+.DS_Store
+*~
+*#
+
+
