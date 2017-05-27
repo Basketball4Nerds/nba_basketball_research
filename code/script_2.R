@@ -10,44 +10,6 @@ createWinPredAccDfByLine(df)
 # x <- createWinPredAccByWinPcMetrics(master)
 
 
-
-
-
-
-
-## predict that team with higher conf-sp win percentage will win
-# scenarios:
-# E vs. E
-# E vs. W
-# W vs. E
-# W vs. W
-pred <- ifelse(rs$cnf=='E' & rs$o_cnf=='E' & (rs$wPcVsE > rs$o_wPcVsE), TRUE,
-               ifelse(rs$cnf=='E' & rs$o_cnf=='W' & (rs$wPcVsW > rs$o_wPcVsE), TRUE, 
-                      ifelse(rs$cnf=='W' & rs$o_cnf=='E' & (rs$wPcVsE > rs$o_wPcVsW), TRUE, 
-                             ifelse(rs$cnf=='W' & rs$o_cnf=='W' & (rs$wPcVsW > rs$o_wPcVsW), TRUE, FALSE))))
-x <- table(pred, rs$won)
-calcAccFrConfMtx(x)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## create variable-by list
 by_lst <- list('site', 
                'cnf', 
@@ -58,9 +20,9 @@ by_lst <- list('site',
                c('site', 'DG'))
 
 ## create variable-by df list
-var_df_lst <- lapply(by_lst, function(x) {
-  createVarDf(by=x, type='tm-opp')
-})
+var_df_lst <- lapply(by_lst, createVarDf)
+
+
 
 
 ## for each threshold in n-game min threshold vector

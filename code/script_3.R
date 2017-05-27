@@ -2,81 +2,22 @@
 #### simple methods to predict winners (regular season only)
 
 
-makeSimplePreds <- function(master) {
-  ## predict that home team will win
-  pred <- rs$site=='H'
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  
-  
-  ## predict that favored team will win
-  ## - use the tier system to see how it perform
-  hist(rs$line)
-  pred <- ifelse(rs$line < 0, TRUE,
-                 ifelse(rs$line > 0, FALSE, NA))
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  
-  
-  ## predict that team with higher win percentage will win
-  pred <- ifelse(rs$wPc > rs$o_wPc, TRUE,
-                 ifelse(rs$wPc < rs$o_wPc, FALSE, NA))
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  
-  
-  
-  ## predict that team with more matchup wins will win
-  ## use tier system to see how it performs
-  rs$mtch_mrgn <- rs$mtch_w - rs$mtch_l
-  pred <- ifelse(rs$mtch_mrgn > 0, TRUE,
-                 ifelse(rs$mtch_mrgn < 0, FALSE, NA))
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  
-  pred <- ifelse(rs$mtch_mrgn > 1, TRUE,
-                 ifelse(rs$mtch_mrgn < -1, FALSE, NA))
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  
-  pred <- ifelse(rs$mtch_mrgn > 2, TRUE,
-                 ifelse(rs$mtch_mrgn < -2, FALSE, NA))
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  x
-  
-  
-  ## predict that team with higher propagation juice will win
-  pred <- rs$j > rs$o_j
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  
-  ## predict that whichever team that had more rest will win the game
-  pred <- ifelse(rs$rst > rs$o_rst, TRUE, 
-                 ifelse(rs$rst == rs$o_rst, NA, FALSE))
-  x <- table(pred, rs$won)
-  calcAccFrConfMtx(x)
-  
-}
-
-
-
 ## MODIFY THIS
 # ## predict game outcome based on team's win perc at home/away
-# pred <- (rs$site=='H' & rs$wPcH > 0.5) | (rs$site=='A' & rs$wPcA > 0.5)
-# x <- table(pred, rs$won)
+# pred <- (master_df$site=='H' & master_df$wPcH > 0.5) | (master_df$site=='A' & master_df$wPcA > 0.5)
+# x <- table(pred, master_df$won)
 # calcAccFrConfMtx(x)
 # 
 # 
 # ## predict game outcome based on team's win perc at home/away
-# pred <- (rs$o_cnf=='E' & rs$wPcVsE > 0.5) | (rs$o_cnf=='W' & rs$wPcVsW > 0.5)
-# x <- table(pred, rs$won)
+# pred <- (master_df$o_cnf=='E' & master_df$wPcVsE > 0.5) | (master_df$o_cnf=='W' & master_df$wPcVsW > 0.5)
+# x <- table(pred, master_df$won)
 # calcAccFrConfMtx(x)
 # 
 # 
 # ## predict game outcome based on team's win perc against opposing team conf
-# pred <- (rs$o_cnf=='E' & rs$wPcVsE > 0.5) | (rs$o_cnf=='W' & rs$wPcVsW > 0.5)
-# x <- table(pred, rs$won)
+# pred <- (master_df$o_cnf=='E' & master_df$wPcVsE > 0.5) | (master_df$o_cnf=='W' & master_df$wPcVsW > 0.5)
+# x <- table(pred, master_df$won)
 # calcAccFrConfMtx(x)
 
 

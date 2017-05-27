@@ -1547,37 +1547,89 @@ createIndex <- function(master_df, var_df_row, n_min) {
 
 ## this function takes master_df, var_df, by, and n_min
 ## and output a vector of win predictions
-createWinPred <- function(master_df, var_df=NULL, by=NULL, n_min=5) {
-  
-  ## initialize predictions to a vector of NAs
-  pred <- rep(NA, nrow(df))
-  
-  ## separate win prediction method when by "line" is selected
-  if (!is.null(by)) {
-    if (by=='line') {
+createWinPred <- function(master_df, metric, by=NULL, n_min=5) {
+
+  ## stop if there is error in input
+  if (metric %in% c('site', 'line', 'mtch_mrgn', 'j', 'rst')) 
+    if (!is.null(by)) stop('Given metric cannot be varied by the "by" variable.')
+
+  ## if 'by' variable is not specified and not applicable,
+  ## make simple predictions without 'by' variable 
+  if (is.null(by)) {
+
+    ## predict that home team will win
+    if (metric=='site') {
+      pred <- master_df$site=='H'
+    }
+    
+    ## predict that favored team will win
+    else if (metric=='line') {
       pred <- ifelse(master_df$line < 0, TRUE, 
                      ifelse(master_df$line > 0, FALSE, NA))
-      pred[master_df$n < n_min | master_df$o_n < n_min] <- NA
     }
-  } 
+    
+    ## predict that whichever team who has won more games 
+    ## against the other team will win
+    else if (metric==c('mtch_mrgn')) {
+      pred <- ifelse(master_df$mtch_mrgn > 0, TRUE,
+                     ifelse(master_df$mtch_mrgn < 0, FALSE, NA))
+    } 
+    
+    ## predict that whichever team with higher metric will win
+    else if (metric %in% c('j', 'rst', 'wPc')) {
+      
+      ## create opponent metric
+      o_metric <- paste0('o_', metric)
+      
+      ## predict that whichever team that had more rest will win the game
+      pred <- ifelse(master_df[[metric]] > master_df[[o_metric]], TRUE,
+                     ifelse(master_df[[metric]] < master_df[[o_metric]], FALSE, NA))
+    } 
+    
+    else {
+      stop('Metric not found in the master dataset.')
+    }
+
+    ## filter out predictions by using min n-game threshold
+    pred[master_df$n < n_min | master_df$o_n < n_min] <- NA
+  }
+
   
-  ## win prediction method when by site, cnf, OG, DG, etc.  
+  ## if 'by' variable is specified and applicable,
+  ## make variable-specific (e.g. cnf-specific) predictions
   else {
     
-    ## for each variation
+    ## create var_df to obtain rows of variations
+    var_df <- createVarDf(by=by)
+    
+    ## for each variation listed in var_df
     for (i in 1:nrow(var_df)) {
       var_df_row <- var_df[i, ]
-      w_pc_col <- var_df_row$wPcCol
-      o_w_pc_col <- var_df_row$o_wPcCol
+      
+      ## select team and opponent metrics
+      if (metric=='wPc') {
+        metric_col <- var_df_row$wPcCol
+        o_metric_col <- var_df_row$o_wPcCol
+      } else if (metric=='sma10') {
+        next  # skip for not; come back later and modify this part
+      }
+      
+      ## create index of metric comparisons to make
       ind <- createIndex(master_df, var_df_row, n_min)
-      pred[ind] <- ifelse(df[[w_pc_col]] > df[[o_w_pc_col]], TRUE,
-                          ifelse(df[[w_pc_col]] < df[[o_w_pc_col]], FALSE, NA))[ind]
+      
+      ## make predictions for the applicable index
+      pred[ind] <- ifelse(master_df[[metric_col]] > master_df[[o_metric_col]], TRUE,
+                          ifelse(master_df[[metric_col]] < master_df[[o_metric_col]], FALSE, NA))[ind]
     }
-  }
-  
+  }    
+
   ## return
   return(pred)
 }
+
+
+## 
+
 
 
 ## this function returns df of win prediction accuracies
@@ -1614,7 +1666,7 @@ createWinPredAccDfByWinPcMetrics <- function(master_df, n_min=c(5, 10)) {
       var_df <- var_df_lst[[j]]
       
       ## create prediction
-      pred <- createWinPred(master_df=master_df, var_df=var_df, by=by, n_min=thres)
+      pred <- createWinPred(master_df=master_df, var_df=var_df, n_min=thres)
       
       ## create confusion matrix
       cnfMtx <- table(pred, master_df$won)
@@ -1636,31 +1688,4 @@ createWinPredAccDfByWinPcMetrics <- function(master_df, n_min=c(5, 10)) {
   return(ret_df)
 }
 
-
-## this function returns df of win prediction accuracies 
-## when predicting wins by line
-createWinPredAccDfByLine <- function(master_df, n_min=c(5, 10)) {
-  
-  ## initialize df to populate
-  ret_df <- as.data.frame(matrix(NA, nrow=length(n_min), ncol=4))
-  names(ret_df) <- c('by', 'n_min', 'acc', 'n_pred')
-  
-  ## for each threshold
-  ind <- 1
-  for (thres in n_min) {
-    
-    ## predict using line and add perform to ret_df
-    master_df_sub <- subset(master_df, n >= thres & o_n >= thres)
-    pred <- ifelse(master_df_sub$line < 0, TRUE, 
-                   ifelse(master_df_sub$line > 0, FALSE, NA))
-    cnfMtx <- table(pred, master_df_sub$won)
-    acc <- calcAccFrConfMtx(cnfMtx, rndDgt=3)
-    row <- c('line', thres, acc, sum(cnfMtx))
-    ret_df[ind, ] <- row
-    ind <- ind + 1
-  }
-  
-  ## return
-  return(ret_df)
-}
 

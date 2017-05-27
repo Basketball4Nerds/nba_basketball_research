@@ -105,6 +105,9 @@ master$pMrgn <- master$p - master$pA
 master$rqP <- master$pQ1 + master$pQ2 + master$pQ3 + master$pQ4
 master$rqPA <- master$pQ1A + master$pQ2A + master$pQ3A + master$pQ4A
 
+## match w-l differential
+master$mtch_mrgn <- master$mtch_w - master$mtch_l
+
 ## conditional whether games was won
 master$won <- master$p > master$pA
 
@@ -244,8 +247,6 @@ smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
 ## site specific
 ## opponent conference specific
 ## opponent rank specific
-x <- master[master$season==1995, c('season', 'date', 'team', 'o_team', smaCols)]
-x <- addMaCols(df=x, n=10, cols=smaCols, aggVars=c('team', 'season'), orderCol='date')
 
 
 y <- master[master$season==1995, c('season', 'date', 'team', 'o_team', 'won', 'site', 'o_cnf', smaCols)]

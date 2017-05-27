@@ -714,3 +714,21 @@ addRunWinLossGmCntCols <- function(df) {
   ## return 
   return(df)
 }
+
+
+
+#### create win prediction test
+a <- createWinPred(df, metric='site')
+b <- createWinPred(df, metric='line')
+c <- createWinPred(df, metric='mtch_mrgn')
+d <- createWinPred(df, metric='j')
+e <- createWinPred(df, metric='rst')
+f <- createWinPred(df, metric='wPc')
+g <- createWinPred(df, metric='wPc', by=c('site', 'cnf'))
+table(a)
+table(b)
+table(c)
+table(d)
+table(e)
+table(f)
+table(g)
