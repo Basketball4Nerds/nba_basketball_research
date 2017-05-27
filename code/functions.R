@@ -155,8 +155,6 @@ fillInOpCols <- function(df, cols) {
 }
 
 
-
-
 ## this function adds running count columns of wins/losses 
 ## by home/away, opponent def/off rank, opponent conf,
 ## and combinations of those
@@ -235,6 +233,7 @@ addRunWinLossGmCntCols <- function(df) {
   ## return 
   return(df)
 }
+
 
 ## this function add win percentage columns
 addWinPcCols <- function(df) {
@@ -404,70 +403,6 @@ addQtrOtPtsCols <- function(df, qtrPtsCols) {
 }
 
 
-## this function creates df of simple retrospective win prediction strengths (RWPS)
-## by given metrics
-createSimpleRetroWinPredAccDf <- function(df, cols) {
-  
-  ## initialize an empty list
-  lst <- list()
-  
-  ## calculate retrospective win prediction strength (RWPS) for each metric
-  for (col in cols) {
-    
-    ## construct o_col (opponent's metric) based on a given col
-    if (grepl('Fcd', col)) {
-      o_col <- gsub('Fcd', '', col)      
-    } 
-    else if (grepl('[A-Za-z]_p_[A-Za-z]', col)) {
-      o_col <- unlist(strsplit(col, split='_p_'))
-      o_col <- paste0(o_col, 'A')
-      o_col <- paste0(o_col, collapse='_p_')
-    } 
-    else {
-      o_col <- paste0(col, 'A')      
-    }
-
-    ## if o_col is not found in dataset, skip to the next metric
-    if (!(o_col %in% names(df))) {
-      print(paste('Unable to locate the following metric:', col))
-      next
-    }
-    
-    ## make a simple retrospective prediction 
-    pred <- df[ , col] > df[ , o_col]
-    
-    ## create confusion matrix
-    cnfMtx <- table(df$won, pred)
-    
-    ## calculate prediction accuracy
-    acc <- calcAccFrConfMtx(cnfMtx)
-    
-    ## calculate the number of data points to calculate retro pred acc
-    nDp <- sum(cnfMtx)
-    
-    ## create a list element
-    lstElm <- c(col, acc, nDp)
-    
-    ## append list element to list
-    lst <- c(lst, list(lstElm))
-    
-  }
-  
-  ## collapse list into df
-  retDf <- do.call(rbind.data.frame, lst)
-  
-  ## set colnames for df
-  names(retDf) <- c('metric', 'SRWPS', 'nDp')
-  
-  ## set proper data type 
-  retDf$SRWPS <- as.numeric(as.character(retDf$SRWPS))
-  retDf$nDp <- as.integer(as.character(retDf$nDp))
-  
-  ## return
-  return(retDf)
-}
-
-
 ## this function creates a "variation df"
 ## which lists out different combinations
 ## of team vs. opponent based on 
@@ -475,7 +410,8 @@ createSimpleRetroWinPredAccDf <- function(df, cols) {
 ## it also lists which team metric should be compared which
 ## opponent metric
 createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
-                        type=c('tm-opp', 'tm-only')) {
+                        include.opp.cols=TRUE, 
+                        metric=c('w_pc')) {
   
   ## possible combinations are: 
   # - site-cnf
@@ -485,9 +421,6 @@ createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
   # - cnf-OG
   # - cnf-DG
   # - OG-DG
-  
-  ## set type
-  type <- type[1]
   
   ## weed out error cases
   by <- unique(by)
@@ -553,10 +486,12 @@ createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
   o_nCols <- gsub('^o_wPc', 'o_n', o_wPcCols)
   
   ## incorporate the comparable metrics into the variation df 
-  varDf <- cbind(varDf, wPcCols, o_wPcCols, nCols, o_nCols, wCols, o_wCols)
+  varDf <- cbind(varDf, 
+                 wPcCol=wPcCols, o_wPcCol=o_wPcCols, 
+                 nCol=nCols, o_nCol=o_nCols, wCol=wCols, o_wCol=o_wCols)
 
-  ## if only metrics that pertain to team are wanted
-  if (type=='tm-only') {
+  ## if opponent metrics are not desired
+  if (!include.opp.cols) {
     varDf <- varDf[ , !grepl('o_', names(varDf))]
     varDf <- unique(varDf)
   }
@@ -572,16 +507,10 @@ createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
 }
 
 
-## this function takes in an odd number of vectors and 
+## this function takes in a number of vectors and 
 ## returns a resultant vector by "majority vote" method
 retByMajorityVote <- function(df) {
-  
-  ## stop if even number of vectors (columns) were provided
-  if (length(ncol(df))%%2 == 0) {
-    stop("Please provide an odd number of vectors to compare. Unable to settle majority with even number of vectors.")
-  }
-  
-  
+
   ## initialize values to return
   ret <- rep(NA, nrow(df))
   
@@ -594,8 +523,8 @@ retByMajorityVote <- function(df) {
     ## get the maximum count (or frequency)
     tbl_max <- max(tbl)
     
-    ## if no majority found, assign U
-    if (tbl_max==1) ret[i] <- 'U'
+    ## if no majority found
+    if (tbl_max==1) ret[i] <- NA
     
     ## if majority found, assign majority value as a return value    
     else ret[i] <- names(tbl)[tbl == tbl_max]
@@ -1497,19 +1426,241 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
 ############ OPTIMAL WEIGHTS FUNCTIONS ################
 
 ## this function calculates an average prediction error
-calcAvgPredErr <- function(df, outcomeVar, projVar) {
-  mean(abs(df[[outcomeVar]] - df[[projVar]]), na.rm=TRUE)
+calcAvgPredErr <- function(df, outcomeVar, projVar, wgts=NULL) {
+  
+  if (is.null(wgts)) {
+    ret <- mean(abs(df[[outcomeVar]] - df[[projVar]]), na.rm=TRUE)    
+  }
+
+  else {
+    wgtsMtrx <- matrix(wgts, ncol=1)
+    indVarsMtrx <- as.matrix(df[ , indVars])
+    proj <- as.numeric(indVarsMtrx %*% wgtsMtrx)
+    err <- df[[outcomeVar]] - proj
+    ret <- mean(abs(err), na.rm=TRUE)
+  }
+  
+  return(ret)
 }
 
 
-## this function calculates an average prediction error
-calcAvgPredErr2 <- function(df, outcomeVar, indVars, wgts) {
-  wgtsMtrx <- matrix(wgts, ncol=1)
-  indVarsMtrx <- as.matrix(df[ , indVars])
-  proj <- as.numeric(indVarsMtrx %*% wgtsMtrx)
-  err <- df[[outcomeVar]] - proj
-  return(mean(abs(err), na.rm=TRUE))
+
+
+
+
+############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################
+
+## this function creates df of simple retrospective win prediction strengths (RWPS)
+## by given metrics
+createSimpleRetroWinPredAccDf <- function(df, cols) {
+  
+  ## initialize an empty list
+  lst <- list()
+  
+  ## calculate retrospective win prediction strength (RWPS) for each metric
+  for (col in cols) {
+    
+    ## construct o_col (opponent's metric) based on a given col
+    if (grepl('Fcd', col)) {
+      o_col <- gsub('Fcd', '', col)      
+    } 
+    else if (grepl('[A-Za-z]_p_[A-Za-z]', col)) {
+      o_col <- unlist(strsplit(col, split='_p_'))
+      o_col <- paste0(o_col, 'A')
+      o_col <- paste0(o_col, collapse='_p_')
+    } 
+    else {
+      o_col <- paste0(col, 'A')      
+    }
+    
+    ## if o_col is not found in dataset, skip to the next metric
+    if (!(o_col %in% names(df))) {
+      print(paste('Unable to locate the following metric:', col))
+      next
+    }
+    
+    ## make a simple retrospective prediction 
+    pred <- df[ , col] > df[ , o_col]
+    
+    ## create confusion matrix
+    cnfMtx <- table(df$won, pred)
+    
+    ## calculate prediction accuracy
+    acc <- calcAccFrConfMtx(cnfMtx)
+    
+    ## calculate the number of data points to calculate retro pred acc
+    nDp <- sum(cnfMtx)
+    
+    ## create a list element
+    lstElm <- c(col, acc, nDp)
+    
+    ## append list element to list
+    lst <- c(lst, list(lstElm))
+    
+  }
+  
+  ## collapse list into df
+  retDf <- do.call(rbind.data.frame, lst)
+  
+  ## set colnames for df
+  names(retDf) <- c('metric', 'SRWPS', 'nDp')
+  
+  ## set proper data type 
+  retDf$SRWPS <- as.numeric(as.character(retDf$SRWPS))
+  retDf$nDp <- as.integer(as.character(retDf$nDp))
+  
+  ## return
+  return(retDf)
 }
 
 
+## this function returns a vector of logical (an index) 
+## by given conditions (var_df_row and n_min)
+createIndex <- function(master_df, var_df_row, n_min) {
+  
+  ## grab variable columns
+  by_cols <- grep('^(o_)?site$|^(o_)?cnf$|^(o_)?OG$|^(o_)?DG$', names(var_df), value=TRUE)
+  
+  ## initialize list of indices      
+  ind_lst <- list()
+  
+  ## populate list of indices for each variable
+  for (by_col in by_cols) {
+    by_val <- var_df_row[[by_col]]
+    ind <- master_df[[by_col]]==by_val
+    ind_lst <- c(ind_lst, list(ind))
+  }
+  
+  ## add to list of indices requirement for n-game minimum threshold
+  min_n_col <- var_df_row$nCol
+  o_min_n_col <- var_df_row$o_nCol
+  ind <- master_df[[min_n_col]] >= n_min & master_df[[o_min_n_col]] >= n_min
+  ind_lst <- c(ind_lst, list(ind))
+  
+  ## reduce list of index conditions with "and" operator
+  ind <- Reduce('&', ind_lst)
+  
+  ## return
+  return(ind)
+}
+
+
+## this function takes master_df, var_df, by, and n_min
+## and output a vector of win predictions
+createWinPred <- function(master_df, var_df=NULL, by=NULL, n_min=5) {
+  
+  ## initialize predictions to a vector of NAs
+  pred <- rep(NA, nrow(df))
+  
+  ## separate win prediction method when by "line" is selected
+  if (!is.null(by)) {
+    if (by=='line') {
+      pred <- ifelse(master_df$line < 0, TRUE, 
+                     ifelse(master_df$line > 0, FALSE, NA))
+      pred[master_df$n < n_min | master_df$o_n < n_min] <- NA
+    }
+  } 
+  
+  ## win prediction method when by site, cnf, OG, DG, etc.  
+  else {
+    
+    ## for each variation
+    for (i in 1:nrow(var_df)) {
+      var_df_row <- var_df[i, ]
+      w_pc_col <- var_df_row$wPcCol
+      o_w_pc_col <- var_df_row$o_wPcCol
+      ind <- createIndex(master_df, var_df_row, n_min)
+      pred[ind] <- ifelse(df[[w_pc_col]] > df[[o_w_pc_col]], TRUE,
+                          ifelse(df[[w_pc_col]] < df[[o_w_pc_col]], FALSE, NA))[ind]
+    }
+  }
+  
+  ## return
+  return(pred)
+}
+
+
+## this function returns df of win prediction accuracies
+## when predicting wins by various win percentage metrics
+createWinPredAccDfByWinPcMetrics <- function(master_df, n_min=c(5, 10)) {
+  
+  ## create variable-by list
+  by_lst <- list('site', 
+                 'cnf', 
+                 'OG', 
+                 'DG', 
+                 c('site', 'cnf'), 
+                 c('site', 'OG'), 
+                 c('site', 'DG'))
+  
+  ## create variable-by df list
+  var_df_lst <- lapply(by_lst, function(x) {
+    createVarDf(by=x, type='tm-opp')
+  })
+  
+  ## initialize df to populate
+  ret_df <- as.data.frame(matrix(NA, nrow=length(by_lst)*length(n_min), ncol=4))
+  names(ret_df) <- c('by', 'n_min', 'acc', 'n_pred')
+  
+  ## for each threshold in n-game min threshold vector
+  for (i in seq_along(n_min)) {
+    
+    ## get threshold
+    thres <- n_min[i]
+    
+    ## for each by specification
+    for (j in seq_along(by_lst)) {
+      by <- by_lst[[j]]
+      var_df <- var_df_lst[[j]]
+      
+      ## create prediction
+      pred <- createWinPred(master_df=master_df, var_df=var_df, by=by, n_min=thres)
+      
+      ## create confusion matrix
+      cnfMtx <- table(pred, master_df$won)
+      #cnfMtx <- table(c(T, T), c(T, F))
+      
+      ## calculate prediction accuracy
+      acc <- calcAccFrConfMtx(cnfMtx, rndDgt=3)
+      
+      ## add results to the ret_df
+      k <- (i-1) * length(by_lst) + j
+      ret_df$by[k] <- paste0(by, collapse='_')
+      ret_df$n_min[k] <- thres
+      ret_df$acc[k] <- acc
+      ret_df$n_pred[k] <- sum(cnfMtx)
+    } 
+  }
+  
+  ## return
+  return(ret_df)
+}
+
+
+## this function returns df of win prediction accuracies 
+## when predicting wins by line
+createWinPredAccDfByLine <- function(master_df, n_min=c(5, 10)) {
+  
+  ## initialize df to populate
+  ret_df <- as.data.frame(matrix(NA, nrow=length(n_min), ncol=4))
+  names(ret_df) <- c('by', 'n_min', 'acc', 'n_pred')
+  
+  ## for each threshold
+  ind <- 1
+  for (thres in n_min) {
+    
+    ## predict using line and add perform to ret_df
+    master_df_sub <- subset(master_df, n >= thres & o_n >= thres)
+    pred <- ifelse(master_df_sub$line < 0, TRUE, 
+                   ifelse(master_df_sub$line > 0, FALSE, NA))
+    cnfMtx <- table(pred, master_df_sub$won)
+    acc <- calcAccFrConfMtx(cnfMtx, rndDgt=3)
+    row <- c('line', thres, acc, sum(cnfMtx))
+    ret_df[ind, ] <- row
+    ind <- ind + 1
+  }
+  
+  ## return
+  return(ret_df)
+}
 

@@ -3,8 +3,13 @@
 ## copy games df to master
 master <- games
 
-## change home/away values to H/A for site variable
+## change home/away to H/A for site variable
 master$site <- ifelse(master$site=='home', 'H', 'A')
+
+## create opponent site variable 
+## this is redundant info but provides programmatic 
+## convenience for createWinPred() much later
+master$o_site <- ifelse(master$site=='H', 'A', 'H')
 
 ## create game ID column (unique ID for each matchup)
 master$gId <- apply(cbind(gsub('-', '', as.character(master$date)), 
