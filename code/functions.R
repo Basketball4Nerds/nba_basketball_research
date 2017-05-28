@@ -507,31 +507,28 @@ createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
 }
 
 
-## this function takes in a number of vectors and 
+## this function takes in a number of vectors (in a list or df) and 
 ## returns a resultant vector by "majority vote" method
-retByMajorityVote <- function(df) {
-
-  ## initialize values to return
-  ret <- rep(NA, nrow(df))
+createPredByVote <- function(obj, maj_vote_cnt) {
   
-  ## for each row
-  for (i in 1:nrow(df)) {
-    
-    ## get the number of times a value occurs 
-    tbl <- table(t(df[i, ]))
-    
-    ## get the maximum count (or frequency)
-    tbl_max <- max(tbl)
-    
-    ## if no majority found
-    if (tbl_max==1) ret[i] <- NA
-    
-    ## if majority found, assign majority value as a return value    
-    else ret[i] <- names(tbl)[tbl == tbl_max]
-  }
+  ## get number of votes made for each game
+  if (class(obj)=='data.frame') 
+    n <- ncol(obj)
+  else if (class(obj)=='list') 
+    n <- length(obj)
+
+  ## get a vector of win prediction vote counts
+  w_pred_vote_cnts <- Reduce('+', obj)
+  
+  ## get a vector of loss prediction vote counts
+  l_pred_vote_cnts <- n - w_pred_vote_cnts
+  
+  ## make win prediction by majority vote
+  w_preds <- ifelse(w_pred_vote_cnts >= maj_vote_cnt, TRUE, 
+                    ifelse(l_pred_vote_cnts >= maj_vote_cnt, FALSE, NA))
   
   ## return
-  return(ret)
+  return(w_preds)
 }
 
 
@@ -1635,33 +1632,57 @@ createWinPred <- function(master_df, metric, by=NULL, n_min=5) {
 createWinPredAccDf <- function(master_df, n_min=c(5, 10)) {
   
   ## set metrics
-  metrics <- c('site', 'line', 'mtch_mrgn', 'j', 'rst', 'wPc')
+  metrics <- c('site', 'line', 'mtch_mrgn', 'rst', 'j', 'wPc')
   
-  ## initialize df to populate
-  ret_df <- as.data.frame(matrix(NA, nrow=length(metrics)*length(n_min), ncol=4))
-  names(ret_df) <- c('metric', 'n_min', 'acc', 'n_pred')
-  
-  ## for each threshold 
-  for (i in seq_along(n_min)) {
-    
-    ## set threshold
-    thres <- n_min[i]
-    
-    ## for each metric calculate prediction accuracy 
-    for (j in seq_along(metrics)) {
-      metric <- metrics[j]
-      pred <- createWinPred(master_df, metric=metric, n_min=thres)
+  ## create empty vectors to store values
+  metric_vec <- c()
+  thres_vec <- c()
+  acc_vec <- c()
+  n_pred_vec <- c()
+
+  ## for each metric calculate prediction accuracy 
+  for (metric in metrics) {
+
+    ## if metric doesn't require minimum n-game threshold 
+    if (metric %in% c('site', 'line', 'mtch_mrgn', 'rst')) {
+      pred <- createWinPred(master_df, metric=metric, n_min=0)
       cnf_mtx <- table(master_df$won, pred)
       acc <- calcAccFrConfMtx(cnf_mtx)
       n_pred <- sum(cnf_mtx)
-      k <- (i-1) * length(metrics) + j
-      ret_df[k, ] <- c(metric, thres, acc, n_pred)
+      
+      metric_vec <- c(metric_vec, metric)
+      thres_vec <- c(thres_vec, NA)
+      acc_vec <- c(acc_vec, acc)
+      n_pred_vec <- c(n_pred_vec, n_pred)
+    } 
+    
+    ## if metric require minimum n-game threshold
+    else if (metric %in% c('j', 'wPc')) {
+      
+      ## for each threshold 
+      for (thres in n_min) {
+        pred <- createWinPred(master_df, metric=metric, n_min=thres)
+        cnf_mtx <- table(master_df$won, pred)
+        acc <- calcAccFrConfMtx(cnf_mtx)
+        n_pred <- sum(cnf_mtx)
+        
+        metric_vec <- c(metric_vec, metric)
+        thres_vec <- c(thres_vec, thres)
+        acc_vec <- c(acc_vec, acc)
+        n_pred_vec <- c(n_pred_vec, n_pred)
+      }
     }
   }
+
+  ## create return df
+  ret_df <- cbind.data.frame(metric_vec, acc_vec, thres_vec, n_pred_vec, 
+                             stringsAsFactors=FALSE)
+  names(ret_df) <- c('metric', 'acc', 'n_min', 'n_pred')
   
   ## return
   return(ret_df)
 }
+
 
 ## this function returns df of variable-specific win prediction
 ## accuracies when predicting wins by win percentage metrics
@@ -1694,11 +1715,7 @@ createVarSpWinPredAccDf <- function(master_df, n_min=c(5, 10)) {
       
       ## create prediction
       pred <- createWinPred(master_df=master_df, metric='wPc', by=by, n_min=thres)
-      print(by)
-      print(thres)
-      print(table(pred))
-      print('----')
-      
+
       ## create confusion matrix
       cnf_mtx <- table(pred, master_df$won)
       #cnf_mtx <- table(c(T, T), c(T, F))
@@ -1722,6 +1739,26 @@ createVarSpWinPredAccDf <- function(master_df, n_min=c(5, 10)) {
 }
 
 
-createWinPredAccDf(df)
-createVarSpWinPredAccDf(df)
-dim(df)
+## this function creates a df of win predictions based on simple metrics
+createWinPredDf <- function(master_df, metrics=c('line', 'wPc', 'j', 'site'), n_min=5) {
+  
+  ## initialize empty list to store vectors of predictions
+  pred_lst <- list()
+  
+  ## make prediction using each metric
+  for (metric in metrics) {
+    pred <- createWinPred(master_df=master_df, metric=metric, n_min=n_min)
+    pred_lst <- c(pred_lst, list(pred))
+  }
+  
+  ## label the list elements
+  names(pred_lst) <- paste0('w_pred_by_', metrics)
+  
+  ## convert list of predictions to df
+  pred_df <- do.call(cbind.data.frame, pred_lst)
+  
+  ## return
+  return(pred_df)
+}
+
+
