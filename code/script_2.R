@@ -3,10 +3,6 @@ df <- subset(master, season==2000)
 
 
 
-acc_df
-createWinPredAccDfByLine(df)
-
-# acc_df <- createWinPredAccDfByWinPcMetrics(master)
 # x <- createWinPredAccByWinPcMetrics(master)
 
 
@@ -23,35 +19,4 @@ by_lst <- list('site',
 var_df_lst <- lapply(by_lst, createVarDf)
 
 
-
-
-## for each threshold in n-game min threshold vector
-for (i in seq_along(n_min)) {
-  
-  ## get threshold
-  thres <- n_min[i]
-  
-  ## for each by specification
-  for (j in seq_along(by_lst)) {
-    by <- by_lst[[j]]
-    var_df <- var_df_lst[[j]]
-    
-    ## create prediction
-    pred <- createWinPred(master_df=master_df, var_df=var_df, by=by, n_min=thres)
-    
-    ## create confusion matrix
-    cnfMtx <- table(pred, master_df$won)
-    #cnfMtx <- table(c(T, T), c(T, F))
-    
-    ## calculate prediction accuracy
-    acc <- calcAccFrConfMtx(cnfMtx, rndDgt=3)
-    
-    ## add results to the ret_df
-    k <- (i-1) * length(by_lst) + j
-    ret_df$by[k] <- paste0(by, collapse='_')
-    ret_df$n_min[k] <- thres
-    ret_df$acc[k] <- acc
-    ret_df$n_pred[k] <- sum(cnfMtx)
-  } 
-}
 

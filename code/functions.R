@@ -1519,7 +1519,7 @@ createSimpleRetroWinPredAccDf <- function(df, cols) {
 createIndex <- function(master_df, var_df_row, n_min) {
   
   ## grab variable columns
-  by_cols <- grep('^(o_)?site$|^(o_)?cnf$|^(o_)?OG$|^(o_)?DG$', names(var_df), value=TRUE)
+  by_cols <- grep('^(o_)?site$|^(o_)?cnf$|^(o_)?OG$|^(o_)?DG$', names(var_df_row), value=TRUE)
   
   ## initialize list of indices      
   ind_lst <- list()
@@ -1594,18 +1594,20 @@ createWinPred <- function(master_df, metric, by=NULL, n_min=5) {
     pred[master_df$n < n_min | master_df$o_n < n_min] <- NA
   }
 
-  
   ## if 'by' variable is specified and applicable,
   ## make variable-specific (e.g. cnf-specific) predictions
   else {
     
     ## create var_df to obtain rows of variations
     var_df <- createVarDf(by=by)
+
+    ## initialize prediction values
+    pred <- rep(NA, nrow(master_df))
     
     ## for each variation listed in var_df
     for (i in 1:nrow(var_df)) {
       var_df_row <- var_df[i, ]
-      
+
       ## select team and opponent metrics
       if (metric=='wPc') {
         metric_col <- var_df_row$wPcCol
@@ -1613,10 +1615,10 @@ createWinPred <- function(master_df, metric, by=NULL, n_min=5) {
       } else if (metric=='sma10') {
         next  # skip for not; come back later and modify this part
       }
-      
+
       ## create index of metric comparisons to make
       ind <- createIndex(master_df, var_df_row, n_min)
-      
+
       ## make predictions for the applicable index
       pred[ind] <- ifelse(master_df[[metric_col]] > master_df[[o_metric_col]], TRUE,
                           ifelse(master_df[[metric_col]] < master_df[[o_metric_col]], FALSE, NA))[ind]
@@ -1628,13 +1630,42 @@ createWinPred <- function(master_df, metric, by=NULL, n_min=5) {
 }
 
 
-## 
-
-
-
 ## this function returns df of win prediction accuracies
-## when predicting wins by various win percentage metrics
-createWinPredAccDfByWinPcMetrics <- function(master_df, n_min=c(5, 10)) {
+## when predicting wins by various win metrics
+createWinPredAccDf <- function(master_df, n_min=c(5, 10)) {
+  
+  ## set metrics
+  metrics <- c('site', 'line', 'mtch_mrgn', 'j', 'rst', 'wPc')
+  
+  ## initialize df to populate
+  ret_df <- as.data.frame(matrix(NA, nrow=length(metrics)*length(n_min), ncol=4))
+  names(ret_df) <- c('metric', 'n_min', 'acc', 'n_pred')
+  
+  ## for each threshold 
+  for (i in seq_along(n_min)) {
+    
+    ## set threshold
+    thres <- n_min[i]
+    
+    ## for each metric calculate prediction accuracy 
+    for (j in seq_along(metrics)) {
+      metric <- metrics[j]
+      pred <- createWinPred(master_df, metric=metric, n_min=thres)
+      cnf_mtx <- table(master_df$won, pred)
+      acc <- calcAccFrConfMtx(cnf_mtx)
+      n_pred <- sum(cnf_mtx)
+      k <- (i-1) * length(metrics) + j
+      ret_df[k, ] <- c(metric, thres, acc, n_pred)
+    }
+  }
+  
+  ## return
+  return(ret_df)
+}
+
+## this function returns df of variable-specific win prediction
+## accuracies when predicting wins by win percentage metrics
+createVarSpWinPredAccDf <- function(master_df, n_min=c(5, 10)) {
   
   ## create variable-by list
   by_lst <- list('site', 
@@ -1644,11 +1675,6 @@ createWinPredAccDfByWinPcMetrics <- function(master_df, n_min=c(5, 10)) {
                  c('site', 'cnf'), 
                  c('site', 'OG'), 
                  c('site', 'DG'))
-  
-  ## create variable-by df list
-  var_df_lst <- lapply(by_lst, function(x) {
-    createVarDf(by=x, type='tm-opp')
-  })
   
   ## initialize df to populate
   ret_df <- as.data.frame(matrix(NA, nrow=length(by_lst)*length(n_min), ncol=4))
@@ -1662,25 +1688,32 @@ createWinPredAccDfByWinPcMetrics <- function(master_df, n_min=c(5, 10)) {
     
     ## for each by specification
     for (j in seq_along(by_lst)) {
+      
+      ## select by specification
       by <- by_lst[[j]]
-      var_df <- var_df_lst[[j]]
       
       ## create prediction
-      pred <- createWinPred(master_df=master_df, var_df=var_df, n_min=thres)
+      pred <- createWinPred(master_df=master_df, metric='wPc', by=by, n_min=thres)
+      print(by)
+      print(thres)
+      print(table(pred))
+      print('----')
       
       ## create confusion matrix
-      cnfMtx <- table(pred, master_df$won)
-      #cnfMtx <- table(c(T, T), c(T, F))
+      cnf_mtx <- table(pred, master_df$won)
+      #cnf_mtx <- table(c(T, T), c(T, F))
       
       ## calculate prediction accuracy
-      acc <- calcAccFrConfMtx(cnfMtx, rndDgt=3)
+      acc <- calcAccFrConfMtx(cnf_mtx, rndDgt=3)
+      
+      ## create label 
+      label <- paste0(by, collapse='_')
       
       ## add results to the ret_df
       k <- (i-1) * length(by_lst) + j
-      ret_df$by[k] <- paste0(by, collapse='_')
-      ret_df$n_min[k] <- thres
-      ret_df$acc[k] <- acc
-      ret_df$n_pred[k] <- sum(cnfMtx)
+
+      ## add record to ret_df      
+      ret_df[k, ] <- c(label, thres, acc, sum(cnf_mtx))
     } 
   }
   
@@ -1689,3 +1722,6 @@ createWinPredAccDfByWinPcMetrics <- function(master_df, n_min=c(5, 10)) {
 }
 
 
+createWinPredAccDf(df)
+createVarSpWinPredAccDf(df)
+dim(df)
