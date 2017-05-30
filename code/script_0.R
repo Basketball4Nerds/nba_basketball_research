@@ -27,6 +27,11 @@ library(gridExtra)  # for expand.grid()
 
 
 #### load functions and classes
+source('./code/data_grab_funcs.R')
+source('./code/helper_funcs.R')
+source('./code/preprocess_funcs.R')
+source('./code/rnk_grp_funcs.R')
+source('./code/mov_avg_funcs.R')
 source('./code/functions.R')
 source('./code/classes.R')
 
