@@ -748,3 +748,31 @@ table(e)
 table(f)
 table(g)
 
+
+params_df <- expand.grid(metric=c('j', 'wPc'), by=NA, n_min=c(5, 10, 20), min_diff=NA)
+params_lst <- convertParamsDfToLst(params_df)
+
+
+
+## this function creates a df of win predictions based on variable-specific metric
+## (e.g. conf-specific win percentage, site-specific win percentage, etc.)
+createVarSpWinPredDf <- function(master_df, metric, by_lst, n_min=5) {
+  
+  ## initialize empty list to store vectors of predictions
+  pred_lst <- list()
+  
+  ## make prediction using each metric
+  for (by in by_lst) {
+    pred <- createWinPred(master_df=master_df, metric=metric, by=by, n_min=n_min)
+    pred_lst <- c(pred_lst, list(pred))
+  }
+  
+  ## label the list elements
+  names(pred_lst) <- paste0('w_pred_by_', metric, '_', unlist(lapply(by_lst, paste0, collapse='_')), '_sp')
+  
+  ## convert list of predictions to df
+  pred_df <- do.call(cbind.data.frame, pred_lst)
+  
+  ## return
+  return(pred_df)
+}

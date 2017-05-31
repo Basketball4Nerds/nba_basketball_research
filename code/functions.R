@@ -207,6 +207,18 @@ createVarSpIndex <- function(master_df, var_df_row, n_min) {
 }
 
 
+## this function converts params_df and converts to params_lst
+convertParamsDfToLst <- function(params_df) {
+  params_lst <- apply(params_df, 1, as.list)
+  params_lst <- lapply(params_lst, function(x) {
+    x$n_min <- as.integer(x$n_min)
+    x$min_diff <- as.numeric(x$min_diff)
+    x
+  })
+  return(params_lst)
+}
+
+
 ## this function takes master_df, var_df, by, and n_min
 ## and output a vector of win predictions
 createWinPred <- function(master_df, params) {
@@ -219,15 +231,15 @@ createWinPred <- function(master_df, params) {
 
   ## stop if a given metric cannot be variable-specific (e.g. site cannot be varied by conference)
   if (metric %in% c('site', 'line', 'mtch_mrgn', 'j', 'rst')) 
-    if (!is.na(by)) stop('Invalid params given. The metric cannot be variable-specific.')
-  
+    if (!all(is.na(by))) stop('Invalid params given. The metric cannot be variable-specific.')
+
   ## stop if minimum differential was specified for site metric  
   if (metric=='site')
     if (!is.na(min_diff)) stop('Invalid params given. min_diff cannot be specified with site metric.')
 
   ## if 'by' variable is not specified and not applicable,
   ## make simple predictions without 'by' variable 
-  if (is.na(by)) {
+  if (all(is.na(by))) {
     
     ## for site metric, predict that home team will win
     if (metric=='site') {
@@ -236,7 +248,7 @@ createWinPred <- function(master_df, params) {
     
     ## predict that favored team will win
     else if (metric=='line') {
-      if (is.null(min_diff)) {
+      if (is.na(min_diff)) {
         pred <- ifelse(master_df$line < 0, TRUE, 
                        ifelse(master_df$line > 0, FALSE, NA))
       } else {
@@ -247,8 +259,8 @@ createWinPred <- function(master_df, params) {
     
     ## predict that whichever team who has won more games 
     ## against the other team will win
-    else if (metric==c('mtch_mrgn')) {
-      if (is.null(min_diff))   {
+    else if (metric=='mtch_mrgn') {
+      if (is.na(min_diff))   {
         pred <- ifelse(master_df$mtch_mrgn > 0 , TRUE, 
                        ifelse(master_df$mtch_mrgn < 0, FALSE, NA))
       } else {
@@ -264,7 +276,7 @@ createWinPred <- function(master_df, params) {
       o_metric <- paste0('o_', metric)
       
       ## predict that whichever team that has more/higher rest, J, or win percentage will win the game
-      if (is.null(min_diff)) {
+      if (is.na(min_diff)) {
         pred <- ifelse(master_df[[metric]] > master_df[[o_metric]], TRUE,
                        ifelse(master_df[[metric]] < master_df[[o_metric]], FALSE, NA))
       } else {
@@ -309,7 +321,7 @@ createWinPred <- function(master_df, params) {
       ind <- createVarSpIndex(master_df, var_df_row, n_min)
 
       ## make predictions for the applicable index
-      if (is.null(min_diff)) {
+      if (is.na(min_diff)) {
         pred[ind] <- ifelse(master_df[[metric_col]] > master_df[[o_metric_col]], TRUE,
                             ifelse(master_df[[metric_col]] < master_df[[o_metric_col]], FALSE, NA))[ind]
       } else {
@@ -322,7 +334,6 @@ createWinPred <- function(master_df, params) {
   ## return
   return(pred)
 }
-
 
 ## this function takes in a number of vectors (in a list or df) and 
 ## returns a resultant vector by "majority vote" method
@@ -351,10 +362,13 @@ createPredByVote <- function(pred_obj, maj_vote_cnt) {
 
 ## this function returns df of win prediction accuracies
 ## when predicting wins by various win metrics
-createWinPredAccDf <- function(master_df, params_lst) {
+createWinPredAccDf <- function(master_df, params_df, rm.na.cols=FALSE) {
+  
+  ## get params_lst from params_df
+  params_lst <- convertParamsDfToLst(params_df)
   
   ## create empty vectors to store values
-  metric_vec <- by_vec <- acc_vec <- n_min_vec <- n_pred_vec <- c()
+  acc_vec <- n_pred_vec <- c()
 
   ## for each list of parameters
   for (params in params_lst) {
@@ -366,22 +380,18 @@ createWinPredAccDf <- function(master_df, params_lst) {
     n_pred <- sum(cnf_mtx)
 
     ## append result to vectors
-    metric_vec <- c(metric_vec, params$metric)
-    by_vec <- c(metric_vec, params$by)
     acc_vec <- c(acc_vec, acc)
-    n_min_vec <- c(n_min_vec, params$n_min)
     n_pred_vec <- c(n_pred_vec, n_pred)
   }
-  
+
   ## create return df
-  if (all(is.na(by_vec))) {
-    ret_df <- cbind.data.frame(metric=metric_vec, acc=acc_vec, 
-                               n_min=n_min_vec, n_pred=n_pred_vec, 
-                               stringsAsFactors=FALSE)
-  } else {
-    ret_df <- cbind.data.frame(metric=metric_vec, by=by_vec, 
-                               acc=acc_vec, n_min=n_min_vec, n_pred=n_pred_vec, 
-                               stringsAsFactors=FALSE)
+  ret_df <- cbind.data.frame(params_df, acc=acc_vec, n_pred=n_pred_vec)
+  
+  ## remove column whose values are all NAs
+  if (rm.na.cols) {
+    for (col in names(ret_df)) {
+      if (all(is.na(ret_df[[col]]))) ret_df[[col]] <- NULL
+    }
   }
 
   ## return
@@ -389,28 +399,8 @@ createWinPredAccDf <- function(master_df, params_lst) {
 }
 
 
-# metric='wPc', 
-# by_lst = list('site', 'cnf', 'OG', 'DG', 
-#               c('site', 'cnf'), 
-#               c('site', 'OG'), 
-#               c('site', 'DG')),
-# n_min=c(5, 10)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## this function creates a df of win predictions based on simple metrics
-createWinPredDf <- function(master_df, params_lst) {
+## this function creates a df of win predictions
+createWinPredDf <- function(master_df, params_df) {
   
   ## initialize empty list to store vectors of predictions
   pred_lst <- list()
@@ -423,30 +413,6 @@ createWinPredDf <- function(master_df, params_lst) {
   
   # ## label the list elements
   # names(pred_lst) <- paste0('w_pred_by_', metrics)
-  
-  ## convert list of predictions to df
-  pred_df <- do.call(cbind.data.frame, pred_lst)
-  
-  ## return
-  return(pred_df)
-}
-
-
-## this function creates a df of win predictions based on variable-specific metric
-## (e.g. conf-specific win percentage, site-specific win percentage, etc.)
-createVarSpWinPredDf <- function(master_df, metric, by_lst, n_min=5) {
-  
-  ## initialize empty list to store vectors of predictions
-  pred_lst <- list()
-  
-  ## make prediction using each metric
-  for (by in by_lst) {
-    pred <- createWinPred(master_df=master_df, metric=metric, by=by, n_min=n_min)
-    pred_lst <- c(pred_lst, list(pred))
-  }
-  
-  ## label the list elements
-  names(pred_lst) <- paste0('w_pred_by_', metric, '_', unlist(lapply(by_lst, paste0, collapse='_')), '_sp')
   
   ## convert list of predictions to df
   pred_df <- do.call(cbind.data.frame, pred_lst)
