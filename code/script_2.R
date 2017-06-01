@@ -14,71 +14,93 @@ SRWPA_df
 
 
 
-#### examine win prediction accuracy of simple metric comparison predictions (of j and wPc)
-#### with differing minimum n-game thresholds
 
-## create a params_df
-params_df <- expand.grid(metric=c('j', 'wPc'), by=NA, n_min=c(5, 10, 20), min_diff=NA)
-
-## create prediction performance df of simple comparison metrics
-smpl_pred_acc_df <- createWinPredAccDf(master_df, params_df, rm.na.cols=TRUE)
-
-## sort by accuracy
-sortByCol(smpl_pred_acc_df, col='acc', asc=FALSE)
-
-
-
-#### examine win prediction accuracy of simple metric comparison predictions 
+#### examine win prediction accuracy with simple metrics comparison
 #### (of site, line, match margin, and rest)
 
-## create a params_df
-params_df <- expand.grid(metric=c('site', 'line', 'mtch_mrgn', 'rst'),
-                         by=NA, n_min=0, min_diff=NA)
-
-## create prediction performance df of simple comparison metrics
-smpl_pred_acc_df <- createWinPredAccDf(master_df, params_df, rm.na.cols=TRUE)
-
-## sort by accuracy
+smpl_params_df <- expand.grid(metric=c('site', 'line', 'mtch_mrgn', 'rst'), by=NA, n_min=0, min_diff=NA)
+smpl_pred_acc_df <- createWinPredAccDf(master_df, smpl_params_df, rm.irr.cols=TRUE)
 sortByCol(smpl_pred_acc_df, col='acc', asc=FALSE)
 
 
 
-#### examine win prediction accuracy of variable-specific metrics (of wPc)
 
-## create a list of parameter lists
-params_df <- expand.grid(metric = 'wPc', 
-                         by = list('site', 
-                                   'cnf', 
-                                   'OG', 
-                                   'DG', 
-                                   c('site', 'cnf'), 
-                                   c('site', 'OG'), 
-                                   c('site', 'DG')), 
-                         n_min = c(5, 10), 
-                         min_diff = NA)
+#### examine win prediction accuracy with simple metrics comparison (of j and wPc)
+#### with differing minimum n-game thresholds
 
-## create prediction performance df of variable-specific metrics
-varsp_pred_acc_df <- createWinPredAccDf(master_df, params_df, rm.na.cols=TRUE)
+smpl_params_df2 <- expand.grid(metric=c('j', 'wPc'), by=NA, n_min=c(5, 10, 20, 30), min_diff=NA)
+smpl_pred_acc_df2 <- createWinPredAccDf(master_df, smpl_params_df2, rm.irr.cols=TRUE)
+sortByCol(smpl_pred_acc_df2, col='acc', asc=FALSE)
 
-## sort by accuracy
+
+
+
+#### examine win prediction accuracy with variable-specific metrics comparison (of wPc)
+varsp_params_df <- expand.grid(metric = 'wPc', 
+                               by = list('site', 
+                                         'cnf', 
+                                         'OG', 
+                                         'DG', 
+                                         c('site', 'cnf'), 
+                                         c('site', 'OG'), 
+                                         c('site', 'DG')), 
+                               n_min = c(5, 10), 
+                               min_diff = NA)
+varsp_pred_acc_df <- createWinPredAccDf(master_df, varsp_params_df, rm.irr.cols=TRUE)
 sortByCol(varsp_pred_acc_df, col='acc', asc=FALSE)
 
-## prediction performance dfs with n-min game threshold of 5
-varsp_pred_acc_df2 <- subset(varsp_pred_acc_df, n_min==5)
-sortByCol(varsp_pred_acc_df2, col='acc', asc=FALSE)
 
 
 
-#### BY TIER
-a <- createWinPred(master_df, metric='site')
-b <- createWinPred(master_df, metric='line', min_diff=8)
-c <- createWinPred(master_df, metric='mtch_mrgn', min_diff=2)
-d <- createWinPred(master_df, metric='j', min_diff=150)
-e <- createWinPred(master_df, metric='rst', min_diff=5)
-f <- createWinPred(master_df, metric='wPc', min_diff=0.25)
-g <- createWinPred(master_df, metric='wPc', by=c('site', 'cnf'), min_diff=0.15)
+#### prediction accuracy by tiered metrics
+
+## by tiered line
+range(abs(master$line))
+trd_line_params_df <- expand.grid(metric='line', by=NA, n_min=0, min_diff=seq(0, 22, 1))
+trd_line_pred_acc_df <- createWinPredAccDf(master_df, trd_line_params_df, rm.irr.cols=TRUE)
+sortByCol(trd_line_pred_acc_df, col='acc', asc=FALSE)
 
 
+## by tiered match margins
+table(abs(master$mtch_mrgn))
+mtchmrgn_params_df <- expand.grid(metric='mtch_mrgn', by=NA, n_min=0, min_diff=seq(1, 7, by=1))
+trd_mtchmrgn_pred_acc_df <- createWinPredAccDf(master_df, mtchmrgn_params_df, rm.irr.cols=TRUE)
+sortByCol(trd_mtchmrgn_pred_acc_df, col='acc', asc=FALSE)
+
+
+## by tiered rest margin
+table(abs(master$rst - master$o_rst))
+trd_rst_params_df <- expand.grid(metric='rst', by=NA, n_min=0, min_diff=seq(1, 9, by=1))
+trd_rst_pred_acc_df <- createWinPredAccDf(master_df, trd_rst_params_df, rm.irr.cols=TRUE)
+sortByCol(trd_rst_pred_acc_df, col='acc', asc=FALSE)
+
+
+## by tiered J
+range(abs(master$j - master$o_j))
+trd_j_params_df <- expand.grid(metric='j', by=NA, n_min=5, 
+                         min_diff=c(25, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400))
+trd_j_pred_acc_df <- createWinPredAccDf(master_df, trd_j_params_df, rm.irr.cols=TRUE)
+trd_j_pred_acc_df
+
+
+## by tiered simple win percentage
+range(abs(master$wPc - master$o_wPc), na.rm=TRUE)
+trd_smpl_wPc_params_df <- expand.grid(metric='wPc', by=NA, n_min=5, 
+                         min_diff=seq(0.05, 0.5, 0.05))
+trd_smpl_wPc_pred_acc_df <- createWinPredAccDf(master_df, trd_smpl_wPc_params_df, rm.irr.cols=TRUE)
+trd_smpl_wPc_pred_acc_df
+
+
+## by tiered variable-specific win percentagea
+trd_varsp_wPc_params_df <- expand.grid(metric='wPc', by=c('site', 'cnf', 'OG', 'DG'), n_min=5, 
+                         min_diff=seq(0.05, 0.5, 0.05))
+trd_varsp_wPc_pred_acc_df <- createWinPredAccDf(master_df, trd_varsp_wPc_params_df, rm.irr.cols=TRUE)
+trd_varsp_wPc_pred_acc_df
+
+
+
+
+####
 
 
 

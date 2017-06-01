@@ -335,6 +335,7 @@ createWinPred <- function(master_df, params) {
   return(pred)
 }
 
+
 ## this function takes in a number of vectors (in a list or df) and 
 ## returns a resultant vector by "majority vote" method
 createPredByVote <- function(pred_obj, maj_vote_cnt) {
@@ -362,11 +363,11 @@ createPredByVote <- function(pred_obj, maj_vote_cnt) {
 
 ## this function returns df of win prediction accuracies
 ## when predicting wins by various win metrics
-createWinPredAccDf <- function(master_df, params_df, rm.na.cols=FALSE) {
+createWinPredAccDf <- function(master_df, params_df, rm.irr.cols=FALSE) {
   
   ## get params_lst from params_df
   params_lst <- convertParamsDfToLst(params_df)
-  
+
   ## create empty vectors to store values
   acc_vec <- n_pred_vec <- c()
 
@@ -386,11 +387,12 @@ createWinPredAccDf <- function(master_df, params_df, rm.na.cols=FALSE) {
 
   ## create return df
   ret_df <- cbind.data.frame(params_df, acc=acc_vec, n_pred=n_pred_vec)
-  
-  ## remove column whose values are all NAs
-  if (rm.na.cols) {
+
+  # remove column whose values are all NAs or all 0s
+  if (rm.irr.cols) {
     for (col in names(ret_df)) {
       if (all(is.na(ret_df[[col]]))) ret_df[[col]] <- NULL
+      if (is.numeric(ret_df[[col]]) && all(ret_df[[col]]==0)) ret_df[[col]] <- NULL
     }
   }
 
