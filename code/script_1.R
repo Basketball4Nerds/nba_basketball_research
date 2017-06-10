@@ -11,12 +11,6 @@ master$site <- ifelse(master$site=='home', 'H', 'A')
 ## convenience for createWinPred() much later
 master$o_site <- ifelse(master$site=='H', 'A', 'H')
 
-## create game ID column (unique ID for each matchup)
-master$gId <- apply(cbind(gsub('-', '', as.character(master$date)), 
-                          substr(as.character(master$team), 1, 3),
-                          substr(as.character(master$o_team), 1, 3)), 
-                    1, function(x) paste(sort(x), collapse=""))
-
 ## remove data points for future games
 master <- master[!is.na(master$pts), ]
 
@@ -184,9 +178,15 @@ master$ODRSRA <- master$oRbPcA / master$dRbPcA
 master$pos <- master$FGA + (0.44 * master$FTA) - master$oRb + master$trnovr
 master$posA <- master$FGAA + (0.44 * master$FTAA) - master$oRbA + master$trnovrFcd
 
-## points per possesion (for team and opponent)
-master$PPP <- master$p / master$pos
-master$PPPA <- master$pA / master$posA
+## offensive efficiency: points per possesion x100
+## defensive efficiency: points allowed per possession x100
+master$oeff <- master$p / master$pos * 100
+master$deff <- master$pA / master$pos * 100
+
+## opponent offensive efficiency: points per possession x100
+## opponent defensive efficiency: points allowed per possession x100
+master$oeffA <- master$pA / master$posA * 100
+master$deffA <- master$p / master$posA * 100
 
 ## turnover percentage (turnover per possession)
 master$toPc <- master$trnovr / master$pos
@@ -197,31 +197,46 @@ master$FTA_p_FGA <- master$FTA / master$FGA
 master$FTAA_p_FGAA <- master$FTAA / master$FGAA
 
 ## add juice propagation columns (j and o_j)
-master <- addJCols(master, initJ=100, penaltyWt=0.1)
+master <- addJCols(master, init_j=100, dist_wgts=c(0.05, 0.1, 0.15))
 
 ## round digits to 3 decimal places
 master <- round_df(master, 3)
 
-## add SMA columns for PPP, PPPA
-## (required for offensive/defense grouping)
-master <- addMaCols(df=master, type='cummean', 
-                    cols=c('PPP', 'PPPA', 'FGP', 'FGPA', 'rqP', 'rqPA'), 
-                    aggVars=c('team', 'season'), colApndStr='_gen')
+## create backup
+write.csv(master, './data/master_backup.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
 
-## using PPP_sma and PPPA_sma, create off/def rank group columns 
-master <- addABCGradeCol(df=master, eff=TRUE, minN=10, method='qntl',
-                         metrics=c('PPP_cummean_gen', 'PPPA_cummean_gen', 
-                                   'FGP_cummean_gen', 'FGPA_cummean_gen', 
-                                   'rqP_cummean_gen', 'rqPA_cummean_gen'),
-                         higherNumBetterPerf=c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE))
+############
 
-## create OG (offense group) and DG (defense group) columns
-## based on majority vote method using three separate metrics
-master$OG <- retByMajorityVote(master[ , c('gPPP', 'gFGP', 'gRqP')])
-master$DG <- retByMajorityVote(master[ , c('gPPPA', 'gFGPA', 'gRqPA')])
+## CONTINUE HERE:
+## CREATE FUNCTION TO ADD RUNNING COUNTS 
 
-## create off/def rank group columns for opponent teams
-master <- fillInOpCols(df=master, cols=c('OG', 'DG'))
+## add running count columns
+master <- addRunCntCols(master)
+
+WinLossGm
+
+
+# ## add SMA columns for PPP, PPPA
+# ## (required for offensive/defense grouping)
+# master <- addMaCols(df=master, type='cummean',
+#                     cols=c('PPP', 'PPPA', 'FGP', 'FGPA', 'rqP', 'rqPA'),
+#                     aggVars=c('team', 'season'), colApndStr='_gen')
+# 
+# ## using PPP_sma and PPPA_sma, create off/def rank group columns
+# master <- addABCGradeCol(df=master, eff=TRUE, minN=10, method='qntl',
+#                          metrics=c('PPP_cummean_gen', 'PPPA_cummean_gen',
+#                                    'FGP_cummean_gen', 'FGPA_cummean_gen',
+#                                    'rqP_cummean_gen', 'rqPA_cummean_gen'),
+#                          higherNumBetterPerf=c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE))
+# 
+# ## create OG (offense group) and DG (defense group) columns
+# ## based on majority vote method using three separate metrics
+# master$OG <- retByMajorityVote(master[ , c('gPPP', 'gFGP', 'gRqP')])
+# master$DG <- retByMajorityVote(master[ , c('gPPPA', 'gFGPA', 'gRqPA')])
+# 
+# ## create off/def rank group columns for opponent teams
+# master <- fillInOpCols(df=master, cols=c('OG', 'DG'))
 
 ## add win count and n-game running count columns
 master <- addRunWinLossGmCntCols(master)
@@ -233,16 +248,10 @@ write.csv(master, './data/master_backup3.csv', row.names=FALSE)
 ## add win percentage columns
 master <- addWinPcCols(master)
 
-
-
-
-
-
-## add SMA columns
-
-## SMA of team's regular quarter points scored and allowed (rqP_sma and rqPA_sma)
+## define columns for SMA calculations
 smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
 
+## add SMA columns 
 
 ## site specific
 ## opponent conference specific
@@ -250,12 +259,27 @@ smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
 
 
 y <- master[master$season==1995, c('season', 'date', 'team', 'o_team', 'won', 'site', 'o_cnf', smaCols)]
-y0 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season'), colApndStr='_gen')
-y1 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'site'), colApndStr='_ssp')
-y2 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'o_cnf'), colApndStr='_cfsp')
-# y3 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'gPPP'), colApndStr='_ogsp')
-# y4 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'gPPPA'), colApndStr='_dgsp')
 
+## general
+y0 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season'), colApndStr='_gen')
+
+## site-specific
+y1 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'site'), colApndStr='_ssp')
+
+## cnf-specific
+y2 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'o_cnf'), colApndStr='_cfsp')
+
+## off-grp-specific
+y3 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'gPPP'), colApndStr='_ogsp')
+
+## def-grp-specific
+y4 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'gPPPA'), colApndStr='_dgsp')
+
+## site-cnf-specific
+table(master_df$OG)
+table(master_df$DG)
+
+## site
 
 
 

@@ -1,3 +1,22 @@
+#### analysis of game pace
+
+## examine possession distribution
+range(master$pos)
+quantile(master$pos)
+tapply(master$pos, master$season, quantile)
+
+## examine points-per-possession distribution
+range(master$PPP)
+quantile(range(master$PPP))
+tapply(master$PPP, master$season, quantile)
+
+
+
+
+
+
+
+
 #### examine metrics' retrospective win prediction strength
 cols <- c('p', 'p2x', 'p3x', 'pPnt', 'pFb', 
           'stl', 'ast', 'blk', 'dRb', 'oRb', 'rb', 'trnovrFcd', 'flFcd', 'pos',

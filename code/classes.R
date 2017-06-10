@@ -1,20 +1,20 @@
-Team <- function(name, gmSchDf, j=100, 
-                 prevGmDate=NA, nextGmDate=NA, 
-                 offRnk=NA, defRnk=NA) {
+Team <- function(name, gm_sch_df, j=100, 
+                 prev_gm_date=NA, next_gm_date=NA, 
+                 o_rnk=NA, d_rnk=NA) {
   
   ## Get the environment for this
   ## instance of the function.
-  thisEnv <- environment()
+  this_env <- environment()
   
   ## Initialize
   name <- name
-  gmSchDf <- gmSchDf
+  gm_sch_df <- gm_sch_df
   j <- j
-  prevGmDate <- prevGmDate
-  nextGmDate <- nextGmDate
-  offRnk <- offRnk
-  defRnk <- defRnk
-  gmDates <- sort(gmSchDf$date[gmSchDf$team==name])
+  prev_gm_date <- prev_gm_date
+  next_gm_date <- next_gm_date
+  o_rnk <- o_rnk
+  d_rnk <- d_rnk
+  gm_dates <- sort(gm_sch_df$date[gm_sch_df$team==name])
 
   ## Create the list used to represent an
   ## object for this class
@@ -22,60 +22,60 @@ Team <- function(name, gmSchDf, j=100,
     
     ## Define the environment where this list is defined so
     ## that I can refer to it later.
-    thisEnv = thisEnv,
+    this_env = this_env,
     
     ## Define the accessors for the data fields.
-    getEnv = function() {
-      return(get("thisEnv", thisEnv))
+    get_env = function() {
+      return(get("this_env", this_env))
     },
     
-    getName = function() {
-      return(get("name", thisEnv))
+    get_name = function() {
+      return(get("name", this_env))
     },
     
-    setName = function(value) {
-      return(assign("name", value, thisEnv))
+    set_name = function(value) {
+      return(assign("name", value, this_env))
     },
     
-    getJ = function() {
-      return(get("j", thisEnv))
+    get_j = function() {
+      return(get("j", this_env))
     },
     
-    setJ = function(value) {
-      return(assign("j", value, thisEnv))
+    set_j = function(value) {
+      return(assign("j", value, this_env))
     },
     
-    getLastGmDate = function() {
-      return(get("lastGmDate", thisEnv))
+    get_last_gm_date = function() {
+      return(get("last_gm_date", this_env))
     },
     
-    setLastGmDate = function(value) {
-      return(assign("lastGmDate", value, thisEnv))
+    set_last_gm_date = function(value) {
+      return(assign("last_gm_date", value, this_env))
     },
     
-    getPrevGmDate = function(date) {
+    get_prev_gm_date = function(date) {
       date <- as.Date(date)
-      gmDates <- get('gmDates', thisEnv)
-      if (date %in% gmDates) {
-        return(gmDates[which(gmDates==date) - 1])
+      gm_dates <- get('gm_dates', this_env)
+      if (date %in% gm_dates) {
+        return(gm_dates[which(gm_dates==date) - 1])
       } else {
-        return(gmDates[max(which(gmDates < date))])
+        return(gm_dates[max(which(gm_dates < date))])
       }
     },
 
-    getNextGmDate = function(date) {
+    get_next_gm_date = function(date) {
       date <- as.Date(date)
-      gmDates <- get('gmDates', thisEnv)
-      if (date %in% gmDates) {
-        return(gmDates[which(gmDates==date) + 1])
+      gm_dates <- get('gm_dates', this_env)
+      if (date %in% gm_dates) {
+        return(gm_dates[which(gm_dates==date) + 1])
       } else {
-        return(gmDates[max(which(gmDates < date)) + 1])
+        return(gm_dates[max(which(gm_dates < date)) + 1])
       }
     }
   )
   
   ## Define the value of the list within the current environment.
-  assign('this', me, envir=thisEnv)
+  assign('this', me, envir=this_env)
   
   ## Set the name for the class
   class(me) <- append(class(me), "Team")

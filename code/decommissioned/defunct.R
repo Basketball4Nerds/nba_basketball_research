@@ -776,3 +776,134 @@ createVarSpWinPredDf <- function(master_df, metric, by_lst, n_min=5) {
   ## return
   return(pred_df)
 }
+
+
+
+# ## points per possesion and points allowed per possession (for team)
+# master$PPP <- master$p / master$pos
+# master$PAPP <- master$pA / master$pos
+# 
+# ## points per possession and points allowed per possession (for opponent)
+# master$PPPA <- master$pA / master$posA
+# master$PFcdPPA <- master$p / master$posA
+
+
+# ## add SMA columns for PPP, PPPA
+# ## (required for offensive/defense grouping)
+# master <- addMaCols(df=master, type='cummean',
+#                     cols=c('PPP', 'PPPA', 'FGP', 'FGPA', 'rqP', 'rqPA'),
+#                     aggVars=c('team', 'season'), colApndStr='_gen')
+# 
+# ## using PPP_sma and PPPA_sma, create off/def rank group columns
+# master <- addABCGradeCol(df=master, eff=TRUE, minN=10, method='qntl',
+#                          metrics=c('PPP_cummean_gen', 'PPPA_cummean_gen',
+#                                    'FGP_cummean_gen', 'FGPA_cummean_gen',
+#                                    'rqP_cummean_gen', 'rqPA_cummean_gen'),
+#                          higherNumBetterPerf=c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE))
+# 
+# ## create OG (offense group) and DG (defense group) columns
+# ## based on majority vote method using three separate metrics
+# master$OG <- retByMajorityVote(master[ , c('gPPP', 'gFGP', 'gRqP')])
+# master$DG <- retByMajorityVote(master[ , c('gPPPA', 'gFGPA', 'gRqPA')])
+# 
+# ## create off/def rank group columns for opponent teams
+# master <- fillInOpCols(df=master, cols=c('OG', 'DG'))
+
+
+
+# createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
+#                         include.opp.cols=TRUE,
+#                         metric=c('w_pc')) {
+# 
+#   ## possible combinations are:
+#   # - site-cnf
+#   # - site-OG
+#   # - site-DG
+#   ## not allowed combinations are:
+#   # - cnf-OG
+#   # - cnf-DG
+#   # - OG-DG
+# 
+#   ## weed out error cases
+#   by <- unique(by)
+#   if (!all(by %in% c('site', 'cnf', 'OG', 'DG'))) stop('Incorrect variable given. Try again.')
+#   if (length(by) > 2) stop('Too many variables given. Please limit to 2.')
+#   else if (length(by)==2 && !('site' %in% by)) stop('Incorrect variable combinations provided. With two variable combinations, one must be site.')
+# 
+#   ## specify variable options
+#   site_opts <- c('H', 'A')
+#   cnf_opts <- c('E', 'W')
+#   OG_opts <- c('A', 'B', 'C')
+#   DG_opts <- c('A', 'B', 'C')
+# 
+#   ## create varDf by expanding options
+#   if (length(by)==1) {
+#     opts <- get(paste0(by, '_opts'))
+#     varDf <- expand.grid(opts, opts)
+#     names(varDf) <- c(by, paste0('o_', by))
+#   }  else if (length(by)==2) {
+#     opts1 <- get(paste0(by[1], '_opts'))
+#     opts2 <- get(paste0(by[2], '_opts'))
+#     varDf <- expand.grid(opts1, opts2, opts1, opts2)
+#     names(varDf) <- c(by[1], by[2], paste0('o_', by[1]), paste0('o_', by[2]))
+#   }
+# 
+#   ## weed out incorrect cases (e.g. two teams both can't have home games)
+#   if ('site' %in% names(varDf)) {
+#     varDf <- varDf[varDf$site != varDf$o_site, ]
+#   }
+# 
+#   ## initialize values
+#   wPcCols <- rep('wPc', nrow(varDf))
+#   o_wPcCols <- rep('o_wPc', nrow(varDf))
+# 
+#   ## append H/A specificity
+#   if ('site' %in% names(varDf)) {
+#     wPcCols <- paste0(wPcCols, varDf$site)
+#     o_wPcCols <- paste0(o_wPcCols, varDf$o_site)
+#   }
+# 
+#   ## append vs E/W specificity
+#   if ('cnf' %in% names(varDf)) {
+#     wPcCols <- paste0(wPcCols, 'Vs', varDf$o_cnf)
+#     o_wPcCols <- paste0(o_wPcCols, 'Vs', varDf$cnf)
+#   }
+# 
+#   ## append vs offense group specificity
+#   if ('OG' %in% names(varDf)) {
+#     wPcCols <- paste0(wPcCols, 'VsOG', varDf$o_OG)
+#     o_wPcCols <- paste0(o_wPcCols, 'VsOG', varDf$OG)
+#   }
+# 
+#   ## append vs defense group specificity
+#   if ('DG' %in% names(varDf)) {
+#     wPcCols <- paste0(wPcCols, 'VsDG', varDf$o_DG)
+#     o_wPcCols <- paste0(o_wPcCols, 'VsDG', varDf$DG)
+#   }
+# 
+#   ## add win and n game columns
+#   wCols <- gsub('^wPc', 'w', wPcCols)
+#   nCols <- gsub('^wPc', 'n', wPcCols)
+#   o_wCols <- gsub('^o_wPc', 'o_w', o_wPcCols)
+#   o_nCols <- gsub('^o_wPc', 'o_n', o_wPcCols)
+# 
+#   ## incorporate the comparable metrics into the variation df
+#   varDf <- cbind(varDf,
+#                  wPcCol=wPcCols, o_wPcCol=o_wPcCols,
+#                  nCol=nCols, o_nCol=o_nCols, wCol=wCols, o_wCol=o_wCols)
+# 
+#   ## if opponent metrics are not desired
+#   if (!include.opp.cols) {
+#     varDf <- varDf[ , !grepl('o_', names(varDf))]
+#     varDf <- unique(varDf)
+#   }
+# 
+#   ## apply as.character function to each column
+#   varDf <- sapply(varDf, as.character)
+# 
+#   ## turn back into data frame
+#   varDf <- as.data.frame(varDf, stringsAsFactors=FALSE)
+# 
+#   ## return
+#   return(varDf)
+# }

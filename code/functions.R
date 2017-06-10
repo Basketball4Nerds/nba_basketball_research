@@ -1,4 +1,33 @@
 
+
+## this function creates a list of initialized team objects
+createTmObLst <- function(gm_sch_df) {
+  
+  ## initialize an empty list
+  tm_obs_lst <- vector(mode = "list", length = length(TEAMS))
+  
+  ## label the list objects
+  names(tm_obs_lst) <- TEAMS
+  
+  ## for each team name
+  for (team_name in TEAMS) {
+    
+    ## create team object
+    tm_ob <- Team(name=team_name, gm_sch_df=gm_sch_df)
+    
+    ## add to list of team objects
+    tm_obs_lst[[team_name]] <- tm_ob
+  }
+  
+  ## return
+  return(tm_obs_lst)
+}
+
+
+
+
+
+
 ############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################
 
 ## this function calculates prediction accuracy from confusion matrix
@@ -9,30 +38,19 @@ calcAccFrConfMtx <- function(confMtx, rndDgt=3) {
   return(accPerc)
 }
 
+
 ## this function creates a "variation df"
 ## which lists out different combinations
 ## of team vs. opponent based on 
 ## site, conference, and off/def rank group;
-## it also lists which team metric should be compared which
-## opponent metric
+## it also lists variable-specific team tags
 createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
-                        include.opp.cols=TRUE, 
+                        include.opp.cols=TRUE,
                         metric=c('w_pc')) {
-  
-  ## possible combinations are: 
-  # - site-cnf
-  # - site-OG
-  # - site-DG
-  ## not allowed combinations are:
-  # - cnf-OG
-  # - cnf-DG
-  # - OG-DG
   
   ## weed out error cases
   by <- unique(by)
   if (!all(by %in% c('site', 'cnf', 'OG', 'DG'))) stop('Incorrect variable given. Try again.')
-  if (length(by) > 2) stop('Too many variables given. Please limit to 2.')    
-  else if (length(by)==2 && !('site' %in% by)) stop('Incorrect variable combinations provided. With two variable combinations, one must be site.')
   
   ## specify variable options
   site_opts <- c('H', 'A')
@@ -40,138 +58,132 @@ createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
   OG_opts <- c('A', 'B', 'C')
   DG_opts <- c('A', 'B', 'C')
   
-  ## create varDf by expanding options
-  if (length(by)==1) {
-    opts <- get(paste0(by, '_opts'))
-    varDf <- expand.grid(opts, opts)
-    names(varDf) <- c(by, paste0('o_', by))
-  }  else if (length(by)==2) {
-    opts1 <- get(paste0(by[1], '_opts'))
-    opts2 <- get(paste0(by[2], '_opts'))
-    varDf <- expand.grid(opts1, opts2, opts1, opts2)
-    names(varDf) <- c(by[1], by[2], paste0('o_', by[1]), paste0('o_', by[2]))
+  ## create options list
+  tm_opts_lst <- list()
+  o_opts_lst <- list()
+  for (var in by) {
+    tm_var_opts <- get(paste0(var, '_opts'))
+    tm_opts_lst <- c(tm_opts_lst, list(tm_var_opts))
+    o_var_opts <- get(paste0(var, '_opts'))
+    o_opts_lst <- c(o_opts_lst, list(o_var_opts))
   }
+  opts_lst <- c(tm_opts_lst, o_opts_lst)
+  names(opts_lst) <- c(by, paste0('o_', by))
+  
+  ## create variable df from variable options list
+  var_df <- expand.grid(opts_lst)
   
   ## weed out incorrect cases (e.g. two teams both can't have home games)
-  if ('site' %in% names(varDf)) {
-    varDf <- varDf[varDf$site != varDf$o_site, ]
-  }
+  if ('site' %in% by) 
+    var_df <- var_df[var_df$site != var_df$o_site, ]
   
-  ## initialize values 
-  wPcCols <- rep('wPc', nrow(varDf))
-  o_wPcCols <- rep('o_wPc', nrow(varDf))
+  ## initialize specifity tag
+  tm_tags <- o_tags <- rep('', nrow(var_df))
   
   ## append H/A specificity
-  if ('site' %in% names(varDf)) {
-    wPcCols <- paste0(wPcCols, varDf$site)
-    o_wPcCols <- paste0(o_wPcCols, varDf$o_site)
+  if ('site' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_a', var_df$site)
+    o_tags <- paste0(o_tags, '_a', var_df$o_site)
   }
   
   ## append vs E/W specificity
-  if ('cnf' %in% names(varDf)) {
-    wPcCols <- paste0(wPcCols, 'Vs', varDf$o_cnf)
-    o_wPcCols <- paste0(o_wPcCols, 'Vs', varDf$cnf)
-  } 
+  if ('cnf' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_v', var_df$o_cnf)
+    o_tags <- paste0(o_tags, '_v', var_df$cnf)
+  }
   
   ## append vs offense group specificity
-  if ('OG' %in% names(varDf)) {
-    wPcCols <- paste0(wPcCols, 'VsOG', varDf$o_OG)
-    o_wPcCols <- paste0(o_wPcCols, 'VsOG', varDf$OG)
+  if ('OG' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_vOG', var_df$o_OG)
+    o_tags <- paste0(o_tags, '_vOG', var_df$OG)
   }
   
-  ## append vs defense group specificity  
-  if ('DG' %in% names(varDf)) {
-    wPcCols <- paste0(wPcCols, 'VsDG', varDf$o_DG)
-    o_wPcCols <- paste0(o_wPcCols, 'VsDG', varDf$DG)
+  ## append vs defense group specificity
+  if ('DG' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_vDG', var_df$o_DG)
+    o_tags <- paste0(o_tags, '_vDG', var_df$DG)
   }
   
-  ## add win and n game columns
-  wCols <- gsub('^wPc', 'w', wPcCols)
-  nCols <- gsub('^wPc', 'n', wPcCols)
-  o_wCols <- gsub('^o_wPc', 'o_w', o_wPcCols)
-  o_nCols <- gsub('^o_wPc', 'o_n', o_wPcCols)
-  
-  ## incorporate the comparable metrics into the variation df 
-  varDf <- cbind(varDf, 
-                 wPcCol=wPcCols, o_wPcCol=o_wPcCols, 
-                 nCol=nCols, o_nCol=o_nCols, wCol=wCols, o_wCol=o_wCols)
+  ## incorporate the comparable metrics into the variation df
+  var_df <- cbind(var_df, tm_tags=tm_tags, o_tags=o_tags)
   
   ## if opponent metrics are not desired
   if (!include.opp.cols) {
-    varDf <- varDf[ , !grepl('o_', names(varDf))]
-    varDf <- unique(varDf)
+    var_df <- var_df[ , !grepl('o_', names(var_df))]
+    var_df <- unique(var_df)
   }
   
   ## apply as.character function to each column
-  varDf <- sapply(varDf, as.character)
+  var_df <- sapply(var_df, as.character)
   
   ## turn back into data frame
-  varDf <- as.data.frame(varDf, stringsAsFactors=FALSE)
+  var_df <- as.data.frame(var_df, stringsAsFactors=FALSE)
   
   ## return
-  return(varDf)
+  return(var_df)
 }
+
 
 
 ## this function creates df of simple retrospective win prediction strengths (RWPS)
 ## by given metrics
 createSimpleRetroWinPredAccDf <- function(df, cols) {
-  
+
   ## initialize an empty list
   lst <- list()
-  
+
   ## calculate retrospective win prediction strength (RWPS) for each metric
   for (col in cols) {
-    
+
     ## construct o_col (opponent's metric) based on a given col
     if (grepl('Fcd', col)) {
-      o_col <- gsub('Fcd', '', col)      
-    } 
+      o_col <- gsub('Fcd', '', col)
+    }
     else if (grepl('[A-Za-z]_p_[A-Za-z]', col)) {
       o_col <- unlist(strsplit(col, split='_p_'))
       o_col <- paste0(o_col, 'A')
       o_col <- paste0(o_col, collapse='_p_')
-    } 
-    else {
-      o_col <- paste0(col, 'A')      
     }
-    
+    else {
+      o_col <- paste0(col, 'A')
+    }
+
     ## if o_col is not found in dataset, skip to the next metric
     if (!(o_col %in% names(df))) {
       print(paste('Unable to locate the following metric:', col))
       next
     }
-    
-    ## make a simple retrospective prediction 
+
+    ## make a simple retrospective prediction
     pred <- df[ , col] > df[ , o_col]
-    
+
     ## create confusion matrix
     cnfMtx <- table(df$won, pred)
-    
+
     ## calculate prediction accuracy
     acc <- calcAccFrConfMtx(cnfMtx)
-    
+
     ## calculate the number of data points to calculate retro pred acc
     nDp <- sum(cnfMtx)
-    
+
     ## create a list element
     lstElm <- c(col, acc, nDp)
-    
+
     ## append list element to list
     lst <- c(lst, list(lstElm))
-    
+
   }
-  
+
   ## collapse list into df
   retDf <- do.call(rbind.data.frame, lst)
-  
+
   ## set colnames for df
   names(retDf) <- c('metric', 'SRWPS', 'nDp')
-  
-  ## set proper data type 
+
+  ## set proper data type
   retDf$SRWPS <- as.numeric(as.character(retDf$SRWPS))
   retDf$nDp <- as.integer(as.character(retDf$nDp))
-  
+
   ## return
   return(retDf)
 }

@@ -22,37 +22,57 @@ fillInOpCols <- function(df, cols) {
 ## this function adds running count columns of wins/losses 
 ## by home/away, opponent def/off rank, opponent conf,
 ## and combinations of those
-addRunWinLossGmCntCols <- function(df) {
+
+## create variable-by list
+by_lst <- list('site', 
+               'cnf', 
+               'OG', 
+               'DG', 
+               c('site', 'cnf'), 
+               c('site', 'OG'), 
+               c('site', 'DG'))
+
+## create variable-by df list
+var_df_lst <- lapply(by_lst, function(x) {
+  createVarDf(by=x)
+})
+
+type = c('w', 'n')
+
+
+
+names(master)
+dRb_H_E_OGA
+
+
+addRunMsrCols <- function(df, type=c('count', 'sum')) {
+  
+}
+
+addRunCntCols <- function(df, type=) {
   
   ## original cols
-  origCols <- colnames(df)
-  
-  ## create variable-by list
-  by_lst <- list('site', 
-                 'cnf', 
-                 'OG', 
-                 'DG', 
-                 c('site', 'cnf'), 
-                 c('site', 'OG'), 
-                 c('site', 'DG'))
-  
-  ## create variable-by df list
-  var_df_lst <- lapply(by_lst, function(x) {
-    createVarDf(by=x, type='tm-opp')
-  })
+  orig_cols <- colnames(df)
+
+  ## sort by date
+  df <- sortByCol(df, col='date')
   
   ## running tallies should contain only per-season-per-team counts
   df <- ddply(df, c('season', 'team'), function(x) {
     n <- nrow(x)
-    x <- sortByCol(x, col='date')
-    
+
     ## for each "by" variation and combination
     for (i in 1:length(by_lst)) {
       
       ## select by and var_df
       by <- by_lst[[i]]
       var_df <- var_df_lst[[i]]
-      
+by
+var_df
+by
+
+``
+
       ## if single-variable (e.g. by H/A or by E/W, etc.)
       if (length(by)==1) {
         
@@ -99,6 +119,87 @@ addRunWinLossGmCntCols <- function(df) {
 }
 
 
+
+# ## this function adds running count columns of wins/losses 
+# ## by home/away, opponent def/off rank, opponent conf,
+# ## and combinations of those
+# addRunWinLossGmCntCols <- function(df) {
+#   
+#   ## original cols
+#   origCols <- colnames(df)
+#   
+#   ## create variable-by list
+#   by_lst <- list('site', 
+#                  'cnf', 
+#                  'OG', 
+#                  'DG', 
+#                  c('site', 'cnf'), 
+#                  c('site', 'OG'), 
+#                  c('site', 'DG'))
+#   
+#   ## create variable-by df list
+#   var_df_lst <- lapply(by_lst, function(x) {
+#     createVarDf(by=x, type='tm-opp')
+#   })
+#   
+#   ## running tallies should contain only per-season-per-team counts
+#   df <- ddply(df, c('season', 'team'), function(x) {
+#     n <- nrow(x)
+#     x <- sortByCol(x, col='date')
+#     
+#     ## for each "by" variation and combination
+#     for (i in 1:length(by_lst)) {
+#       
+#       ## select by and var_df
+#       by <- by_lst[[i]]
+#       var_df <- var_df_lst[[i]]
+#       
+#       ## if single-variable (e.g. by H/A or by E/W, etc.)
+#       if (length(by)==1) {
+#         
+#         ## create column selector
+#         selector <- ifelse(by=='site', by, paste0('o_', by))
+#         
+#         ## add running win count column and n-game column
+#         for (j in 1:nrow(var_df)) {
+#           wCntMetric <- var_df[j, 'wCols']
+#           nGmMetric <- var_df[j, 'nCols']
+#           x[ , wCntMetric] <- c(0, cumsum(x$won & x[[selector]]==var_df[j, selector])[-n])
+#           x[ , nGmMetric] <- c(0, cumsum(x[[selector]]==var_df[j, selector])[-n])
+#         }
+#       }
+#       
+#       ## if multi-variable (two at most, with one being by "site")
+#       else if (length(by)==2) {
+#         
+#         ## create second column selector (first selector is always "site" when there are two by variaables)
+#         selector <- paste0('o_', by[2])
+#         
+#         ## add running win count column and n-game column
+#         for (j in 1:nrow(var_df)) {
+#           wCntMetric <- var_df[j, 'wCols']
+#           nGmMetric <- var_df[j, 'nCols']
+#           x[ , wCntMetric] <- c(0, cumsum(x$won & x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
+#           x[ , nGmMetric] <- c(0, cumsum(x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
+#         }
+#       }
+#       
+#     }
+#     
+#     x
+#   })
+#   
+#   ## names of new columns
+#   newCols <- setdiff(colnames(df), origCols)
+#   
+#   ## create running tally columns for opponent
+#   df <- fillInOpCols(df, cols=newCols)
+#   
+#   ## return 
+#   return(df)
+# }
+
+
 ## this function add win percentage columns
 addWinPcCols <- function(df) {
   
@@ -138,80 +239,99 @@ addWinPcCols <- function(df) {
 
 
 ## function to add two columns (j and o_j) for propagation juice
-addJCols <- function(df, initJ=100, penaltyWt=0.1) {
+addJCols <- function(master_df, init_j=100, dist_wgts=c(0.05, 0.1, 0.15)) {
+
+  ## create game ID (unique ID for each matchup) column 
+  ## and sort so that every two adjacent rows are team instance of a single game
+  master_df$gid <- gsub('-', '', as.character(master_df$date))
+  master_df$gid[master_df$site=='H'] <- paste0(master_df$gid, 
+                            substr(as.character(master_df$team), 1, 3), 
+                            substr(as.character(master_df$o_team), 1, 3))[master_df$site=='H']
+  master_df$gid[master_df$site=='A'] <- paste0(master_df$gid,
+                            substr(as.character(master_df$o_team), 1, 3),
+                            substr(as.character(master_df$team), 1, 3))[master_df$site=='A']
+  master_df <- sortByCol(master_df, col='gid')
+
+  ## split df by season
+  df_lst <- split(master_df, master_df$season)
   
-  ## initialize the two columns with NA
-  df$j <- df$o_j <- NA
-  
-  ## populate j with initial value of j 
-  df$j[df$n==0] <- initJ
-  df$o_j[df$o_n==0] <- initJ
-  
-  ## apply juice propation by season
-  returnDf <- ddply(df, 'season', function(x) {
+  ## for each season, apply juice propagation
+  ret_df_lst <- lapply(df_lst, function(x) {
     
-    ## create a list to store team objects
-    ## (populated with initialized team objects)
-    tmObLst <- vector(mode = "list", length = length(TEAMS))
-    names(tmObLst) <- TEAMS
-    for (teamName in TEAMS) {
+    ## for each redistrubtion weight
+    for (dist_wgt in dist_wgts) {
       
-      ## create team object
-      tmOb <- Team(name=teamName, gmSchDf=x[, c('season', 'date', 'team', 'o_team')])
+      ## create a list of newly initialized team objects
+      tm_obs_lst <- createTmObLst(gm_sch_df=x[, c('season', 'date', 'team', 'o_team')])
       
-      ## add to list of team objects
-      tmObLst[[teamName]] <- tmOb
-    }
-    
-    ## sort by game id so that every adjacent two rows of df provide info
-    ## on a single match between given two teams
-    x <- sortByCol(x, 'gId')
-    
-    ## go through each game record (every two rows);
-    ## every two rows captures a single matchup game
-    for (i in seq(from=1, to=nrow(x), by=2)) {
+      ## create J column names
+      j_col <- paste0('j', as.character(dist_wgt * 100))
+      o_j_col <- paste0('o_', j_col)
       
-      ## store game info into variables
-      date <- x$date[i]
-      team <- as.character(x$team[i])
-      o_team <- as.character(x$o_team[i])
-      won <- x$won[i]
-      tmOb <- tmObLst[[team]]
-      oTmOb <- tmObLst[[o_team]]
-      nxtGmDate <- tmOb$getNextGmDate(date)
-      oNxtGmDate <- oTmOb$getNextGmDate(date)
+      ## initialize two vectors with NAs 
+      ## (later these vectors will become j and o_j columns)
+      j_vec <- o_j_vec <- rep(NA, nrow(x))
       
-      ## calculate updated j after the game (for both team and opponent)
-      if (won) {
-        ## (team's new j) = (team's current j) + (fraction of opponent team's j)
-        newJ <- tmOb$getJ() + oTmOb$getJ() * penaltyWt
+      ## populate j with initial value of j 
+      j_vec[x$n==0] <- init_j
+      o_j_vec[x$o_n==0] <- init_j
+      
+      ## go through each game record (every other row)
+      for (i in seq(from=1, to=nrow(x), by=2)) {
         
-        ## (opponent's new j) = (opponent's current j) - (fraction of opponent's j)
-        oNewJ <- oTmOb$getJ() * (1 - penaltyWt)
-      } else {
-        ## (team's new j) = (team's current j) - (fraction of team's j)
-        newJ <- tmOb$getJ() * (1 - penaltyWt)
+        ## store game info into variables
+        date <- x$date[i]
+        team <- as.character(x$team[i])
+        o_team <- as.character(x$o_team[i])
+        won <- x$won[i]
+        tm_ob <- tm_obs_lst[[team]]
+        o_tm_ob <- tm_obs_lst[[o_team]]
+        nxt_gm_date <- tm_ob$get_next_gm_date(date)
+        o_nxt_gm_date <- o_tm_ob$get_next_gm_date(date)
         
-        ## (opponent's new j) = (opponent's current j) + (fraction of team's j)
-        oNewJ <- oTmOb$getJ() + tmOb$getJ() * penaltyWt
+        ## calculate updated j after game depending on the game outcome
+        if (won) {
+          
+          ## (team's new j) = (team's current j) + (fraction of opponent team's j)
+          new_j <- tm_ob$get_j() + o_tm_ob$get_j() * dist_wgt
+          
+          ## (opponent's new j) = (opponent's current j) - (fraction of opponent's j)
+          o_new_j <- o_tm_ob$get_j() * (1 - dist_wgt)
+          
+        } else {
+          
+          ## (team's new j) = (team's current j) - (fraction of team's j)
+          new_j <- tm_ob$get_j() * (1 - dist_wgt)
+          
+          ## (opponent's new j) = (opponent's current j) + (fraction of team's j)
+          o_new_j <- o_tm_ob$get_j() + tm_ob$get_j() * dist_wgt
+        }
+        
+        ## populate values for j and o_j 
+        j_vec[x$date==nxt_gm_date & x$team==team] <- new_j
+        j_vec[x$date==o_nxt_gm_date & x$team==o_team] <- o_new_j
+        o_j_vec[x$date==nxt_gm_date & x$o_team==team] <- new_j
+        o_j_vec[x$date==o_nxt_gm_date & x$o_team==o_team] <- o_new_j
+        
+        ## add j-vectors as columns
+        x[[j_col]] <- j_vec
+        x[[o_j_col]] <- o_j_vec
+        
+        ## after updating the df, update j values in team objects
+        tm_obs_lst[[team]]$set_j(new_j)
+        tm_obs_lst[[o_team]]$set_j(o_new_j)
       }
-      
-      ## populate values for j and o_j 
-      x$j[x$date==nxtGmDate & x$team==team] <- newJ
-      x$j[x$date==oNxtGmDate & x$team==o_team] <- oNewJ
-      x$o_j[x$date==nxtGmDate & x$o_team==team] <- newJ
-      x$o_j[x$date==oNxtGmDate & x$o_team==o_team] <- oNewJ
-      
-      ## after updating the df, update j values in team objects
-      tmObLst[[team]]$setJ(newJ)
-      tmObLst[[o_team]]$setJ(oNewJ)
     }
     
+    ## return that adds to list
     x
   })
+
+  ## collapse list of dfs into df
+  ret_df <- do.call(rbind.data.frame, c(ret_df_lst, stringsAsFactors=FALSE))
   
   ## return
-  return(returnDf)
+  return(ret_df)
 }
 
 

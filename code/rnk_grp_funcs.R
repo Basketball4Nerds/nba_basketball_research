@@ -227,6 +227,13 @@ returnCollectiveGrading <- function(gradedRnkM, pValThres) {
 }
 
 
+ddply(master, 'season', function(x) {
+  print(table(x$OG))
+  print(x$season[1])
+  print('---')
+})
+
+
 ## this function adds letter grade column based on 
 ## performance of a certain given metric; grades can be
 ## A through C, where A denotes the best performance
@@ -418,3 +425,6 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
   ## return
   return(df)
 }
+
+
+
