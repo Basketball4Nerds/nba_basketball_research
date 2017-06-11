@@ -982,3 +982,63 @@ addRunWinLossGmCntCols <- function(df) {
   ## return
   return(df)
 }
+
+
+## this function adds running count columns of wins/losses 
+## by home/away, opponent def/off rank, opponent conf,
+## and combinations of those
+## create variable-by list
+addRunCntCols <- function(master_df, 
+                          cnt_type=c('w', 'l', 'n'),
+                          by=list('site', 'cnf')) {
+  
+  ## original cols
+  orig_cols <- colnames(master_df)
+  
+  ## sort by date
+  master_df <- sortByCol(master_df, col='date')
+  
+  ## for each season-team combo
+  ## (running tallies should contain only per-season-per-team counts)
+  master_df <- ddply(master_df, c('season', 'team'), function(x) {
+    
+    ## calculate total number of games played by team per season
+    n <- nrow(x)
+    
+    ## for each variable-specification, add counts
+    for (by_elem in by) {
+      
+      ## create variable-specific var_df
+      var_df <- createVarDf(by=by_elem)
+      
+      ## for each variability dimension (e.g. by site, by opponent conference, etc.)
+      for (j in 1:nrow(var_df)) {
+        
+        tm_tag <- var_df[j, 'tm_tags']
+        o_tag <- var_df[j, 'o_tags']
+        var_df_row <- var_df[j, ]
+        varsp_ind <- createVarSpIndex(master_df=x, var_df_row=var_df_row, n_min=0)
+        
+        if ('w' %in% cnt_type)
+          x[ , paste0('w', tm_tag)] <- c(0, cumsum(x$won & varsp_ind)[-n])
+        if ('l' %in% cnt_type)
+          x[ , paste0('l', tm_tag)] <- c(0, cumsum(!x$won & varsp_ind)[-n])
+        if ('n' %in% cnt_type)
+          x[ , paste0('n', tm_tag)] <- c(0, cumsum(varsp_ind)[-n])
+      }
+    }
+    
+    ## return 
+    x
+  })
+  
+  ## get new columns created
+  new_cols <- setdiff(colnames(master_df), orig_cols)
+  
+  ## create win percentage columns for opponent
+  master_df <- fillInOpCols(master_df, cols=new_cols)
+  
+  ## return 
+  return(master_df)
+}
+

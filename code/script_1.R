@@ -206,15 +206,16 @@ master <- round_df(master, 3)
 write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
 
-## add running count columns
-master <- addRunCntCols(master, by=c('site', 'cnf'), cnt_type=c('w', 'n'))
+## add running count columns of variable-specific wins and number of games played
+master <- addRunSumCols(master, by=c('site', 'cnf'), cnt_type=c('w', 'n'))
 
-names(master)
+## add win percentage columns
+master <- addWinPcCols(master)
 
-## add running sum columns
-master <- addRunSumCols(master, by=c('site', 'cnf'))
-
-names(master)
+## add general running sum columns for p, pA, pos, posA
+x <- addMaCols(master, type='cumsum', cols=c('p', 'pA', 'pos', 'posA'), 
+                    aggVars=c('team', 'season'), colApndStr='_gen')
+head(x)
 
 
 
@@ -242,19 +243,12 @@ names(master)
 # ## create off/def rank group columns for opponent teams
 # master <- fillInOpCols(df=master, cols=c('OG', 'DG'))
 
-## add win count and n-game running count columns
-names(master)
-x <- master[ , 1:140]
-x <- addRunWinLossGmCntCols(x)
-head(x)
 
 
 ## create another backup
 write.csv(master, './data/master_backup3.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
 
-## add win percentage columns
-master <- addWinPcCols(master)
 
 ## define columns for SMA calculations
 smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')

@@ -20,12 +20,9 @@ fillInOpCols <- function(df, cols) {
 
 
 ## this function adds running count columns of wins/losses 
-## by home/away, opponent def/off rank, opponent conf,
-## and combinations of those
-## create variable-by list
-addRunCntCols <- function(master_df, 
-                          cnt_type=c('w', 'l', 'n'),
-                          by=list('site', 'cnf')) {
+## as well as running sum columns of other numeric values
+## by home/away, opponent def/off rank, opponent conf, etc.
+addVarSpRunSumCols <- function(master_df, cols, by=list('site', 'cnf')) {
   
   ## original cols
   orig_cols <- colnames(master_df)
@@ -42,7 +39,7 @@ addRunCntCols <- function(master_df,
     
     ## for each variable-specification, add counts
     for (by_elem in by) {
-
+      
       ## create variable-specific var_df
       var_df <- createVarDf(by=by_elem)
       
@@ -54,12 +51,28 @@ addRunCntCols <- function(master_df,
         var_df_row <- var_df[j, ]
         varsp_ind <- createVarSpIndex(master_df=x, var_df_row=var_df_row, n_min=0)
         
-        if ('w' %in% cnt_type)
-          x[ , paste0('w', tm_tag)] <- c(0, cumsum(x$won & varsp_ind)[-n])
-        if ('l' %in% cnt_type)
-          x[ , paste0('l', tm_tag)] <- c(0, cumsum(!x$won & varsp_ind)[-n])
-        if ('n' %in% cnt_type)
-          x[ , paste0('n', tm_tag)] <- c(0, cumsum(varsp_ind)[-n])
+        ## for each column
+        for (col in cols) {
+          
+          ## adding w, l, n counts by variable specificity
+          if (col %in% c('w', 'l', 'n')) {
+            if (col=='w')
+              x[ , paste0('w', tm_tag)] <- c(0, cumsum(x$won & varsp_ind)[-n])
+            else if (col=='l')
+              x[ , paste0('l', tm_tag)] <- c(0, cumsum(!x$won & varsp_ind)[-n])
+            else if (col=='n')
+              x[ , paste0('n', tm_tag)] <- c(0, cumsum(varsp_ind)[-n])
+          }
+
+          ## adding cumulative sum by variable specificity
+          else {
+            target_vals <- rep(0, n)
+            target_vals[varsp_ind] <- x[[col]][varsp_ind]
+            x[ , paste0(col, tm_tag)] <- c(0, cumsum(target_vals)[-n])
+          }
+        }
+
+
       }
     }
     
