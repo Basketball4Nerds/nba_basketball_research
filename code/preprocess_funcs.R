@@ -22,216 +22,93 @@ fillInOpCols <- function(df, cols) {
 ## this function adds running count columns of wins/losses 
 ## by home/away, opponent def/off rank, opponent conf,
 ## and combinations of those
-
 ## create variable-by list
-by_lst <- list('site', 
-               'cnf', 
-               'OG', 
-               'DG', 
-               c('site', 'cnf'), 
-               c('site', 'OG'), 
-               c('site', 'DG'))
-
-## create variable-by df list
-var_df_lst <- lapply(by_lst, function(x) {
-  createVarDf(by=x)
-})
-
-type = c('w', 'n')
-
-
-
-names(master)
-dRb_H_E_OGA
-
-
-addRunMsrCols <- function(df, type=c('count', 'sum')) {
-  
-}
-
-addRunCntCols <- function(df, type=) {
+addRunCntCols <- function(master_df, 
+                          cnt_type=c('w', 'l', 'n'),
+                          by=list('site', 'cnf')) {
   
   ## original cols
-  orig_cols <- colnames(df)
-
-  ## sort by date
-  df <- sortByCol(df, col='date')
+  orig_cols <- colnames(master_df)
   
-  ## running tallies should contain only per-season-per-team counts
-  df <- ddply(df, c('season', 'team'), function(x) {
+  ## sort by date
+  master_df <- sortByCol(master_df, col='date')
+  
+  ## for each season-team combo
+  ## (running tallies should contain only per-season-per-team counts)
+  master_df <- ddply(master_df, c('season', 'team'), function(x) {
+    
+    ## calculate total number of games played by team per season
     n <- nrow(x)
+    
+    ## for each variable-specification, add counts
+    for (by_elem in by) {
 
-    ## for each "by" variation and combination
-    for (i in 1:length(by_lst)) {
+      ## create variable-specific var_df
+      var_df <- createVarDf(by=by_elem)
       
-      ## select by and var_df
-      by <- by_lst[[i]]
-      var_df <- var_df_lst[[i]]
-by
-var_df
-by
-
-``
-
-      ## if single-variable (e.g. by H/A or by E/W, etc.)
-      if (length(by)==1) {
+      ## for each variability dimension (e.g. by site, by opponent conference, etc.)
+      for (j in 1:nrow(var_df)) {
         
-        ## create column selector
-        selector <- ifelse(by=='site', by, paste0('o_', by))
+        tm_tag <- var_df[j, 'tm_tags']
+        o_tag <- var_df[j, 'o_tags']
+        var_df_row <- var_df[j, ]
+        varsp_ind <- createVarSpIndex(master_df=x, var_df_row=var_df_row, n_min=0)
         
-        ## add running win count column and n-game column
-        for (j in 1:nrow(var_df)) {
-          wCntMetric <- var_df[j, 'wCols']
-          nGmMetric <- var_df[j, 'nCols']
-          x[ , wCntMetric] <- c(0, cumsum(x$won & x[[selector]]==var_df[j, selector])[-n])
-          x[ , nGmMetric] <- c(0, cumsum(x[[selector]]==var_df[j, selector])[-n])
-        }
+        if ('w' %in% cnt_type)
+          x[ , paste0('w', tm_tag)] <- c(0, cumsum(x$won & varsp_ind)[-n])
+        if ('l' %in% cnt_type)
+          x[ , paste0('l', tm_tag)] <- c(0, cumsum(!x$won & varsp_ind)[-n])
+        if ('n' %in% cnt_type)
+          x[ , paste0('n', tm_tag)] <- c(0, cumsum(varsp_ind)[-n])
       }
-      
-      ## if multi-variable (two at most, with one being by "site")
-      else if (length(by)==2) {
-        
-        ## create second column selector (first selector is always "site" when there are two by variaables)
-        selector <- paste0('o_', by[2])
-        
-        ## add running win count column and n-game column
-        for (j in 1:nrow(var_df)) {
-          wCntMetric <- var_df[j, 'wCols']
-          nGmMetric <- var_df[j, 'nCols']
-          x[ , wCntMetric] <- c(0, cumsum(x$won & x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
-          x[ , nGmMetric] <- c(0, cumsum(x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
-        }
-      }
-      
     }
     
+    ## return 
     x
   })
   
-  ## names of new columns
-  newCols <- setdiff(colnames(df), origCols)
+  ## get new columns created
+  new_cols <- setdiff(colnames(master_df), orig_cols)
   
-  ## create running tally columns for opponent
-  df <- fillInOpCols(df, cols=newCols)
+  ## create win percentage columns for opponent
+  master_df <- fillInOpCols(master_df, cols=new_cols)
   
   ## return 
-  return(df)
+  return(master_df)
 }
 
-
-
-# ## this function adds running count columns of wins/losses 
-# ## by home/away, opponent def/off rank, opponent conf,
-# ## and combinations of those
-# addRunWinLossGmCntCols <- function(df) {
-#   
-#   ## original cols
-#   origCols <- colnames(df)
-#   
-#   ## create variable-by list
-#   by_lst <- list('site', 
-#                  'cnf', 
-#                  'OG', 
-#                  'DG', 
-#                  c('site', 'cnf'), 
-#                  c('site', 'OG'), 
-#                  c('site', 'DG'))
-#   
-#   ## create variable-by df list
-#   var_df_lst <- lapply(by_lst, function(x) {
-#     createVarDf(by=x, type='tm-opp')
-#   })
-#   
-#   ## running tallies should contain only per-season-per-team counts
-#   df <- ddply(df, c('season', 'team'), function(x) {
-#     n <- nrow(x)
-#     x <- sortByCol(x, col='date')
-#     
-#     ## for each "by" variation and combination
-#     for (i in 1:length(by_lst)) {
-#       
-#       ## select by and var_df
-#       by <- by_lst[[i]]
-#       var_df <- var_df_lst[[i]]
-#       
-#       ## if single-variable (e.g. by H/A or by E/W, etc.)
-#       if (length(by)==1) {
-#         
-#         ## create column selector
-#         selector <- ifelse(by=='site', by, paste0('o_', by))
-#         
-#         ## add running win count column and n-game column
-#         for (j in 1:nrow(var_df)) {
-#           wCntMetric <- var_df[j, 'wCols']
-#           nGmMetric <- var_df[j, 'nCols']
-#           x[ , wCntMetric] <- c(0, cumsum(x$won & x[[selector]]==var_df[j, selector])[-n])
-#           x[ , nGmMetric] <- c(0, cumsum(x[[selector]]==var_df[j, selector])[-n])
-#         }
-#       }
-#       
-#       ## if multi-variable (two at most, with one being by "site")
-#       else if (length(by)==2) {
-#         
-#         ## create second column selector (first selector is always "site" when there are two by variaables)
-#         selector <- paste0('o_', by[2])
-#         
-#         ## add running win count column and n-game column
-#         for (j in 1:nrow(var_df)) {
-#           wCntMetric <- var_df[j, 'wCols']
-#           nGmMetric <- var_df[j, 'nCols']
-#           x[ , wCntMetric] <- c(0, cumsum(x$won & x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
-#           x[ , nGmMetric] <- c(0, cumsum(x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
-#         }
-#       }
-#       
-#     }
-#     
-#     x
-#   })
-#   
-#   ## names of new columns
-#   newCols <- setdiff(colnames(df), origCols)
-#   
-#   ## create running tally columns for opponent
-#   df <- fillInOpCols(df, cols=newCols)
-#   
-#   ## return 
-#   return(df)
-# }
-
-
+  
 ## this function add win percentage columns
 addWinPcCols <- function(df) {
   
   ## get original columns
-  origCols <- colnames(df)
+  orig_cols <- colnames(df)
   
   ## get win count column names
-  winCntCols <- colnames(df)[grepl('^w', colnames(df))]  
-  winCntCols <- setdiff(winCntCols, 'won')
+  win_cnt_cols <- colnames(df)[grepl('^w_', colnames(df))]
   
   ## get game count column names
-  gmCntCols <- gsub('^w', 'n', winCntCols)
+  gm_cnt_cols <- colnames(df)[grepl('^n_', colnames(df))]  
   
   ## create win percent column names
-  winPcCols <- gsub('^w', 'wPc', winCntCols)
+  win_pc_cols <- gsub('^w', 'wPc', win_cnt_cols)
   
   ## for each win count column name  
-  for (i in 1:length(winCntCols)) {
-    winCntCol <- winCntCols[i]
-    gmCntCol <- gmCntCols[i]
-    winPcCol <- winPcCols[i]
-    df[winPcCol] <- df[winCntCol] / df[gmCntCol]
+  for (i in 1:length(win_cnt_cols)) {
+    win_cnt_col <- win_cnt_cols[i]
+    gm_cnt_col <- gm_cnt_cols[i]
+    win_pc_col <- win_pc_cols[i]
+    df[win_pc_col] <- df[win_cnt_col] / df[gm_cnt_col]
   }
   
   ## replace NaN w/ NA
   df[is.nan.data.frame(df)] <- NA
   
   ## get new columns created
-  newCols <- setdiff(colnames(df), origCols)
+  new_cols <- setdiff(colnames(df), orig_cols)
   
   ## create win percentage columns for opponent
-  df <- fillInOpCols(df, cols=newCols)
+  df <- fillInOpCols(df, cols=new_cols)
   
   ## return
   return(df)

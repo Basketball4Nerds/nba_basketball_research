@@ -193,22 +193,25 @@ createSimpleRetroWinPredAccDf <- function(df, cols) {
 createVarSpIndex <- function(master_df, var_df_row, n_min) {
   
   ## grab variable columns
-  by_cols <- grep('^(o_)?site$|^(o_)?cnf$|^(o_)?OG$|^(o_)?DG$', names(var_df_row), value=TRUE)
+  var_cols <- grep('^(o_)?site$|^(o_)?cnf$|^(o_)?OG$|^(o_)?DG$', names(var_df_row), value=TRUE)
   
   ## initialize list of indices      
   ind_lst <- list()
   
   ## populate list of indices for each variable
-  for (by_col in by_cols) {
-    by_val <- var_df_row[[by_col]]
-    ind <- master_df[[by_col]]==by_val
+  for (var_col in var_cols) {
+    var_val <- var_df_row[[var_col]]
+    ind <- master_df[[var_col]]==var_val
     ind_lst <- c(ind_lst, list(ind))
   }
-  
+
   ## add to list of indices requirement for n-game minimum threshold
-  min_n_col <- var_df_row$nCol
-  o_min_n_col <- var_df_row$o_nCol
-  ind <- master_df[[min_n_col]] >= n_min & master_df[[o_min_n_col]] >= n_min
+  min_n_col <- paste0('n', var_df_row$tm_tags)
+  o_min_n_col <- paste0('o_n', var_df_row$o_tags)
+  if (all(c(min_n_col, o_min_n_col) %in% names(master_df))) 
+    ind <- (master_df[[min_n_col]] >= n_min) && (master_df[[o_min_n_col]] >= n_min)
+  else
+    ind <- (master_df$n >= n_min) && (master_df$o_n >= n_min)
   ind_lst <- c(ind_lst, list(ind))
   
   ## reduce list of index conditions with "and" operator

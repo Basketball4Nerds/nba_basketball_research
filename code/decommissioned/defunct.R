@@ -583,137 +583,137 @@ master$o_wPcVsOGC <- master$o_wVsOGC / master$o_nVsOGC
 ## this function adds running count columns of wins/losses 
 ## by home/away, opponent def/off rank, opponent conf,
 ## and combinations of those
-addRunWinLossGmCntCols <- function(df) {
-  
-  ## original cols
-  origCols <- colnames(df)
-  
-  ## running tallies should contain only per-season-per-team counts
-  df <- ddply(df, c('season', 'team'), function(x) {
-    n <- nrow(x)
-    x <- sortByCol(x, col='date')
-    
-    ## counts at home/away
-    x$wH <- c(0, cumsum(x$won & x$site=='home')[-n])
-    x$wA <- c(0, cumsum(x$won & x$site=='away')[-n])
-    x$lH <- c(0, cumsum(!x$won & x$site=='home')[-n])
-    x$lA <- c(0, cumsum(!x$won & x$site=='away')[-n])
-    
-    ## counts vs. E/W
-    x$wVsE <- c(0, cumsum(x$won & x$o_cnf=='E')[-n])
-    x$wVsW <- c(0, cumsum(x$won & x$o_cnf=='W')[-n])
-    x$lVsE <- c(0, cumsum(!x$won & x$o_cnf=='E')[-n])
-    x$lVsW <- c(0, cumsum(!x$won & x$o_cnf=='W')[-n])
-    
-    ## counts against A/B/C offense team
-    x$wVsOGA <- c(0, cumsum(x$won & x$o_OG=='A')[-n])
-    x$wVsOGB <- c(0, cumsum(x$won & x$o_OG=='B')[-n])
-    x$wVsOGC <- c(0, cumsum(x$won & x$o_OG=='C')[-n])
-    x$lVsOGA <- c(0, cumsum(!x$won & x$o_OG=='A')[-n])
-    x$lVsOGB <- c(0, cumsum(!x$won & x$o_OG=='B')[-n])
-    x$lVsOGC <- c(0, cumsum(!x$won & x$o_OG=='C')[-n])
-    
-    ## counts against A/B/C defense team    
-    x$wVsDGA <- c(0, cumsum(x$won & x$o_DG=='A')[-n])
-    x$wVsDGB <- c(0, cumsum(x$won & x$o_DG=='B')[-n])
-    x$wVsDGC <- c(0, cumsum(x$won & x$o_DG=='C')[-n])
-    x$lVsDGA <- c(0, cumsum(!x$won & x$o_DG=='A')[-n])
-    x$lVsDGB <- c(0, cumsum(!x$won & x$o_DG=='B')[-n])
-    x$lVsDGC <- c(0, cumsum(!x$won & x$o_DG=='C')[-n])
-    
-    ## counts against E/W at home/away
-    x$wHVsE <- c(0, cumsum(x$won & x$site=='home' & x$o_cnf=='E')[-n])
-    x$wHVsW <- c(0, cumsum(x$won & x$site=='home' & x$o_cnf=='W')[-n])
-    x$wAVsE <- c(0, cumsum(x$won & x$site=='away' & x$o_cnf=='E')[-n])
-    x$wAVsW <- c(0, cumsum(x$won & x$site=='away' & x$o_cnf=='W')[-n])
-    x$lHVsE <- c(0, cumsum(!x$won & x$site=='home' & x$o_cnf=='E')[-n])
-    x$lHVsW <- c(0, cumsum(!x$won & x$site=='home' & x$o_cnf=='W')[-n])
-    x$lAVsE <- c(0, cumsum(!x$won & x$site=='away' & x$o_cnf=='E')[-n])
-    x$lAVsW <- c(0, cumsum(!x$won & x$site=='away' & x$o_cnf=='W')[-n])
-    
-    ## counts against OGA/OGB/OGC at home/away
-    x$wHVsOGA <- c(0, cumsum(x$won & x$site=='home' & x$o_OG=='A')[-n])
-    x$wHVsOGB <- c(0, cumsum(x$won & x$site=='home' & x$o_OG=='B')[-n])
-    x$wHVsOGC <- c(0, cumsum(x$won & x$site=='home' & x$o_OG=='C')[-n])
-    x$wAVsOGA <- c(0, cumsum(x$won & x$site=='away' & x$o_OG=='A')[-n])
-    x$wAVsOGB <- c(0, cumsum(x$won & x$site=='away' & x$o_OG=='B')[-n])
-    x$wAVsOGC <- c(0, cumsum(x$won & x$site=='away' & x$o_OG=='C')[-n])
-    x$lHVsOGA <- c(0, cumsum(!x$won & x$site=='home' & x$o_OG=='A')[-n])
-    x$lHVsOGB <- c(0, cumsum(!x$won & x$site=='home' & x$o_OG=='B')[-n])
-    x$lHVsOGC <- c(0, cumsum(!x$won & x$site=='home' & x$o_OG=='C')[-n])
-    x$lAVsOGA <- c(0, cumsum(!x$won & x$site=='away' & x$o_OG=='A')[-n])
-    x$lAVsOGB <- c(0, cumsum(!x$won & x$site=='away' & x$o_OG=='B')[-n])
-    x$lAVsOGC <- c(0, cumsum(!x$won & x$site=='away' & x$o_OG=='C')[-n])
-    
-    ## counts against DGA/DGB/DGC at home/away
-    x$wHVsDGA <- c(0, cumsum(x$won & x$site=='home' & x$o_DG=='A')[-n])
-    x$wHVsDGB <- c(0, cumsum(x$won & x$site=='home' & x$o_DG=='B')[-n])
-    x$wHVsDGC <- c(0, cumsum(x$won & x$site=='home' & x$o_DG=='C')[-n])
-    x$wAVsDGA <- c(0, cumsum(x$won & x$site=='away' & x$o_DG=='A')[-n])
-    x$wAVsDGB <- c(0, cumsum(x$won & x$site=='away' & x$o_DG=='B')[-n])
-    x$wAVsDGC <- c(0, cumsum(x$won & x$site=='away' & x$o_DG=='C')[-n])
-    x$lHVsDGA <- c(0, cumsum(!x$won & x$site=='home' & x$o_DG=='A')[-n])
-    x$lHVsDGB <- c(0, cumsum(!x$won & x$site=='home' & x$o_DG=='B')[-n])
-    x$lHVsDGC <- c(0, cumsum(!x$won & x$site=='home' & x$o_DG=='C')[-n])
-    x$lAVsDGA <- c(0, cumsum(!x$won & x$site=='away' & x$o_DG=='A')[-n])
-    x$lAVsDGB <- c(0, cumsum(!x$won & x$site=='away' & x$o_DG=='B')[-n])
-    x$lAVsDGC <- c(0, cumsum(!x$won & x$site=='away' & x$o_DG=='C')[-n])
-    
-    x
-  })
-  
-  ## total number of games played
-  df$n <- df$w + df$l
-  
-  ## number of games at home/away
-  df$nH <- df$wH + df$lH
-  df$nA <- df$wA + df$lA
-  
-  ## number of games against E/W conf team
-  df$nVsE <- df$wVsE + df$lVsE
-  df$nVsW <- df$wVsW + df$lVsW
-  
-  ## number of games against A/B/C off team
-  df$nVsOGA <- df$wVsOGA + df$lVsOGA
-  df$nVsOGB <- df$wVsOGB + df$lVsOGB
-  df$nVsOGC <- df$wVsOGC + df$lVsOGC
-  
-  ## number of games against A/B/C def team
-  df$nVsDGA <- df$wVsDGA + df$lVsDGA
-  df$nVsDGB <- df$wVsDGB + df$lVsDGB
-  df$nVsDGC <- df$wVsDGC + df$lVsDGC
-  
-  ## number of games at home/away against E/W
-  df$nHVsE <- df$wHVsE + df$lHVsE
-  df$nHVsW <- df$wHVsW + df$lHVsW
-  df$nAVsE <- df$wAVsE + df$lAVsE
-  df$nAVsW <- df$wAVsW + df$lAVsW
-  
-  ## number of games at home/away against A/B/C offense group
-  df$nHVsOGA <- df$wHVsOGA + df$lHVsOGA
-  df$nHVsOGB <- df$wHVsOGB + df$lHVsOGB
-  df$nHVsOGC <- df$wHVsOGC + df$lHVsOGC
-  df$nAVsOGA <- df$wAVsOGA + df$lAVsOGA
-  df$nAVsOGB <- df$wAVsOGB + df$lAVsOGB
-  df$nAVsOGC <- df$wAVsOGC + df$lAVsOGC
-  
-  ## number of games at home/away against A/B/C defense group
-  df$nHVsDGA <- df$wHVsDGA + df$lHVsDGA
-  df$nHVsDGB <- df$wHVsDGB + df$lHVsDGB
-  df$nHVsDGC <- df$wHVsDGC + df$lHVsDGC
-  df$nAVsDGA <- df$wAVsDGA + df$lAVsDGA
-  df$nAVsDGB <- df$wAVsDGB + df$lAVsDGB
-  df$nAVsDGC <- df$wAVsDGC + df$lAVsDGC
-  
-  ## names of new columns
-  newCols <- setdiff(colnames(df), origCols)
-  
-  ## create running tally columns for opponent
-  df <- fillInOpCols(df, cols=newCols)
-  
-  ## return 
-  return(df)
-}
+# addRunWinLossGmCntCols <- function(df) {
+#   
+#   ## original cols
+#   origCols <- colnames(df)
+#   
+#   ## running tallies should contain only per-season-per-team counts
+#   df <- ddply(df, c('season', 'team'), function(x) {
+#     n <- nrow(x)
+#     x <- sortByCol(x, col='date')
+#     
+#     ## counts at home/away
+#     x$wH <- c(0, cumsum(x$won & x$site=='home')[-n])
+#     x$wA <- c(0, cumsum(x$won & x$site=='away')[-n])
+#     x$lH <- c(0, cumsum(!x$won & x$site=='home')[-n])
+#     x$lA <- c(0, cumsum(!x$won & x$site=='away')[-n])
+#     
+#     ## counts vs. E/W
+#     x$wVsE <- c(0, cumsum(x$won & x$o_cnf=='E')[-n])
+#     x$wVsW <- c(0, cumsum(x$won & x$o_cnf=='W')[-n])
+#     x$lVsE <- c(0, cumsum(!x$won & x$o_cnf=='E')[-n])
+#     x$lVsW <- c(0, cumsum(!x$won & x$o_cnf=='W')[-n])
+#     
+#     ## counts against A/B/C offense team
+#     x$wVsOGA <- c(0, cumsum(x$won & x$o_OG=='A')[-n])
+#     x$wVsOGB <- c(0, cumsum(x$won & x$o_OG=='B')[-n])
+#     x$wVsOGC <- c(0, cumsum(x$won & x$o_OG=='C')[-n])
+#     x$lVsOGA <- c(0, cumsum(!x$won & x$o_OG=='A')[-n])
+#     x$lVsOGB <- c(0, cumsum(!x$won & x$o_OG=='B')[-n])
+#     x$lVsOGC <- c(0, cumsum(!x$won & x$o_OG=='C')[-n])
+#     
+#     ## counts against A/B/C defense team    
+#     x$wVsDGA <- c(0, cumsum(x$won & x$o_DG=='A')[-n])
+#     x$wVsDGB <- c(0, cumsum(x$won & x$o_DG=='B')[-n])
+#     x$wVsDGC <- c(0, cumsum(x$won & x$o_DG=='C')[-n])
+#     x$lVsDGA <- c(0, cumsum(!x$won & x$o_DG=='A')[-n])
+#     x$lVsDGB <- c(0, cumsum(!x$won & x$o_DG=='B')[-n])
+#     x$lVsDGC <- c(0, cumsum(!x$won & x$o_DG=='C')[-n])
+#     
+#     ## counts against E/W at home/away
+#     x$wHVsE <- c(0, cumsum(x$won & x$site=='home' & x$o_cnf=='E')[-n])
+#     x$wHVsW <- c(0, cumsum(x$won & x$site=='home' & x$o_cnf=='W')[-n])
+#     x$wAVsE <- c(0, cumsum(x$won & x$site=='away' & x$o_cnf=='E')[-n])
+#     x$wAVsW <- c(0, cumsum(x$won & x$site=='away' & x$o_cnf=='W')[-n])
+#     x$lHVsE <- c(0, cumsum(!x$won & x$site=='home' & x$o_cnf=='E')[-n])
+#     x$lHVsW <- c(0, cumsum(!x$won & x$site=='home' & x$o_cnf=='W')[-n])
+#     x$lAVsE <- c(0, cumsum(!x$won & x$site=='away' & x$o_cnf=='E')[-n])
+#     x$lAVsW <- c(0, cumsum(!x$won & x$site=='away' & x$o_cnf=='W')[-n])
+#     
+#     ## counts against OGA/OGB/OGC at home/away
+#     x$wHVsOGA <- c(0, cumsum(x$won & x$site=='home' & x$o_OG=='A')[-n])
+#     x$wHVsOGB <- c(0, cumsum(x$won & x$site=='home' & x$o_OG=='B')[-n])
+#     x$wHVsOGC <- c(0, cumsum(x$won & x$site=='home' & x$o_OG=='C')[-n])
+#     x$wAVsOGA <- c(0, cumsum(x$won & x$site=='away' & x$o_OG=='A')[-n])
+#     x$wAVsOGB <- c(0, cumsum(x$won & x$site=='away' & x$o_OG=='B')[-n])
+#     x$wAVsOGC <- c(0, cumsum(x$won & x$site=='away' & x$o_OG=='C')[-n])
+#     x$lHVsOGA <- c(0, cumsum(!x$won & x$site=='home' & x$o_OG=='A')[-n])
+#     x$lHVsOGB <- c(0, cumsum(!x$won & x$site=='home' & x$o_OG=='B')[-n])
+#     x$lHVsOGC <- c(0, cumsum(!x$won & x$site=='home' & x$o_OG=='C')[-n])
+#     x$lAVsOGA <- c(0, cumsum(!x$won & x$site=='away' & x$o_OG=='A')[-n])
+#     x$lAVsOGB <- c(0, cumsum(!x$won & x$site=='away' & x$o_OG=='B')[-n])
+#     x$lAVsOGC <- c(0, cumsum(!x$won & x$site=='away' & x$o_OG=='C')[-n])
+#     
+#     ## counts against DGA/DGB/DGC at home/away
+#     x$wHVsDGA <- c(0, cumsum(x$won & x$site=='home' & x$o_DG=='A')[-n])
+#     x$wHVsDGB <- c(0, cumsum(x$won & x$site=='home' & x$o_DG=='B')[-n])
+#     x$wHVsDGC <- c(0, cumsum(x$won & x$site=='home' & x$o_DG=='C')[-n])
+#     x$wAVsDGA <- c(0, cumsum(x$won & x$site=='away' & x$o_DG=='A')[-n])
+#     x$wAVsDGB <- c(0, cumsum(x$won & x$site=='away' & x$o_DG=='B')[-n])
+#     x$wAVsDGC <- c(0, cumsum(x$won & x$site=='away' & x$o_DG=='C')[-n])
+#     x$lHVsDGA <- c(0, cumsum(!x$won & x$site=='home' & x$o_DG=='A')[-n])
+#     x$lHVsDGB <- c(0, cumsum(!x$won & x$site=='home' & x$o_DG=='B')[-n])
+#     x$lHVsDGC <- c(0, cumsum(!x$won & x$site=='home' & x$o_DG=='C')[-n])
+#     x$lAVsDGA <- c(0, cumsum(!x$won & x$site=='away' & x$o_DG=='A')[-n])
+#     x$lAVsDGB <- c(0, cumsum(!x$won & x$site=='away' & x$o_DG=='B')[-n])
+#     x$lAVsDGC <- c(0, cumsum(!x$won & x$site=='away' & x$o_DG=='C')[-n])
+#     
+#     x
+#   })
+#   
+#   ## total number of games played
+#   df$n <- df$w + df$l
+#   
+#   ## number of games at home/away
+#   df$nH <- df$wH + df$lH
+#   df$nA <- df$wA + df$lA
+#   
+#   ## number of games against E/W conf team
+#   df$nVsE <- df$wVsE + df$lVsE
+#   df$nVsW <- df$wVsW + df$lVsW
+#   
+#   ## number of games against A/B/C off team
+#   df$nVsOGA <- df$wVsOGA + df$lVsOGA
+#   df$nVsOGB <- df$wVsOGB + df$lVsOGB
+#   df$nVsOGC <- df$wVsOGC + df$lVsOGC
+#   
+#   ## number of games against A/B/C def team
+#   df$nVsDGA <- df$wVsDGA + df$lVsDGA
+#   df$nVsDGB <- df$wVsDGB + df$lVsDGB
+#   df$nVsDGC <- df$wVsDGC + df$lVsDGC
+#   
+#   ## number of games at home/away against E/W
+#   df$nHVsE <- df$wHVsE + df$lHVsE
+#   df$nHVsW <- df$wHVsW + df$lHVsW
+#   df$nAVsE <- df$wAVsE + df$lAVsE
+#   df$nAVsW <- df$wAVsW + df$lAVsW
+#   
+#   ## number of games at home/away against A/B/C offense group
+#   df$nHVsOGA <- df$wHVsOGA + df$lHVsOGA
+#   df$nHVsOGB <- df$wHVsOGB + df$lHVsOGB
+#   df$nHVsOGC <- df$wHVsOGC + df$lHVsOGC
+#   df$nAVsOGA <- df$wAVsOGA + df$lAVsOGA
+#   df$nAVsOGB <- df$wAVsOGB + df$lAVsOGB
+#   df$nAVsOGC <- df$wAVsOGC + df$lAVsOGC
+#   
+#   ## number of games at home/away against A/B/C defense group
+#   df$nHVsDGA <- df$wHVsDGA + df$lHVsDGA
+#   df$nHVsDGB <- df$wHVsDGB + df$lHVsDGB
+#   df$nHVsDGC <- df$wHVsDGC + df$lHVsDGC
+#   df$nAVsDGA <- df$wAVsDGA + df$lAVsDGA
+#   df$nAVsDGB <- df$wAVsDGB + df$lAVsDGB
+#   df$nAVsDGC <- df$wAVsDGC + df$lAVsDGC
+#   
+#   ## names of new columns
+#   newCols <- setdiff(colnames(df), origCols)
+#   
+#   ## create running tally columns for opponent
+#   df <- fillInOpCols(df, cols=newCols)
+#   
+#   ## return 
+#   return(df)
+# }
 
 
 
@@ -907,3 +907,78 @@ createVarSpWinPredDf <- function(master_df, metric, by_lst, n_min=5) {
 #   ## return
 #   return(varDf)
 # }
+
+
+
+## this function adds running count columns of wins/losses
+## by home/away, opponent def/off rank, opponent conf,
+## and combinations of those
+addRunWinLossGmCntCols <- function(df) {
+
+  ## original cols
+  origCols <- colnames(df)
+
+  ## create variable-by list
+  by_lst <- list('site', 'cnf')
+
+  ## create variable-by df list
+  var_df_lst <- lapply(by_lst, function(x) {
+    createVarDf(by=x)
+  })
+
+  ## running tallies should contain only per-season-per-team counts
+  df <- ddply(df, c('season', 'team'), function(x) {
+    n <- nrow(x)
+    x <- sortByCol(x, col='date')
+
+    ## for each "by" variation and combination
+    for (i in 1:length(by_lst)) {
+
+      ## select by and var_df
+      by <- by_lst[[i]]
+      var_df <- var_df_lst[[i]]
+
+      ## if single-variable (e.g. by H/A or by E/W, etc.)
+      if (length(by)==1) {
+
+        ## create column selector
+        selector <- ifelse(by=='site', by, paste0('o_', by))
+
+        ## add running win count column and n-game column
+        for (j in 1:nrow(var_df)) {
+          wCntMetric <- var_df[j, 'wCols']
+          nGmMetric <- var_df[j, 'nCols']
+          x[ , wCntMetric] <- c(0, cumsum(x$won & x[[selector]]==var_df[j, selector])[-n])
+          x[ , nGmMetric] <- c(0, cumsum(x[[selector]]==var_df[j, selector])[-n])
+        }
+      }
+
+      ## if multi-variable (two at most, with one being by "site")
+      else if (length(by)==2) {
+
+        ## create second column selector (first selector is always "site" when there are two by variaables)
+        selector <- paste0('o_', by[2])
+
+        ## add running win count column and n-game column
+        for (j in 1:nrow(var_df)) {
+          wCntMetric <- var_df[j, 'wCols']
+          nGmMetric <- var_df[j, 'nCols']
+          x[ , wCntMetric] <- c(0, cumsum(x$won & x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
+          x[ , nGmMetric] <- c(0, cumsum(x$site==var_df$site[j] & x[[selector]]==var_df[j, selector])[-n])
+        }
+      }
+
+    }
+
+    x
+  })
+
+  ## names of new columns
+  newCols <- setdiff(colnames(df), origCols)
+
+  ## create running tally columns for opponent
+  df <- fillInOpCols(df, cols=newCols)
+
+  ## return
+  return(df)
+}

@@ -206,15 +206,19 @@ master <- round_df(master, 3)
 write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
 
-############
-
-## CONTINUE HERE:
-## CREATE FUNCTION TO ADD RUNNING COUNTS 
-
 ## add running count columns
-master <- addRunCntCols(master)
+master <- addRunCntCols(master, by=c('site', 'cnf'), cnt_type=c('w', 'n'))
 
-WinLossGm
+names(master)
+
+## add running sum columns
+master <- addRunSumCols(master, by=c('site', 'cnf'))
+
+names(master)
+
+
+
+####### CONTINUE HERE!!!
 
 
 # ## add SMA columns for PPP, PPPA
@@ -239,7 +243,11 @@ WinLossGm
 # master <- fillInOpCols(df=master, cols=c('OG', 'DG'))
 
 ## add win count and n-game running count columns
-master <- addRunWinLossGmCntCols(master)
+names(master)
+x <- master[ , 1:140]
+x <- addRunWinLossGmCntCols(x)
+head(x)
+
 
 ## create another backup
 write.csv(master, './data/master_backup3.csv', row.names=FALSE)
