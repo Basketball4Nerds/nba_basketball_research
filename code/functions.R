@@ -562,8 +562,6 @@ create_stding_by_date_df <- function(master_df, metric) {
 }
 
 
-
-
 ## this function takes in a vector of numeric values and return letter-based 
 ## ranks (A, B, C, ...) based on quantile distribution, where A signifies the best 
 ## performance indicator
@@ -615,16 +613,28 @@ ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf=TRUE) {
 }
 
 
+## this function takes in standing-by-date df and creates 
+## rank-standing-by-date df
+create_rnkd_std_by_date <- function(std_by_date_df) {
+  
+  ## initialize ranked-standing-by-date df by copying dimensions
+  rnkd_std_by_date_df <- matrix(NA, nrow=nrow(std_by_date_df), ncol=ncol(std_by_date_df))
+  colnames(rnkd_std_by_date_df) <- colnames(std_by_date_df)
+  rownames(rnkd_std_by_date_df) <- rownames(std_by_date_df)
+  
+  ## index where all row values are filled and NA-free
+  complete_row_strt_ind <- max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
+  
+  ## starting from rows where performance values are present for all teams
+  for (i in complete_row_strt_ind:nrow(std_by_date_df)) {
+    x <- as.numeric(std_by_date_df[i, ])  
+    rnks <- ret_ABC_rnks_by_qntl(x)
+    rnkd_std_by_date_df[i, ] <- rnks
+  }
 
-create_rnkd_stding_by_date <- function(create_std_by_date_df) {
-  
-  ## 
-  max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
-  
-  x <- as.numeric(std_by_date_df[6, ])
-  hist(as.numeric(x))
-  
-
+  ## return
+  return(as.data.frame(rnkd_std_by_date_df))
 }
 
-
+x <- create_rnkd_std_by_date(std_by_date_df)
+head(x)
