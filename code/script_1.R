@@ -3,6 +3,10 @@
 ## copy games df to master
 master <- games
 
+## exclude playoff games (for now since playoff data is not available for 1995 - 2001)
+ddply(master, 'season', function(x) {table(x$playoffs)})
+master <- subset(master, playoffs==0)
+
 ## change home/away to H/A for site variable
 master$site <- ifelse(master$site=='home', 'H', 'A')
 
@@ -212,42 +216,98 @@ master <- addRunSumCols(master, by=c('site', 'cnf'), cnt_type=c('w', 'n'))
 ## add win percentage columns
 master <- addWinPcCols(master)
 
-## add general running sum columns for p, pA, pos, posA
-x <- addMaCols(master, type='cumsum', cols=c('p', 'pA', 'pos', 'posA'), 
-                    aggVars=c('team', 'season'), colApndStr='_gen')
-head(x)
+## add general cumulative sum columns for p, pA, pos, posA
+master <- addCumSumCols(master, cols=c('p', 'pA', 'pos', 'posA'), 
+                        agg_vars=c('team', 'season'), new_colnm_apnd_str='gen')
+
+## cumulative offensive efficiency: points per possesion x100
+master$oeff_cum_gen <- master$p_cumsum_gen / master$pos_cumsum_gen * 100
+
+## opponent cumulative offensive efficiency: points per possession x100
+master$oeffA_cum_gen <- master$pA_cumsum_gen / master$posA_cumsum_gen * 100
+
+names(master)
+
+
+range(master_df$date)
 
 
 
-####### CONTINUE HERE!!!
+oeff_cum_gen
 
 
-# ## add SMA columns for PPP, PPPA
-# ## (required for offensive/defense grouping)
-# master <- addMaCols(df=master, type='cummean',
-#                     cols=c('PPP', 'PPPA', 'FGP', 'FGPA', 'rqP', 'rqPA'),
-#                     aggVars=c('team', 'season'), colApndStr='_gen')
-# 
-# ## using PPP_sma and PPPA_sma, create off/def rank group columns
-# master <- addABCGradeCol(df=master, eff=TRUE, minN=10, method='qntl',
-#                          metrics=c('PPP_cummean_gen', 'PPPA_cummean_gen',
-#                                    'FGP_cummean_gen', 'FGPA_cummean_gen',
-#                                    'rqP_cummean_gen', 'rqPA_cummean_gen'),
-#                          higherNumBetterPerf=c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE))
-# 
-# ## create OG (offense group) and DG (defense group) columns
-# ## based on majority vote method using three separate metrics
-# master$OG <- retByMajorityVote(master[ , c('gPPP', 'gFGP', 'gRqP')])
-# master$DG <- retByMajorityVote(master[ , c('gPPPA', 'gFGPA', 'gRqPA')])
-# 
-# ## create off/def rank group columns for opponent teams
-# master <- fillInOpCols(df=master, cols=c('OG', 'DG'))
+
+
+
+
+
+
+
+
+
+
+
+## this function fills in NA 
+
+
+
+for (i in seq_along(nna_index[-1])) {
+  i <- 
+}
+
+# find the day when each team had a game
+# from the 
+
+
+
+
+
+## this function selects 
+subsetLatestTeamRecs <- function(master_df, date) {
+
+  date <- '2000-10-31'
+  date <- ''
+  master_df <- subset(master, season==2000)
+
+
+
+  a <- subset(master_df, n==0)
+  b <- subset(master_df, n==1)
+  c <- subset(master_df, n==2)
+  range(a$date)
+  range(b$date)
+  range(c$date)
+  
+  # ____   _______    ________
+  #   _______   _________
+  season <- getSeasonFrDate(date)
+  gm_sch_df <- master_df[master_df$season==season, c('season', 'date', 'team')]
+  tm_obs_lst <- createTmObLst(gm_sch_df)
+
+
+  tm_obs_lst[[1]]$get_next_gm_date(date)
+  master_df
+  for (team in TEAMS) {
+    
+  }
+
+  
+}
+
+
+## this function ranks team's offensive/defensive efficiency by comparing 
+## current relative standing with other teams
+addEffGradeCols <- function(master_df, ) {
+  
+  ## 
+  
+}
 
 
 
 ## create another backup
-write.csv(master, './data/master_backup3.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
+write.csv(master, './data/master_backup2.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 
 
 ## define columns for SMA calculations

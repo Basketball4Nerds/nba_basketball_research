@@ -1,5 +1,4 @@
 
-
 ## this function creates a list of initialized team objects
 createTmObLst <- function(gm_sch_df) {
   
@@ -497,3 +496,65 @@ createMetricCmbLst <- function(metrics) {
   ## return
   return(metric_cmb_lst)
 }
+
+
+## this function takes in a vector a retro-fills any NA values 
+## e.g. c(NA, 1, 2, NA, NA, 3) would become c(1, 1, 2, 3, 3, 3)
+retro_fill_nas <- function(x) {
+  
+  ## get a vector of non-NA indices 
+  complete_nna_indices <- which(!is.na(x))
+  
+  ## for each non-NA index, apply retro-fill
+  for (ind in complete_nna_indices) {
+    
+    ## get value to retro-fill
+    retro_fill_val <- x[ind]
+    
+    ## get indices of values to retro-fill
+    complete_retro_na_indices <- which(is.na(x[1:ind]))
+    
+    ## retro-fill with value
+    x[complete_retro_na_indices] <- retro_fill_val
+  }
+  
+  ## return
+  return(x)
+}
+
+
+## this function creates standing-by-date df
+create_stding_by_date_df <- function(master_df, metric) {
+  
+  ## create df with relevant columns
+  df <- master_df[, c('date', 'team', metric)]
+  
+  ## create an initial standing-by-date df that contains NA "holes"
+  std_by_date_df <- dcast(df, date ~ team, value.var = 'oeff_cum_gen')
+  
+  ## grab team names and game dates contain in the dataset
+  teams <- setdiff(names(std_by_date_df), 'date')
+  gm_dates <- unique(df$date)
+  
+  ## for each team
+  for (team in teams) {
+    
+    ## grab team's vector with NA "holes" to retro-fill
+    x <- std_by_date_df[ , team]
+    
+    ## retro-fill NAs
+    x <- retro_fill_nas(x)
+    
+    ## first game date (and dates prior to the first game) should be assigned NA
+    first_gm_date <- df[df$team=='Warriors', 'date'][1]
+    na_indices <- 1:which(first_gm_date==gm_dates)
+    x[na_indices] <- NA
+    
+    ## put retro-filled vector back into df
+    std_by_date_df[, team] <- x
+  }
+  
+  ## return standing-by-date df
+  return(std_by_date_df)
+}
+

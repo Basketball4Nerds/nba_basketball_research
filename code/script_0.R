@@ -23,6 +23,7 @@ library(rvest)
 library(car)  # for leveneTest()
 library(lsr)  # for cohensD()
 library(gridExtra)  # for expand.grid()
+library(reshape2)  # for dcast()
 
 
 

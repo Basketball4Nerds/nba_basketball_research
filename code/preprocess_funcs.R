@@ -90,7 +90,7 @@ addVarSpRunSumCols <- function(master_df, cols, by=list('site', 'cnf')) {
   return(master_df)
 }
 
-  
+
 ## this function add win percentage columns
 addWinPcCols <- function(df) {
   

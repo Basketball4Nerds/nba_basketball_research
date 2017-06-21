@@ -147,3 +147,52 @@ addMaCols <- function(df, cols, type=c('SMA', 'EMA', 'cummean'), n=10,
   return(outputDF)
 }
 
+
+## this function adds cumulative sum columns
+addCumSumCols <- function(df, cols, agg_vars=c('team', 'season'), 
+                          new_colnm_apnd_str='', rnd_dgt=3) {
+  
+  ## recursionn base case
+  if (is.null(agg_vars)) {
+    
+    ## order the base subsets
+    df <- df[order(df$date), ]
+    
+    ## for each column
+    for (col in cols) {
+      
+      ## calculate MA
+      runVals <- cumsum(df[[col]])
+
+      ## offset (shift) MA vals by 1
+      runVals <- c(NA, runVals[-length(runVals)])
+      
+      ## round MA values
+      runVals <- round(runVals, rnd_dgt)
+      
+      ## create new column name
+      runValsColNm <- paste0(col, '_cumsum_', new_colnm_apnd_str)
+      runValsColNm <- gsub('__', '_', runValsColNm)
+      
+      ## add MA vals to df as column
+      df[[runValsColNm]] <- runVals
+    }
+    
+    ## return
+    return(df)
+    
+  }
+
+  df <- sortByCol(df, agg_vars, asc=TRUE)
+  
+  ## for each aggregation subset, apply ad
+  output_df <- ddply(df, agg_vars, function(x) {
+    addCumSumCols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
+  })
+  
+  ## return
+  return(output_df)
+}
+  
+  
+  
