@@ -532,29 +532,99 @@ create_stding_by_date_df <- function(master_df, metric) {
   ## create an initial standing-by-date df that contains NA "holes"
   std_by_date_df <- dcast(df, date ~ team, value.var=metric)
   
-  ## grab team names and game dates contain in the dataset
-  teams <- setdiff(names(std_by_date_df), 'date')
-  gm_dates <- sort(as.Date(unique(df$date)))
-
+  ## store game dates in a variable
+  gm_dates <- std_by_date_df$date
+  
+  ## remove game dates column in df and store as row names
+  std_by_date_df$date <- NULL
+  rownames(std_by_date_df) <- gm_dates
+  
   ## for each team
-  for (team in teams) {
-
+  for (team in names(std_by_date_df)) {
+    
     ## grab team's vector with NA "holes" to retro-fill
     x <- std_by_date_df[, team]
-
+    
     ## retro-fill NAs
     x <- retro_fill_nas(x)
-
+    
     ## first game date (and dates prior to the first game) should be assigned NA
     first_gm_date <- df[df$team==team, 'date'][1]
     na_indices <- 1:which(first_gm_date==gm_dates)
     x[na_indices] <- NA
-
+    
     ## put retro-filled vector back into df
     std_by_date_df[, team] <- x
   }
-
+  
   ## return standing-by-date df
   return(std_by_date_df)
 }
+
+
+
+
+## this function takes in a vector of numeric values and return letter-based 
+## ranks (A, B, C, ...) based on quantile distribution, where A signifies the best 
+## performance indicator
+ret_ABC_rnks_by_qntl <- function(x, higher_num_bttr_perf=TRUE) {
+  
+  ## use previous seasons to calculate quantiles
+  qntls <- quantile(x, probs=seq(0, 1, 1/3), na.rm=TRUE)
+  
+  ## if higher numeric value signifies better performance
+  if (higher_num_bttr_perf) {
+    rnks <- ifelse(x >= qntls[3], 'A', 
+                   ifelse(x <= qntls[2], 'C', 'B'))
+  }
+  
+  ## if higher numeric value signifies lower performance
+  else {
+    rnks <- ifelse(x >= qntls[3], 'C',
+                   ifelse(perfs <= qntls[2], 'A', 'B'))
+  }
+  
+  ## return
+  return(rnks)
+}
+
+
+## this function takes in a vector of numeric values and return letter-based
+## ranks (A, B, C) based on standard deviation, where A signifies the best 
+## performance indicator
+ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf=TRUE) {
+
+  ## calculate mean and sd of te numeric values provided
+  mean <- mean(x)
+  sd <- sd(x)
+  
+  ## if higher numeric value signifies better performance
+  if (higher_num_bttr_perf) {
+    rnks <- ifelse(x >= (mean + sd), 'A', 
+                   ifelse(x <= (mean - sd), 'C', 'B'))
+  }
+  
+  ## if higher numeric value signifies lower performance
+  else {
+    rnks <- ifelse(x >= (mean + sd), 'C',
+                   ifelse(x <= (mean - sd), 'A', 'B'))
+  }  
+    
+  ## return 
+  return(rnks)
+}
+
+
+
+create_rnkd_stding_by_date <- function(create_std_by_date_df) {
+  
+  ## 
+  max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
+  
+  x <- as.numeric(std_by_date_df[6, ])
+  hist(as.numeric(x))
+  
+
+}
+
 

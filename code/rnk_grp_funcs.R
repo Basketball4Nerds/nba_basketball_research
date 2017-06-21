@@ -332,7 +332,6 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
             snGrades <- ifelse(perfs >= prevQntls[3], 'C',
                                ifelse(perfs <= prevQntls[2], 'A', 'B'))
           }
-          
         } 
         
         ## if invalid method selected
