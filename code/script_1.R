@@ -226,14 +226,14 @@ master$oeff_cum_gen <- master$p_cumsum_gen / master$pos_cumsum_gen * 100
 ## opponent cumulative offensive efficiency: points per possession x100
 master$oeffA_cum_gen <- master$pA_cumsum_gen / master$posA_cumsum_gen * 100
 
-names(master)
+
+master_df <- subset(master, season==2012)
 
 
-range(master_df$date)
+x <- create_stding_by_date_df(master_df, 'oeff_cum_gen')
 
-
-
-oeff_cum_gen
+head(x)
+remove(gm_dates)
 
 
 
