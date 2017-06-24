@@ -523,8 +523,8 @@ retro_fill_nas <- function(x) {
 }
 
 
-## this function creates standing-by-date df
-create_stding_by_date_df <- function(master_df, metric) {
+## this function creates performance-standing-by-date df
+create_std_by_date_df <- function(master_df, metric) {
   
   ## create df with relevant columns
   df <- master_df[, c('date', 'team', metric)]
@@ -565,7 +565,7 @@ create_stding_by_date_df <- function(master_df, metric) {
 ## this function takes in a vector of numeric values and return letter-based 
 ## ranks (A, B, C, ...) based on quantile distribution, where A signifies the best 
 ## performance indicator
-ret_ABC_rnks_by_qntl <- function(x, higher_num_bttr_perf=TRUE) {
+ret_ABC_rnks_by_qntl <- function(x, higher_num_bttr_perf) {
   
   ## use previous seasons to calculate quantiles
   qntls <- quantile(x, probs=seq(0, 1, 1/3), na.rm=TRUE)
@@ -579,7 +579,7 @@ ret_ABC_rnks_by_qntl <- function(x, higher_num_bttr_perf=TRUE) {
   ## if higher numeric value signifies lower performance
   else {
     rnks <- ifelse(x >= qntls[3], 'C',
-                   ifelse(perfs <= qntls[2], 'A', 'B'))
+                   ifelse(x <= qntls[2], 'A', 'B'))
   }
   
   ## return
@@ -590,7 +590,7 @@ ret_ABC_rnks_by_qntl <- function(x, higher_num_bttr_perf=TRUE) {
 ## this function takes in a vector of numeric values and return letter-based
 ## ranks (A, B, C) based on standard deviation, where A signifies the best 
 ## performance indicator
-ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf=TRUE) {
+ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf) {
 
   ## calculate mean and sd of te numeric values provided
   mean <- mean(x)
@@ -613,28 +613,66 @@ ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf=TRUE) {
 }
 
 
+
+## this function takes in a df and returns an empty copy of the original
+create_empty_df_copy <- function(df) {
+  empty_df_copy <- matrix(NA, nrow=nrow(df), ncol=ncol(df))
+  colnames(empty_df_copy) <- colnames(df)
+  rownames(empty_df_copy) <- rownames(df)
+  return(empty_df_copy)
+}
+
 ## this function takes in standing-by-date df and creates 
 ## rank-standing-by-date df
-create_rnkd_std_by_date <- function(std_by_date_df) {
+create_rnkd_tm_std_by_date_df <- function(master_df, metric, higher_num_bttr_perf) {
+
+  ## create standing-by-date df (consists of numeric values)
+  std_by_date_df <- create_std_by_date_df(master_df, metric)
   
-  ## initialize ranked-standing-by-date df by copying dimensions
-  rnkd_std_by_date_df <- matrix(NA, nrow=nrow(std_by_date_df), ncol=ncol(std_by_date_df))
-  colnames(rnkd_std_by_date_df) <- colnames(std_by_date_df)
-  rownames(rnkd_std_by_date_df) <- rownames(std_by_date_df)
-  
+  ## initialize two ranked-standings-by-date dfs 
+  ## by copying dimensions from original df
+  qntl_rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df)  # quantile derivation
+  sd_rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df)  # standard deviation derivation
+
   ## index where all row values are filled and NA-free
   complete_row_strt_ind <- max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
   
   ## starting from rows where performance values are present for all teams
   for (i in complete_row_strt_ind:nrow(std_by_date_df)) {
-    x <- as.numeric(std_by_date_df[i, ])  
-    rnks <- ret_ABC_rnks_by_qntl(x)
-    rnkd_std_by_date_df[i, ] <- rnks
+    
+    ## get current standing performance as a vector
+    x <- as.numeric(std_by_date_df[i, ])
+    
+    ## fill in quantile-derivation ranks
+    qntl_rnks <- ret_ABC_rnks_by_qntl(x, higher_num_bttr_perf)
+    qntl_rnkd_std_by_date_df[i, ] <- qntl_rnks
+
+    ## fill in sd-derivation ranks
+    sd_rnks <- ret_ABC_rnks_by_sd(x, higher_num_bttr_perf)
+    sd_rnkd_std_by_date_df[i, ] <- sd_rnks
   }
 
+  ## convert matrix to df
+  qntl_rnkd_std_by_date_df <- as.data.frame(qntl_rnkd_std_by_date_df, stringsAsFactors=FALSE)
+  sd_rnkd_std_by_date_df <- as.data.frame(sd_rnkd_std_by_date_df, stringsAsFactors=FALSE)
+
+  ## add date column  
+  qntl_rnkd_std_by_date_df$date <- as.Date(rownames(qntl_rnkd_std_by_date_df))
+  sd_rnkd_std_by_date_df$date <- as.Date(rownames(sd_rnkd_std_by_date_df))
+
+  ## melt dfs
+  qntl_rnk_df <- melt(qntl_rnkd_std_by_date_df, id.vars='date', 
+                      variable.name='team', value.name='qntl_rnk')
+  sd_rnk_df <- melt(sd_rnkd_std_by_date_df, id.vars='date', 
+                      variable.name='team', value.name='sd_rnk')
+  
+  ## merge two dfs
+  ret_df <- merge(qntl_rnk_df, sd_rnk_df, by=c('team', 'date'))
+    
+  ## un-factor team column
+  ret_df$team <- as.character(ret_df$team)
+  
   ## return
-  return(as.data.frame(rnkd_std_by_date_df))
+  return(ret_df)
 }
 
-x <- create_rnkd_std_by_date(std_by_date_df)
-head(x)

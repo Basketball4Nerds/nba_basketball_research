@@ -10,6 +10,10 @@ master <- subset(master, playoffs==0)
 ## change home/away to H/A for site variable
 master$site <- ifelse(master$site=='home', 'H', 'A')
 
+## un-factor teams (for later, for the left_join() function to work)
+master$team <- as.character(master$team)
+master$o_team <- as.character(master$o_team)
+
 ## create opponent site variable 
 ## this is redundant info but provides programmatic 
 ## convenience for createWinPred() much later
@@ -227,72 +231,19 @@ master$oeff_cum_gen <- master$p_cumsum_gen / master$pos_cumsum_gen * 100
 master$oeffA_cum_gen <- master$pA_cumsum_gen / master$posA_cumsum_gen * 100
 
 
-master_df <- subset(master, season==2012)
-
-
-x <- create_stding_by_date_df(master_df, 'oeff_cum_gen')
-
-head(x)
-remove(gm_dates)
+master_df <- subset(master, season==2013)
+x <- create_rnkd_tm_std_by_date_df(master_df, metric='oeff_cum_gen', higher_num_bttr_perf=TRUE)
+y <- create_rnkd_tm_std_by_date_df(master_df, metric='oeffA_cum_gen', higher_num_bttr_perf=FALSE)
 
 
 
+## ranked-standing-by-date 
+rnkd_tm_std_by_date_df <- ddply(master, 'season', function(x) {
+  ss_rnkd_tm_std_by_date_df <- create_rnkd_tm_std_by_date_df(x, 'oeff_cum_gen', TRUE)
+  ss_rnkd_tm_std_by_date_df
+})
 
 
-
-
-
-
-
-
-
-
-## this function fills in NA 
-
-
-
-for (i in seq_along(nna_index[-1])) {
-  i <- 
-}
-
-# find the day when each team had a game
-# from the 
-
-
-
-
-
-## this function selects 
-subsetLatestTeamRecs <- function(master_df, date) {
-
-  date <- '2000-10-31'
-  date <- ''
-  master_df <- subset(master, season==2000)
-
-
-
-  a <- subset(master_df, n==0)
-  b <- subset(master_df, n==1)
-  c <- subset(master_df, n==2)
-  range(a$date)
-  range(b$date)
-  range(c$date)
-  
-  # ____   _______    ________
-  #   _______   _________
-  season <- getSeasonFrDate(date)
-  gm_sch_df <- master_df[master_df$season==season, c('season', 'date', 'team')]
-  tm_obs_lst <- createTmObLst(gm_sch_df)
-
-
-  tm_obs_lst[[1]]$get_next_gm_date(date)
-  master_df
-  for (team in TEAMS) {
-    
-  }
-
-  
-}
 
 
 ## this function ranks team's offensive/defensive efficiency by comparing 
