@@ -626,53 +626,66 @@ create_empty_df_copy <- function(df) {
 ## rank-standing-by-date df
 create_rnkd_tm_std_by_date_df <- function(master_df, metric, higher_num_bttr_perf) {
 
-  ## create standing-by-date df (consists of numeric values)
-  std_by_date_df <- create_std_by_date_df(master_df, metric)
-  
-  ## initialize two ranked-standings-by-date dfs 
-  ## by copying dimensions from original df
-  qntl_rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df)  # quantile derivation
-  sd_rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df)  # standard deviation derivation
-
-  ## index where all row values are filled and NA-free
-  complete_row_strt_ind <- max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
-  
-  ## starting from rows where performance values are present for all teams
-  for (i in complete_row_strt_ind:nrow(std_by_date_df)) {
+  ## apply the following lines of code by season
+  ms_df <- ddply(master_df, 'season', function(ss_df) {
     
-    ## get current standing performance as a vector
-    x <- as.numeric(std_by_date_df[i, ])
+    ## create standing-by-date df (consists of numeric values)
+    std_by_date_df <- create_std_by_date_df(ss_df, metric)
     
-    ## fill in quantile-derivation ranks
-    qntl_rnks <- ret_ABC_rnks_by_qntl(x, higher_num_bttr_perf)
-    qntl_rnkd_std_by_date_df[i, ] <- qntl_rnks
+    ## initialize two ranked-standings-by-date dfs 
+    ## by copying dimensions from original df
+    qntl_rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df)  # quantile derivation
+    sd_rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df)  # standard deviation derivation
+    
+    ## index where all row values are filled and NA-free
+    complete_row_strt_ind <- max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
+    
+    ## starting from rows where performance values are present for all teams
+    for (i in complete_row_strt_ind:nrow(std_by_date_df)) {
+      
+      ## get current standing performance as a vector
+      x <- as.numeric(std_by_date_df[i, ])
+      
+      ## fill in quantile-derivation ranks
+      qntl_rnks <- ret_ABC_rnks_by_qntl(x, higher_num_bttr_perf)
+      qntl_rnkd_std_by_date_df[i, ] <- qntl_rnks
+      
+      ## fill in sd-derivation ranks
+      sd_rnks <- ret_ABC_rnks_by_sd(x, higher_num_bttr_perf)
+      sd_rnkd_std_by_date_df[i, ] <- sd_rnks
+    }
+    
+    ## convert matrix to df
+    qntl_rnkd_std_by_date_df <- as.data.frame(qntl_rnkd_std_by_date_df, stringsAsFactors=FALSE)
+    sd_rnkd_std_by_date_df <- as.data.frame(sd_rnkd_std_by_date_df, stringsAsFactors=FALSE)
+    
+    ## add date column  
+    qntl_rnkd_std_by_date_df$date <- as.Date(rownames(qntl_rnkd_std_by_date_df))
+    sd_rnkd_std_by_date_df$date <- as.Date(rownames(sd_rnkd_std_by_date_df))
+    
+    ## get rank nomenclature prefix from metric
+    rnk_nm_prefix <- strsplit(metric, '_')[[1]][1]
+    
+    ## melt dfs
+    qntl_rnk_df <- melt(qntl_rnkd_std_by_date_df, 
+                        id.vars='date', variable.name='team', 
+                        value.name=paste0(rnk_nm_prefix, '_qntl_rnk'))
+    sd_rnk_df <- melt(sd_rnkd_std_by_date_df, 
+                      id.vars='date', variable.name='team', 
+                      value.name=paste0(rnk_nm_prefix, '_sd_rnk'))
+    
+    ## merge two dfs
+    mrgd_df <- merge(qntl_rnk_df, sd_rnk_df, by=c('team', 'date'))
+    
+    ## return df for single season
+    mrgd_df
+  })
 
-    ## fill in sd-derivation ranks
-    sd_rnks <- ret_ABC_rnks_by_sd(x, higher_num_bttr_perf)
-    sd_rnkd_std_by_date_df[i, ] <- sd_rnks
-  }
-
-  ## convert matrix to df
-  qntl_rnkd_std_by_date_df <- as.data.frame(qntl_rnkd_std_by_date_df, stringsAsFactors=FALSE)
-  sd_rnkd_std_by_date_df <- as.data.frame(sd_rnkd_std_by_date_df, stringsAsFactors=FALSE)
-
-  ## add date column  
-  qntl_rnkd_std_by_date_df$date <- as.Date(rownames(qntl_rnkd_std_by_date_df))
-  sd_rnkd_std_by_date_df$date <- as.Date(rownames(sd_rnkd_std_by_date_df))
-
-  ## melt dfs
-  qntl_rnk_df <- melt(qntl_rnkd_std_by_date_df, id.vars='date', 
-                      variable.name='team', value.name='qntl_rnk')
-  sd_rnk_df <- melt(sd_rnkd_std_by_date_df, id.vars='date', 
-                      variable.name='team', value.name='sd_rnk')
   
-  ## merge two dfs
-  ret_df <- merge(qntl_rnk_df, sd_rnk_df, by=c('team', 'date'))
-    
   ## un-factor team column
-  ret_df$team <- as.character(ret_df$team)
+  ms_df$team <- as.character(ms_df$team)
   
   ## return
-  return(ret_df)
+  return(ms_df)
 }
 

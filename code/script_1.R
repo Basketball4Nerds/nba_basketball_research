@@ -224,34 +224,36 @@ master <- addWinPcCols(master)
 master <- addCumSumCols(master, cols=c('p', 'pA', 'pos', 'posA'), 
                         agg_vars=c('team', 'season'), new_colnm_apnd_str='gen')
 
-## cumulative offensive efficiency: points per possesion x100
+## general up-to-date offensive efficiency: points per possesion x100
 master$oeff_cum_gen <- master$p_cumsum_gen / master$pos_cumsum_gen * 100
 
-## opponent cumulative offensive efficiency: points per possession x100
+## general up-to-date opponent offensive efficiency: points per possession x100
 master$oeffA_cum_gen <- master$pA_cumsum_gen / master$posA_cumsum_gen * 100
 
+## add general cumulative sum columns for FGM, FGA, FGMA, FGAA
+master <- addCumSumCols(master, cols=c('FGM', 'FGA', 'FGMA', 'FGAA'), 
+                        agg_vars=c('team', 'season'), new_colnm_apnd_str='gen')
 
-master_df <- subset(master, season==2013)
-x <- create_rnkd_tm_std_by_date_df(master_df, metric='oeff_cum_gen', higher_num_bttr_perf=TRUE)
-y <- create_rnkd_tm_std_by_date_df(master_df, metric='oeffA_cum_gen', higher_num_bttr_perf=FALSE)
+## general up-to-date FGP
+master$FGP_cum_gen <- master$FGM_cumsum_gen / master$FGA_cumsum_gen
 
+## general up-to-date FGPA
+master$FGPA_cum_gen <- master$FGMA_cumsum_gen / master$FGAA_cumsum_gen
 
-
-## ranked-standing-by-date 
-rnkd_tm_std_by_date_df <- ddply(master, 'season', function(x) {
-  ss_rnkd_tm_std_by_date_df <- create_rnkd_tm_std_by_date_df(x, 'oeff_cum_gen', TRUE)
-  ss_rnkd_tm_std_by_date_df
-})
-
-
-
-
-## this function ranks team's offensive/defensive efficiency by comparing 
-## current relative standing with other teams
-addEffGradeCols <- function(master_df, ) {
+## this function adds A-B-C offensive/defensive rank standings columns
+addEffRnkCols <- function(master_df) {
   
-  ## 
+  ## create ranked-team-standing-by-date df for offensive and defensive efficiency
+  a <- create_rnkd_tm_std_by_date_df(master_df, metric='oeff_cum_gen', higher_num_bttr_perf=TRUE)
+  b <- create_rnkd_tm_std_by_date_df(master_df, metric='oeffA_cum_gen', higher_num_bttr_perf=FALSE)
+  c <- create_rnkd_tm_std_by_date_df(master_df, metric='FGP_cum_gen', higher_num_bttr_perf=TRUE)
+  d <- create_rnkd_tm_std_by_date_df(master_df, metric='FGPA_cum_gen', higher_num_bttr_perf=FALSE)
   
+  ## merge those dfs onto original master df
+  master_df <- merge()
+  
+  ## return
+  return(master_df)
 }
 
 
