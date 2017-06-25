@@ -218,6 +218,11 @@ x <- subset(master, season==2012 & team=='Lakers')
 y <- x[ , c('season', 'date', 'team', 'o_team', 'site', 'n', 'won')]
 
 
+z <- add_cum_cnt_cols(y, cols=c('w', 'l', 'n'),
+                      agg_vars=c('team', 'season', 'site'),
+                      new_colnm_apnd_str='ssp')
+
+
 y <- addCumSumCols(x, cols='n', agg_vars=c('team', 'season', 'site'), new_colnm_apnd_str='gen')
 head(y)
 tail(y)

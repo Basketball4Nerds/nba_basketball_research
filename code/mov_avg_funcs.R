@@ -151,8 +151,8 @@ addMaCols <- function(df, cols, type=c('SMA', 'EMA', 'cummean'), n=10,
 
 
 
-## 
-add_cum_cnt_cols <- function(df, cols, 
+## this function 
+add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'), 
                        agg_vars=c('team', 'season'), 
                        new_colnm_apnd_str='') {
   
@@ -172,13 +172,16 @@ add_cum_cnt_cols <- function(df, cols,
       run_cnt_colnm <- paste0(col, '_', new_colnm_apnd_str)
       run_cnt_colnm <- gsub('__', '_', run_cnt_colnm)
 
-      ## calculate running counts and add as column
-      if ('w' %in% cols)
-        df[[run_cnt_colnm]] <- c(0, cumsum(df$won)[-n])
-      if ('l' %in% cols)
-        df[[run_cnt_colnm]] <- c(0, cumsum(!x$won)[-n])
-      if ('n' %in% cols)
-        df[[run_cnt_colnm]] <- seq(0, n-1)
+      ## calculate running counts
+      if (col=='w')
+        run_cnts <- c(0, cumsum(df$won)[-n])
+      else if (col=='l')
+        run_cnts <- c(0, cumsum(!df$won)[-n])
+      else if (col=='n')
+        run_cnts <- seq(0, n-1)
+      
+      ## add run count as a column
+      df[[run_cnt_colnm]] <- run_cnts
     }
     
     ## return
@@ -194,10 +197,6 @@ add_cum_cnt_cols <- function(df, cols,
   return(output_df)
   
 }
-z <- add_cum_cnt_cols(y, cols=c('w', 'l', 'n'),
-                      agg_vars=c('team', 'season', 'site'),
-                      new_colnm_apnd_str='ssp')
-head(z)
 
 
 ## this function adds cumulative sum columns
