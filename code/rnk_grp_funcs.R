@@ -227,11 +227,11 @@ returnCollectiveGrading <- function(gradedRnkM, pValThres) {
 }
 
 
-ddply(master, 'season', function(x) {
-  print(table(x$OG))
-  print(x$season[1])
-  print('---')
-})
+# ddply(master, 'season', function(x) {
+#   print(table(x$OG))
+#   print(x$season[1])
+#   print('---')
+# })
 
 
 ## this function adds letter grade column based on 

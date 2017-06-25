@@ -233,121 +233,10 @@ convertParamsDfToLst <- function(params_df) {
 }
 
 
-## this function takes master_df, var_df, by, and n_min
-## and output a vector of win predictions
-createWinPred <- function(master_df, params) {
-
-  ## get parameters
-  metric <- params$metric
-  by <- params$by
-  n_min <- params$n_min
-  min_diff <- abs(params$min_diff)
-
-  ## stop if a given metric cannot be variable-specific (e.g. site cannot be varied by conference)
-  if (metric %in% c('site', 'line', 'mtch_mrgn', 'j', 'rst')) 
-    if (!all(is.na(by))) stop('Invalid params given. The metric cannot be variable-specific.')
-
-  ## stop if minimum differential was specified for site metric  
-  if (metric=='site')
-    if (!is.na(min_diff)) stop('Invalid params given. min_diff cannot be specified with site metric.')
-
-  ## if 'by' variable is not specified and not applicable,
-  ## make simple predictions without 'by' variable 
-  if (all(is.na(by))) {
-    
-    ## for site metric, predict that home team will win
-    if (metric=='site') {
-      pred <- master_df$site=='H'
-    }
-    
-    ## predict that favored team will win
-    else if (metric=='line') {
-      if (is.na(min_diff)) {
-        pred <- ifelse(master_df$line < 0, TRUE, 
-                       ifelse(master_df$line > 0, FALSE, NA))
-      } else {
-        pred <- ifelse(master_df$line <= -min_diff, TRUE, 
-                       ifelse(master_df$line >= min_diff, FALSE, NA))
-      }
-    }
-    
-    ## predict that whichever team who has won more games 
-    ## against the other team will win
-    else if (metric=='mtch_mrgn') {
-      if (is.na(min_diff))   {
-        pred <- ifelse(master_df$mtch_mrgn > 0 , TRUE, 
-                       ifelse(master_df$mtch_mrgn < 0, FALSE, NA))
-      } else {
-        pred <- ifelse(master_df$mtch_mrgn >= min_diff, TRUE, 
-                       ifelse(master_df$mtch_mrgn <= -min_diff, FALSE, NA))
-      }
-    } 
-    
-    ## predict that whichever team with higher metric will win
-    else if (metric %in% c('j', 'rst', 'wPc')) {
-      
-      ## create opponent metric
-      o_metric <- paste0('o_', metric)
-      
-      ## predict that whichever team that has more/higher rest, J, or win percentage will win the game
-      if (is.na(min_diff)) {
-        pred <- ifelse(master_df[[metric]] > master_df[[o_metric]], TRUE,
-                       ifelse(master_df[[metric]] < master_df[[o_metric]], FALSE, NA))
-      } else {
-        pred <- ifelse(master_df[[metric]] - master_df[[o_metric]] >= min_diff, TRUE,
-                       ifelse(master_df[[metric]] - master_df[[o_metric]] <= -min_diff, FALSE, NA))
-      }
-    } 
-    
-    ## stop if wrong metric given
-    else {
-      stop('Metric not found in the master dataset.')
-    }      
-    
-    ## filter out predictions by using min n-game threshold
-    pred[master_df$n < n_min | master_df$o_n < n_min] <- NA
-  }
 
 
-  ## if 'by' variable is specified and applicable,
-  ## make variable-specific (e.g. cnf-specific) predictions
-  else {
-    
-    ## create var_df to obtain rows of variations
-    var_df <- createVarDf(by=by)
 
-    ## initialize prediction values
-    pred <- rep(NA, nrow(master_df))
-    
-    ## for each variation listed in var_df
-    for (i in 1:nrow(var_df)) {
-      var_df_row <- var_df[i, ]
 
-      ## select team and opponent metrics
-      if (metric=='wPc') {
-        metric_col <- var_df_row$wPcCol
-        o_metric_col <- var_df_row$o_wPcCol
-      } else if (metric=='sma10') {
-        next  # skip for not; come back later and modify this part
-      }
-
-      ## create index of metric comparisons to make
-      ind <- createVarSpIndex(master_df, var_df_row, n_min)
-
-      ## make predictions for the applicable index
-      if (is.na(min_diff)) {
-        pred[ind] <- ifelse(master_df[[metric_col]] > master_df[[o_metric_col]], TRUE,
-                            ifelse(master_df[[metric_col]] < master_df[[o_metric_col]], FALSE, NA))[ind]
-      } else {
-        pred[ind] <- ifelse(master_df[[metric_col]] - master_df[[o_metric_col]] >= min_diff, TRUE,
-                            ifelse(master_df[[metric_col]] - master_df[[o_metric_col]] <= -min_diff, FALSE, NA))[ind]
-      }
-    }
-  }    
-
-  ## return
-  return(pred)
-}
 
 
 ## this function takes in a number of vectors (in a list or df) and 
@@ -388,6 +277,8 @@ createWinPredAccDf <- function(master_df, params_df, rm.irr.cols=FALSE) {
   ## for each list of parameters
   for (params in params_lst) {
     
+    print(params)
+    
     ## make prediction, calculate accuracy, calculate sample size
     pred <- createWinPred(master_df, params)
     cnf_mtx <- table(master_df$won, pred)
@@ -397,6 +288,7 @@ createWinPredAccDf <- function(master_df, params_df, rm.irr.cols=FALSE) {
     ## append result to vectors
     acc_vec <- c(acc_vec, acc)
     n_pred_vec <- c(n_pred_vec, n_pred)
+    print('suc')
   }
 
   ## create return df
@@ -687,5 +579,25 @@ create_rnkd_tm_std_by_date_df <- function(master_df, metric, higher_num_bttr_per
   
   ## return
   return(ms_df)
+}
+
+
+## this function adds A-B-C offensive/defensive rank standings columns
+add_rnk_cols <- function(master_df) {
+  
+  ## create ranked-team-standing-by-date df for offensive and defensive efficiency
+  a <- create_rnkd_tm_std_by_date_df(master_df, metric='oeff_cum_gen', higher_num_bttr_perf=TRUE)
+  b <- create_rnkd_tm_std_by_date_df(master_df, metric='oeffA_cum_gen', higher_num_bttr_perf=FALSE)
+  c <- create_rnkd_tm_std_by_date_df(master_df, metric='FGP_cum_gen', higher_num_bttr_perf=TRUE)
+  d <- create_rnkd_tm_std_by_date_df(master_df, metric='FGPA_cum_gen', higher_num_bttr_perf=FALSE)
+  
+  ## merge those dfs onto original master df
+  master_df <- left_join(master_df, a, by=c('season', 'team', 'date'))
+  master_df <- left_join(master_df, b, by=c('season', 'team', 'date'))
+  master_df <- left_join(master_df, c, by=c('season', 'team', 'date'))
+  master_df <- left_join(master_df, d, by=c('season', 'team', 'date'))
+  
+  ## return
+  return(master_df)
 }
 

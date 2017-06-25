@@ -1,18 +1,12 @@
-#### analysis of game pace
+#### analysis of game pace distribution
 
-## examine possession distribution
 range(master$pos)
 quantile(master$pos)
 tapply(master$pos, master$season, quantile)
 
-## examine points-per-possession distribution
-range(master$PPP)
-quantile(range(master$PPP))
-tapply(master$PPP, master$season, quantile)
-
-
-
-
+mean(master$pos)
+sd(master$pos)
+tapply(master$pos, master$season, mean)
 
 
 
@@ -36,7 +30,6 @@ SRWPA_df
 
 #### examine win prediction accuracy with simple metrics comparison
 #### (of site, line, match margin, and rest)
-
 smpl_params_df <- expand.grid(metric=c('site', 'line', 'mtch_mrgn', 'rst'), by=NA, n_min=0, min_diff=NA)
 smpl_pred_acc_df <- createWinPredAccDf(master_df, smpl_params_df, rm.irr.cols=TRUE)
 sortByCol(smpl_pred_acc_df, col='acc', asc=FALSE)
@@ -46,9 +39,9 @@ sortByCol(smpl_pred_acc_df, col='acc', asc=FALSE)
 
 #### examine win prediction accuracy with simple metrics comparison (of j and wPc)
 #### with differing minimum n-game thresholds
-
 smpl_params_df2 <- expand.grid(metric=c('j', 'wPc'), by=NA, n_min=c(5, 10, 20, 30), min_diff=NA)
 smpl_pred_acc_df2 <- createWinPredAccDf(master_df, smpl_params_df2, rm.irr.cols=TRUE)
+smpl_pred_acc_df2
 sortByCol(smpl_pred_acc_df2, col='acc', asc=FALSE)
 
 
@@ -60,11 +53,13 @@ varsp_params_df <- expand.grid(metric = 'wPc',
                                          'cnf', 
                                          'OG', 
                                          'DG', 
-                                         c('site', 'cnf'), 
-                                         c('site', 'OG'), 
-                                         c('site', 'DG')), 
+                                         c('site', 'cnf')), 
                                n_min = c(5, 10), 
                                min_diff = NA)
+varsp_params_df
+
+
+
 varsp_pred_acc_df <- createWinPredAccDf(master_df, varsp_params_df, rm.irr.cols=TRUE)
 sortByCol(varsp_pred_acc_df, col='acc', asc=FALSE)
 

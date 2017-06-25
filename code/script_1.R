@@ -214,15 +214,45 @@ master <- round_df(master, 3)
 write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
 
+x <- subset(master, season==2012 & team=='Lakers')
+y <- x[ , c('season', 'date', 'team', 'o_team', 'site', 'n', 'won')]
+
+
+y <- addCumSumCols(x, cols='n', agg_vars=c('team', 'season', 'site'), new_colnm_apnd_str='gen')
+head(y)
+tail(y)
+
+
+
+
 ## add running count columns of variable-specific wins and number of games played
 master <- addRunSumCols(master, by=c('site', 'cnf'), cnt_type=c('w', 'n'))
 
 ## add win percentage columns
 master <- addWinPcCols(master)
 
+
 ## add general cumulative sum columns for p, pA, pos, posA
-master <- addCumSumCols(master, cols=c('p', 'pA', 'pos', 'posA'), 
+cum_cols <- c('p', 'pA', 'pos', 'posA', 'FGM', 'FGA', 'n')
+master <- addCumSumCols(master, cols=cum_col, 
                         agg_vars=c('team', 'season'), new_colnm_apnd_str='gen')
+
+
+
+
+cum_cols <- c('n')
+cum_cols <- c('w')
+
+
+
+
+
+y <- addCumSumCols(x, 
+                   cols=cum_cols, 
+                   agg_vars=c('team', 'season', 'site'), 
+                   new_colnm_apnd_str='ssp')
+
+
 
 ## general up-to-date offensive efficiency: points per possesion x100
 master$oeff_cum_gen <- master$p_cumsum_gen / master$pos_cumsum_gen * 100
@@ -240,31 +270,28 @@ master$FGP_cum_gen <- master$FGM_cumsum_gen / master$FGA_cumsum_gen
 ## general up-to-date FGPA
 master$FGPA_cum_gen <- master$FGMA_cumsum_gen / master$FGAA_cumsum_gen
 
-## this function adds A-B-C offensive/defensive rank standings columns
-addEffRnkCols <- function(master_df) {
-  
-  ## create ranked-team-standing-by-date df for offensive and defensive efficiency
-  a <- create_rnkd_tm_std_by_date_df(master_df, metric='oeff_cum_gen', higher_num_bttr_perf=TRUE)
-  b <- create_rnkd_tm_std_by_date_df(master_df, metric='oeffA_cum_gen', higher_num_bttr_perf=FALSE)
-  c <- create_rnkd_tm_std_by_date_df(master_df, metric='FGP_cum_gen', higher_num_bttr_perf=TRUE)
-  d <- create_rnkd_tm_std_by_date_df(master_df, metric='FGPA_cum_gen', higher_num_bttr_perf=FALSE)
-  
-  ## merge those dfs onto original master df
-  master_df <- merge()
-  
-  ## return
-  return(master_df)
-}
-
-
-
 ## create another backup
 write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 
 
+
+# metrics: 
+# 'rqP', 'rqPA'
+# 'oeff', 'oeffA'
+# 'FGP', 'FGPA'
+# 'wPc'
+# 'pos', 'posA'
+names(master)
+
+
+
+## CONTINUE HERE
+
+
 ## define columns for SMA calculations
-smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
+# smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
+smaCols <- c('p')
 
 ## add SMA columns 
 
@@ -272,11 +299,10 @@ smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
 ## opponent conference specific
 ## opponent rank specific
 
-
 y <- master[master$season==1995, c('season', 'date', 'team', 'o_team', 'won', 'site', 'o_cnf', smaCols)]
 
 ## general
-y0 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season'), colApndStr='_gen')
+y0 <- addMaCols(df=y, type='sma', n=10, cols='p', aggVars=c('team', 'season'), colApndStr='_gen')
 
 ## site-specific
 y1 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'site'), colApndStr='_ssp')

@@ -148,6 +148,58 @@ addMaCols <- function(df, cols, type=c('SMA', 'EMA', 'cummean'), n=10,
 }
 
 
+
+
+
+## 
+add_cum_cnt_cols <- function(df, cols, 
+                       agg_vars=c('team', 'season'), 
+                       new_colnm_apnd_str='') {
+  
+  ## recursionn base case
+  if (is.null(agg_vars)) {
+    
+    ## order the base subsets
+    df <- df[order(df$date), ]
+    
+    ## calculate nrow
+    n <- nrow(df)
+    
+    ## for each column
+    for (col in cols) {
+      
+      ## create new column name
+      run_cnt_colnm <- paste0(col, '_', new_colnm_apnd_str)
+      run_cnt_colnm <- gsub('__', '_', run_cnt_colnm)
+
+      ## calculate running counts and add as column
+      if ('w' %in% cols)
+        df[[run_cnt_colnm]] <- c(0, cumsum(df$won)[-n])
+      if ('l' %in% cols)
+        df[[run_cnt_colnm]] <- c(0, cumsum(!x$won)[-n])
+      if ('n' %in% cols)
+        df[[run_cnt_colnm]] <- seq(0, n-1)
+    }
+    
+    ## return
+    return(df)
+  }
+
+  ## for each aggregation subset, apply ad
+  output_df <- ddply(df, agg_vars, function(x) {
+    add_cum_cnt_cols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str)
+  })
+  
+  ## return
+  return(output_df)
+  
+}
+z <- add_cum_cnt_cols(y, cols=c('w', 'l', 'n'),
+                      agg_vars=c('team', 'season', 'site'),
+                      new_colnm_apnd_str='ssp')
+head(z)
+
+
 ## this function adds cumulative sum columns
 addCumSumCols <- function(df, cols, agg_vars=c('team', 'season'), 
                           new_colnm_apnd_str='', rnd_dgt=3) {
@@ -193,6 +245,3 @@ addCumSumCols <- function(df, cols, agg_vars=c('team', 'season'),
   ## return
   return(output_df)
 }
-  
-  
-  
