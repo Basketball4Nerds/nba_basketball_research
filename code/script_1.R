@@ -213,85 +213,56 @@ master <- round_df(master, 3)
 ## create backup
 write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
-
-x <- subset(master, season==2012 & team=='Lakers')
-y <- x[ , c('season', 'date', 'team', 'o_team', 'site', 'n', 'won')]
-
-
-z <- add_cum_cnt_cols(y, cols=c('w', 'l', 'n'),
-                      agg_vars=c('team', 'season', 'site'),
-                      new_colnm_apnd_str='ssp')
-
-
-y <- addCumSumCols(x, cols='n', agg_vars=c('team', 'season', 'site'), new_colnm_apnd_str='gen')
-head(y)
-tail(y)
+# master$date <- as.Date(master$date)
 
 
 
+#### add general cumulative sum columns for p, pA, pos, posA
+cum_cols <- c('p', 'pA', 'pos', 'posA', 'FGM', 'FGA', 'FGMA', 'FGAA', 'rqP', 'rqPA')
+master <- add_cum_sum_cols(master, cols=cum_cols, 
+                           new_colnm_apnd_str='gen')
 
-## add running count columns of variable-specific wins and number of games played
-master <- addRunSumCols(master, by=c('site', 'cnf'), cnt_type=c('w', 'n'))
-
-## add win percentage columns
-master <- addWinPcCols(master)
-
-
-## add general cumulative sum columns for p, pA, pos, posA
-cum_cols <- c('p', 'pA', 'pos', 'posA', 'FGM', 'FGA', 'n')
-master <- addCumSumCols(master, cols=cum_col, 
-                        agg_vars=c('team', 'season'), new_colnm_apnd_str='gen')
-
-
-
-
-cum_cols <- c('n')
-cum_cols <- c('w')
-
-
-
-
-
-y <- addCumSumCols(x, 
-                   cols=cum_cols, 
-                   agg_vars=c('team', 'season', 'site'), 
-                   new_colnm_apnd_str='ssp')
-
-
-
-## general up-to-date offensive efficiency: points per possesion x100
+## general offensive efficiency: points per possesion x100
 master$oeff_cum_gen <- master$p_cumsum_gen / master$pos_cumsum_gen * 100
 
-## general up-to-date opponent offensive efficiency: points per possession x100
+## general opponent offensive efficiency: points per possession x100
 master$oeffA_cum_gen <- master$pA_cumsum_gen / master$posA_cumsum_gen * 100
 
-## add general cumulative sum columns for FGM, FGA, FGMA, FGAA
-master <- addCumSumCols(master, cols=c('FGM', 'FGA', 'FGMA', 'FGAA'), 
-                        agg_vars=c('team', 'season'), new_colnm_apnd_str='gen')
-
-## general up-to-date FGP
+## general field goal percentage
 master$FGP_cum_gen <- master$FGM_cumsum_gen / master$FGA_cumsum_gen
 
-## general up-to-date FGPA
+## general field goal percentage allowed
 master$FGPA_cum_gen <- master$FGMA_cumsum_gen / master$FGAA_cumsum_gen
+
+## add columns for offensive and defensive rankings
+master <- add_rnk_cols(master, 
+                       metric=c('oeff_cum_gen', 'oeffA_cum_gen'), 
+                       higher_num_bttr_perf=c(TRUE, FALSE),
+                       method='qntl')
 
 ## create another backup
 write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
 
 
 
-# metrics: 
+## vary-by-variable win percentage
+master <- add_vary_by_wpc_cols(master, 
+                               vary_by=c('site', 'cnf', 
+                                         'oeff_qntl_rnk', 
+                                         'oeffA_qntl_rnk'))
+
+## vary-by-variable performance:
 # 'rqP', 'rqPA'
 # 'oeff', 'oeffA'
 # 'FGP', 'FGPA'
 # 'wPc'
 # 'pos', 'posA'
-names(master)
+min(master_df$season)
 
 
 
-## CONTINUE HERE
 
 
 ## define columns for SMA calculations

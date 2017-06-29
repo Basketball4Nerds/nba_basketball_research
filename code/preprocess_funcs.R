@@ -2,7 +2,7 @@
 
 ## this function takes in df and "fills in" the selected metrics
 ## for opponent by join method
-fillInOpCols <- function(df, cols) {
+fill_in_opp_cols <- function(df, cols) {
   
   ## make a partial copy of df
   df_pc <- df[ , c('date', 'team', cols)]
@@ -22,7 +22,8 @@ fillInOpCols <- function(df, cols) {
 ## this function adds running count columns of wins/losses 
 ## as well as running sum columns of other numeric values
 ## by home/away, opponent def/off rank, opponent conf, etc.
-addVarSpRunSumCols <- function(master_df, cols, by=list('site', 'cnf')) {
+add_varsp_runsum_cols <- function(master_df, cols, 
+                                  by=list('site', 'cnf'), add_opp_cols) {
   
   ## original cols
   orig_cols <- colnames(master_df)
@@ -71,8 +72,6 @@ addVarSpRunSumCols <- function(master_df, cols, by=list('site', 'cnf')) {
             x[ , paste0(col, tm_tag)] <- c(0, cumsum(target_vals)[-n])
           }
         }
-
-
       }
     }
     
@@ -80,20 +79,24 @@ addVarSpRunSumCols <- function(master_df, cols, by=list('site', 'cnf')) {
     x
   })
   
-  ## get new columns created
-  new_cols <- setdiff(colnames(master_df), orig_cols)
-  
-  ## create win percentage columns for opponent
-  master_df <- fillInOpCols(master_df, cols=new_cols)
+  ## add opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(master_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    master_df <- fill_in_opp_cols(master_df, cols=new_cols)
+  }
   
   ## return 
   return(master_df)
 }
 
 
-## this function add win percentage columns
-addWinPcCols <- function(df) {
-  
+## this function adds win percentage columns from w, n columns
+add_wpc_cols_fr_w_n_cols <- function(df, rnd_dgts=3, add_opp_cols=FALSE) {
+
   ## get original columns
   orig_cols <- colnames(df)
   
@@ -104,28 +107,57 @@ addWinPcCols <- function(df) {
   gm_cnt_cols <- colnames(df)[grepl('^n_', colnames(df))]  
   
   ## create win percent column names
-  win_pc_cols <- gsub('^w', 'wPc', win_cnt_cols)
+  win_pc_cols <- gsub('^w', 'wpc', win_cnt_cols)
   
   ## for each win count column name  
   for (i in 1:length(win_cnt_cols)) {
     win_cnt_col <- win_cnt_cols[i]
     gm_cnt_col <- gm_cnt_cols[i]
     win_pc_col <- win_pc_cols[i]
-    df[win_pc_col] <- df[win_cnt_col] / df[gm_cnt_col]
+    df[win_pc_col] <- round(df[win_cnt_col] / df[gm_cnt_col], rnd_dgts)
   }
   
   ## replace NaN w/ NA
   df[is.nan.data.frame(df)] <- NA
   
-  ## get new columns created
-  new_cols <- setdiff(colnames(df), orig_cols)
-  
-  ## create win percentage columns for opponent
-  df <- fillInOpCols(df, cols=new_cols)
+  ## fill in opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    df <- fill_in_opp_cols(df, cols=new_cols)
+  }
   
   ## return
   return(df)
 }
+
+
+## this function adds varied-by-variable win percentage columns to master df
+add_vary_by_wpc_cols <- function(master_df, vary_by, rnd_dgts=3, add_opp_cols=FALSE) {
+
+  ## for each vary-by variable
+  for (var in vary_by) {
+    
+    ## add varied-by-variable cumulative win count (w) and game count (n)
+    master_df <- add_cum_cnt_cols(master_df, 
+                                  cols=c('w', 'n'),
+                                  agg_vars=var,
+                                  new_colnm_apnd_str=tocamel(paste0(var, '_sp')))
+  }
+  
+  ## create and add win percentage columns from w, n columns
+  master_df <- add_wpc_cols_fr_w_n_cols(master_df, rnd_dgts, add_opp_cols)
+    
+  ## remove win and loss count columns
+  master_df <- master_df[ , !(grepl('^w_', names(master_df)) | grepl('^l_', names(master_df)))]
+  
+  ## return
+  return(master_df)
+}
+
 
 
 ## function to add two columns (j and o_j) for propagation juice

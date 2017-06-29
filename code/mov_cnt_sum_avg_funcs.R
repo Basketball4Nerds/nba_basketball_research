@@ -1,7 +1,7 @@
 ############ MOVING AVERAGE FUNCTIONS ################
 
 ## this function calculates moving averages
-calcMovAvgVals <- function(vals, type=c('SMA', 'EMA', 'cummean'), n=NULL, coverLessThanN=TRUE) {
+calc_movavg_vals <- function(vals, type=c('SMA', 'EMA', 'cummean'), n=NULL, cover_less_than_n=TRUE) {
   
   ## specify moving average type
   type <- type[1]
@@ -29,14 +29,14 @@ calcMovAvgVals <- function(vals, type=c('SMA', 'EMA', 'cummean'), n=NULL, coverL
   ## regular moving average;
   ## doesn't provide moving average values for indices less than n;
   ## e.g. if n=5, no moving average values from 1st through 4th
-  if (!coverLessThanN) {
+  if (!cover_less_than_n) {
     
     ## if there are less numbers in the vector than n
     ## to average over, then moving average is a vector of NAs
-    if (len < n) { runVals <- rep(NA, len) } 
+    if (len < n) { run_vals <- rep(NA, len) } 
     
     ## calculate MAs under normal condition
-    else { runVals <- do.call(type, args=list(x=vals, n=n)) }
+    else { run_vals <- do.call(type, args=list(x=vals, n=n)) }
   }
   
   ## modified moving average;
@@ -55,32 +55,38 @@ calcMovAvgVals <- function(vals, type=c('SMA', 'EMA', 'cummean'), n=NULL, coverL
     if (len <= n) { n <- len }
     
     ## first calculate MA normally
-    runVals <- do.call(type, args=list(x=vals, n=n))
+    run_vals <- do.call(type, args=list(x=vals, n=n))
     
     ## then go back and fill in i < n entries
-    runVals[1] <- vals[1]
+    run_vals[1] <- vals[1]
     for (i in 2:(n-1)) {
       args <- list(x=vals[1:i], n=i)
-      runVal <- do.call(type, args=args)[i]
-      runVals[i] <- runVal
+      run_val <- do.call(type, args=args)[i]
+      run_vals[i] <- run_val
     }
   }
   
   ## return  
-  return(runVals)
+  return(run_vals)
 }
 
 
-## this function adds new columns for moving averages
+## this function adds new columns for moving averages 
 ## (e.g. simple moving averages or running standard deviations)
-addMaCols <- function(df, cols, type=c('SMA', 'EMA', 'cummean'), n=10, 
-                      coverLessThanN=TRUE, aggVars=NULL, colApndStr='', rndDgt=3) {
+add_movavg_cols <- function(df, cols, 
+                            type=c('SMA', 'EMA', 'cummean'), 
+                            n=10, cover_less_than_n=TRUE, 
+                            agg_vars=NULL, new_colnm_apnd_str='', 
+                            rnd_dgt=3, add_opp_cols=FALSE) {
   
   ## set type
   type <- type[1]
   
+  ## get original column names
+  orig_cols <- names(df)
+  
   ## base case
-  if (is.null(aggVars)) {
+  if (is.null(agg_vars)) {
     
     ## order the base subsets
     df <- df[order(df$date), ]
@@ -92,19 +98,19 @@ addMaCols <- function(df, cols, type=c('SMA', 'EMA', 'cummean'), n=10,
       if (type=='cummean') {
         
         ## calculate MA
-        runVals <- calcMovAvgVals(vals=df[[col]], type=type)
+        run_vals <- calc_movavg_vals(vals=df[[col]], type=type)
         
         ## offset (shift) MA vals by 1
-        runVals <- c(NA, runVals[-length(runVals)])
+        run_vals <- c(NA, run_vals[-length(run_vals)])
         
         ## round MA values
-        runVals <- round(runVals, rndDgt)
+        run_vals <- round(run_vals, rnd_dgt)
         
         ## create new column name
-        runValsColNm <- paste0(col, '_', tolower(type), colApndStr)
+        run_valsColNm <- paste0(col, '_', tolower(type), new_colnm_apnd_str)
         
         ## add MA vals to df as column
-        df[[runValsColNm]] <- runVals
+        df[[run_valsColNm]] <- run_vals
       }
       
       ## for SMA and EMA
@@ -114,19 +120,19 @@ addMaCols <- function(df, cols, type=c('SMA', 'EMA', 'cummean'), n=10,
         for (i in n) {
           
           ## calculate MA
-          runVals <- calcMovAvgVals(vals=df[[col]], n=i, coverLessThanN=coverLessThanN)
+          run_vals <- calc_movavg_vals(vals=df[[col]], n=i, cover_less_than_n=cover_less_than_n)
           
           ## offset (shift) MA vals by 1
-          runVals <- c(NA, runVals[-length(runVals)])
+          run_vals <- c(NA, run_vals[-length(run_vals)])
           
           ## round MA values
-          runVals <- round(runVals, rndDgt)
+          run_vals <- round(run_vals, rnd_dgt)
           
           ## create new column name
-          runValsColNm <- paste0(col, '_', tolower(type), i, colApndStr)
+          run_valsColNm <- paste0(col, '_', tolower(type), i, new_colnm_apnd_str)
           
           ## add MA vals to df as column
-          df[[runValsColNm]] <- runVals
+          df[[run_valsColNm]] <- run_vals
         }
       }
     }
@@ -135,26 +141,38 @@ addMaCols <- function(df, cols, type=c('SMA', 'EMA', 'cummean'), n=10,
     return(df)
   }
   
-  df <- sortByCol(df, aggVars, asc=TRUE)
+  ## add team and season to vector of aggregation variables
+  agg_vars <- unique(c('team', 'season', agg_vars))
   
   ## for each aggregation subset, apply ad
-  outputDF <- ddply(df, aggVars, function(x) {
-    addMaCols(df=x, cols=cols, type=type, n=n, coverLessThanN=coverLessThanN, 
-              aggVars=NULL, colApndStr=colApndStr, rndDgt=rndDgt)
+  output_df <- ddply(df, agg_vars, function(x) {
+    addMaCols(df=x, cols=cols, type=type, n=n, cover_less_than_n=cover_less_than_n, 
+              agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
   })
   
+  ## add opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(output_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    output_df <- fill_in_opp_cols(output_df, cols=new_cols)
+  }
+  
   ## return
-  return(outputDF)
+  return(output_df)
 }
 
 
-
-
-
-## this function 
+## this function add variable-specific win, loss, and game counts 
 add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'), 
-                       agg_vars=c('team', 'season'), 
-                       new_colnm_apnd_str='') {
+                             agg_vars=NULL, 
+                             new_colnm_apnd_str='',
+                             add_opp_cols=FALSE) {
+  
+  ## get original column names
+  orig_cols <- names(df)
   
   ## recursionn base case
   if (is.null(agg_vars)) {
@@ -171,7 +189,7 @@ add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'),
       ## create new column name
       run_cnt_colnm <- paste0(col, '_', new_colnm_apnd_str)
       run_cnt_colnm <- gsub('__', '_', run_cnt_colnm)
-
+      
       ## calculate running counts
       if (col=='w')
         run_cnts <- c(0, cumsum(df$won)[-n])
@@ -187,21 +205,37 @@ add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'),
     ## return
     return(df)
   }
-
-  ## for each aggregation subset, apply ad
+  
+  ## add team and season to vector of aggregation variables
+  agg_vars <- unique(c('team', 'season', agg_vars))
+  
+  ## for each aggregation subset, apply function
   output_df <- ddply(df, agg_vars, function(x) {
     add_cum_cnt_cols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str)
   })
   
+  ## add opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(output_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    output_df <- fill_in_opp_cols(output_df, cols=new_cols)
+  }
+
   ## return
   return(output_df)
-  
 }
 
 
 ## this function adds cumulative sum columns
-addCumSumCols <- function(df, cols, agg_vars=c('team', 'season'), 
-                          new_colnm_apnd_str='', rnd_dgt=3) {
+add_cum_sum_cols <- function(df, cols, agg_vars=NULL, 
+                             new_colnm_apnd_str='', 
+                             rnd_dgt=3, add_opp_cols=FALSE) {
+  
+  ## get original column names
+  orig_cols <- names(df)
   
   ## recursionn base case
   if (is.null(agg_vars)) {
@@ -213,34 +247,46 @@ addCumSumCols <- function(df, cols, agg_vars=c('team', 'season'),
     for (col in cols) {
       
       ## calculate MA
-      runVals <- cumsum(df[[col]])
-
+      run_vals <- cumsum(df[[col]])
+      
       ## offset (shift) MA vals by 1
-      runVals <- c(NA, runVals[-length(runVals)])
+      run_vals <- c(NA, run_vals[-length(run_vals)])
       
       ## round MA values
-      runVals <- round(runVals, rnd_dgt)
+      run_vals <- round(run_vals, rnd_dgt)
       
       ## create new column name
-      runValsColNm <- paste0(col, '_cumsum_', new_colnm_apnd_str)
-      runValsColNm <- gsub('__', '_', runValsColNm)
+      run_valsColNm <- paste0(col, '_cumsum_', new_colnm_apnd_str)
+      run_valsColNm <- gsub('__', '_', run_valsColNm)
       
       ## add MA vals to df as column
-      df[[runValsColNm]] <- runVals
+      df[[run_valsColNm]] <- run_vals
     }
     
     ## return
     return(df)
-    
   }
-
-  df <- sortByCol(df, agg_vars, asc=TRUE)
+  
+  ## add team and season to vector of aggregation variables
+  agg_vars <- unique(c('team', 'season', agg_vars))
   
   ## for each aggregation subset, apply ad
   output_df <- ddply(df, agg_vars, function(x) {
     addCumSumCols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
   })
   
+  ## add opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(output_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    output_df <- fill_in_opp_cols(output_df, cols=new_cols)
+  }
+
   ## return
   return(output_df)
 }
+
+

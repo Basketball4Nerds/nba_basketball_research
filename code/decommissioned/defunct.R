@@ -1033,3 +1033,18 @@ addRunCntCols <- function(master_df,
 # 
 # ## create off/def rank group columns for opponent teams
 # master <- fillInOpCols(df=master, cols=c('OG', 'DG'))
+
+
+
+
+####
+## add general cumulative sum columns for FGM, FGA, FGMA, FGAA
+master <- addCumSumCols(master, cols=c('FGM', 'FGA', 'FGMA', 'FGAA'), 
+                        agg_vars=c('team', 'season'), new_colnm_apnd_str='gen')
+
+## general up-to-date FGP
+master$FGP_cum_gen <- master$FGM_cumsum_gen / master$FGA_cumsum_gen
+
+## general up-to-date FGPA
+master$FGPA_cum_gen <- master$FGMA_cumsum_gen / master$FGAA_cumsum_gen
+
