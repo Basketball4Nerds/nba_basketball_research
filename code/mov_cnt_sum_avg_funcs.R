@@ -5,7 +5,7 @@ treat_agg_vars_for_recursion <- function(df, agg_vars) {
 
   ## keep agg_vars as-is if df consists of only one team, one season
   if (length(unique(df$season))==1 && length(unique(df$team))==1) 
-    next
+    agg_vars <- agg_vars
   
   ## add team and season to agg_vars vector if df consists of multiple team-season's  
   else
