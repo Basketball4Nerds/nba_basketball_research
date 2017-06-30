@@ -185,8 +185,8 @@ add_movavg_cols <- function(df, cols,
   
   ## for each aggregation subset, apply function
   output_df <- ddply(df, agg_vars, function(x) {
-    addMaCols(df=x, cols=cols, type=type, n=n, cover_less_than_n=cover_less_than_n, 
-              agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
+    add_movavg_cols(df=x, cols=cols, type=type, n=n, cover_less_than_n=cover_less_than_n, 
+                    agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
   })
   
   ## return
