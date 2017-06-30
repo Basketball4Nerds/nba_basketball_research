@@ -1,7 +1,26 @@
 ############ MOVING AVERAGE FUNCTIONS ################
 
+## this function adjusts add_vars based on df type for recursion purpose
+treat_agg_vars_for_recursion <- function(df, agg_vars) {
+
+  ## keep agg_vars as-is if df consists of only one team, one season
+  if (length(unique(df$season))==1 && length(unique(df$team))==1) 
+    next
+  
+  ## add team and season to agg_vars vector if df consists of multiple team-season's  
+  else
+    agg_vars <- unique(c('team', 'season', agg_vars))
+  
+  ## return
+  return(agg_vars)
+}
+
+
 ## this function calculates moving averages
-calc_movavg_vals <- function(vals, type=c('SMA', 'EMA', 'cummean'), n=NULL, cover_less_than_n=TRUE) {
+calc_movavg_vals <- function(vals, 
+                             type=c('SMA', 'EMA', 'cummean'), 
+                             n=NULL, 
+                             cover_less_than_n=TRUE) {
   
   ## specify moving average type
   type <- type[1]
@@ -82,20 +101,15 @@ add_movavg_cols <- function(df, cols,
   ## set type
   type <- type[1]
   
-  ## get original column names
-  orig_cols <- names(df)
-  
-  ## adjust add_vars based on df type;
-  ## keep agg_vars as is if df consists of single team-season;
-  ## add team/season to agg_vars vector if df consists of multiple team-season's
-  if (length(unique(df$season))==1 && length(unique(df$team))==1)
-    next
-  else
-    agg_vars <- unique(c('team', 'season', agg_vars))
-  
+  ## adjust add_vars based on df type for recursion
+  agg_vars <- treat_agg_vars_for_recursion(df, agg_vars)
+
   ## base case
   if (is.null(agg_vars)) {
     
+    ## get original column names
+    orig_cols <- names(df)
+
     ## order the base subsets
     df <- df[order(df$date), ]
     
@@ -145,25 +159,25 @@ add_movavg_cols <- function(df, cols,
       }
     }
     
+    ## add opponent columns
+    if (add_opp_cols) {
+      
+      ## get new columns created
+      new_cols <- setdiff(colnames(df), orig_cols)
+      
+      ## create win percentage columns for opponent
+      df <- fill_in_opp_cols(df, cols=new_cols)
+    }
+    
     ## return
     return(df)
   }
   
-  ## for each aggregation subset, apply ad
+  ## for each aggregation subset, apply function
   output_df <- ddply(df, agg_vars, function(x) {
     addMaCols(df=x, cols=cols, type=type, n=n, cover_less_than_n=cover_less_than_n, 
               agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
   })
-  
-  ## add opponent columns
-  if (add_opp_cols) {
-    
-    ## get new columns created
-    new_cols <- setdiff(colnames(output_df), orig_cols)
-    
-    ## create win percentage columns for opponent
-    output_df <- fill_in_opp_cols(output_df, cols=new_cols)
-  }
   
   ## return
   return(output_df)
@@ -176,20 +190,15 @@ add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'),
                              new_colnm_apnd_str='',
                              add_opp_cols=FALSE) {
   
-  ## get original column names
-  orig_cols <- names(df)
+  ## adjust add_vars based on df type for recursion
+  agg_vars <- treat_agg_vars_for_recursion(df, agg_vars)
   
-  ## adjust add_vars based on df type;
-  ## keep agg_vars as is if df consists of single team-season;
-  ## add team/season to agg_vars vector if df consists of multiple team-season's
-  if (length(unique(df$season))==1 && length(unique(df$team))==1)
-    next
-  else
-    agg_vars <- unique(c('team', 'season', agg_vars))
-
   ## recursionn base case
   if (is.null(agg_vars)) {
     
+    ## get original column names
+    orig_cols <- names(df)
+
     ## order the base subsets
     df <- df[order(df$date), ]
     
@@ -215,6 +224,16 @@ add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'),
       df[[run_cnt_colnm]] <- run_cnts
     }
     
+    ## add opponent columns
+    if (add_opp_cols) {
+      
+      ## get new columns created
+      new_cols <- setdiff(colnames(df), orig_cols)
+      
+      ## create win percentage columns for opponent
+      df <- fill_in_opp_cols(df, cols=new_cols)
+    }
+    
     ## return
     return(df)
   }
@@ -224,16 +243,6 @@ add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'),
     add_cum_cnt_cols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str)
   })
   
-  ## add opponent columns
-  if (add_opp_cols) {
-    
-    ## get new columns created
-    new_cols <- setdiff(colnames(output_df), orig_cols)
-    
-    ## create win percentage columns for opponent
-    output_df <- fill_in_opp_cols(output_df, cols=new_cols)
-  }
-
   ## return
   return(output_df)
 }
@@ -244,19 +253,14 @@ add_cum_sum_cols <- function(df, cols, agg_vars=NULL,
                              new_colnm_apnd_str='', 
                              rnd_dgt=3, add_opp_cols=FALSE) {
   
-  ## get original column names
-  orig_cols <- names(df)
-  
-  ## adjust add_vars based on df type;
-  ## keep agg_vars as is if df consists of single team-season;
-  ## add team/season to agg_vars vector if df consists of multiple team-season's
-  if (length(unique(df$season))==1 && length(unique(df$team))==1)
-    next
-  else
-    agg_vars <- unique(c('team', 'season', agg_vars))
+  ## adjust add_vars based on df type for recursion
+  agg_vars <- treat_agg_vars_for_recursion(df, agg_vars)
   
   ## recursion base case
   if (is.null(agg_vars)) {
+    
+    ## get original column names
+    orig_cols <- names(df)
     
     ## order the base subsets
     df <- df[order(df$date), ]
@@ -281,25 +285,25 @@ add_cum_sum_cols <- function(df, cols, agg_vars=NULL,
       df[[run_valsColNm]] <- run_vals
     }
     
+    ## add opponent columns
+    if (add_opp_cols) {
+      
+      ## get new columns created
+      new_cols <- setdiff(colnames(df), orig_cols)
+      
+      ## create win percentage columns for opponent
+      df <- fill_in_opp_cols(df, cols=new_cols)
+    }
+    
     ## return
     return(df)
   }
 
-  ## for each aggregation subset, apply ad
+  ## for each aggregation subset, apply function
   output_df <- ddply(df, agg_vars, function(x) {
     add_cum_sum_cols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
   })
   
-  ## add opponent columns
-  if (add_opp_cols) {
-    
-    ## get new columns created
-    new_cols <- setdiff(colnames(output_df), orig_cols)
-    
-    ## create win percentage columns for opponent
-    output_df <- fill_in_opp_cols(output_df, cols=new_cols)
-  }
-
   ## return
   return(output_df)
 }
@@ -316,19 +320,14 @@ add_cum_gen_perf_cols <- function(df,
                                   rnd_dgt=3,
                                   add_opp_cols=FALSE) {
   
-  ## get original column names
-  orig_cols <- names(df)
-  
-  ## adjust add_vars based on df type;
-  ## keep agg_vars as is if df consists of single team-season;
-  ## add team/season to agg_vars vector if df consists of multiple team-season's
-  if (length(unique(df$season))==1 && length(unique(df$team))==1)
-    next
-  else
-    agg_vars <- unique(c('team', 'season', agg_vars))
+  ## adjust add_vars based on df type for recursion
+  agg_vars <- treat_agg_vars_for_recursion(df, agg_vars)
 
   ## recursion base case
   if (is.null(agg_vars)) {
+    
+    ## get original column names
+    orig_cols <- names(df)
     
     ## order the base subsets
     df <- df[order(df$date), ]
@@ -382,22 +381,30 @@ add_cum_gen_perf_cols <- function(df,
     }
     
     ## remove intermediary "cumsum" columns
-    #df <- rm_colnms_by_regex_mtch(df, regex_expr='cumsum')
+    # df <- rm_colnms_by_regex_mtch(df, regex_expr='cumsum')
+    
+    ## round digits
+    df <- round_df(df, rnd_dgt)
+    
+    ## fill in opponent columns
+    if (add_opp_cols) {
+      
+      ## get new columns created
+      new_cols <- setdiff(colnames(df), orig_cols)
+      
+      ## create win percentage columns for opponent
+      df <- fill_in_opp_cols(df, cols=new_cols)
+    }
+    
+    ## return
+    return(df)
   }
   
-  ## round digits
-  df <- round_df(df, rnd_dgt)
-  
-  ## fill in opponent columns
-  if (add_opp_cols) {
-    
-    ## get new columns created
-    new_cols <- setdiff(colnames(df), orig_cols)
-    
-    ## create win percentage columns for opponent
-    df <- fill_in_opp_cols(df, cols=new_cols)
-  }
+  ## for each aggregation subset, apply function
+  output_df <- ddply(df, agg_vars, function(x) {
+    add_cum_gen_perf_cols(df=x, metric=metric, agg_vars=NULL, rnd_dgt=rnd_dgt, add_opp_cols=add_opp_cols)
+  })
   
   ## return
-  return(df)
+  return(output_df)
 }

@@ -234,6 +234,8 @@ master_df <- subset(master, season==2012)
 x <- add_cum_gen_perf_cols(master_df, 
                            metric=c('rqP'), 
                            add_opp_cols=F)
+
+
 y <- x[ , c('season', 'date', 'team', 'n', 'rqP', 'rqP_cumsum_gen', 'rqP_cum_gen')]
 head(y, 50)
 
