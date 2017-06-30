@@ -543,7 +543,8 @@ ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf) {
 
 
 ## this function takes in standing-by-date df and creates 
-## rank-standing-by-date df
+## rank-standing-by-date df;
+## (takes multiple team-season into account)
 create_rnkd_tm_std_by_date_df <- function(master_df, metric, higher_num_bttr_perf, method) {
   
   ## apply the following lines of code by season
@@ -616,7 +617,8 @@ create_rnkd_tm_std_by_date_df <- function(master_df, metric, higher_num_bttr_per
 }
 
 
-## this function adds A-B-C offensive/defensive rank standings columns
+## this function adds A-B-C offensive/defensive rank standings columns;
+## (takes multiple team-season into account)
 add_rnk_cols <- function(master_df, metric, 
                          higher_num_bttr_perf, 
                          method, add_opp_cols=FALSE) {

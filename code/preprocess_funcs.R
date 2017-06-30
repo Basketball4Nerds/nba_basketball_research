@@ -136,7 +136,10 @@ add_wpc_cols_fr_w_n_cols <- function(df, rnd_dgts=3, add_opp_cols=FALSE) {
 
 
 ## this function adds varied-by-variable win percentage columns to master df
-add_vary_by_wpc_cols <- function(master_df, vary_by, rnd_dgts=3, add_opp_cols=FALSE) {
+add_vary_by_wpc_cols <- function(master_df, 
+                                 vary_by, 
+                                 rnd_dgts=3, 
+                                 add_opp_cols=FALSE) {
 
   ## for each vary-by variable
   for (var in vary_by) {
