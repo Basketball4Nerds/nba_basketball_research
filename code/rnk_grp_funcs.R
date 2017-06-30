@@ -1,216 +1,5 @@
 ############ OFFENSE/DEFENSE RANK FUNCTIONS ################
 
-## this function takes in a vector a retro-fills any NA values 
-## e.g. c(NA, 1, 2, NA, NA, 3) would become c(1, 1, 2, 3, 3, 3)
-retro_fill_nas <- function(x) {
-  
-  ## get a vector of non-NA indices 
-  complete_nna_indices <- which(!is.na(x))
-  
-  ## for each non-NA index, apply retro-fill
-  for (ind in complete_nna_indices) {
-    
-    ## get value to retro-fill
-    retro_fill_val <- x[ind]
-    
-    ## get indices of values to retro-fill
-    complete_retro_na_indices <- which(is.na(x[1:ind]))
-    
-    ## retro-fill with value
-    x[complete_retro_na_indices] <- retro_fill_val
-  }
-  
-  ## return
-  return(x)
-}
-
-
-## this function creates performance-standing-by-date df
-create_std_by_date_df <- function(master_df, metric) {
-  
-  ## create df with relevant columns
-  df <- master_df[, c('date', 'team', metric)]
-  
-  ## create an initial standing-by-date df that contains NA "holes"
-  std_by_date_df <- dcast(df, date ~ team, value.var=metric)
-  
-  ## store game dates in a variable
-  gm_dates <- std_by_date_df$date
-  
-  ## remove game dates column in df and store as row names
-  std_by_date_df$date <- NULL
-  rownames(std_by_date_df) <- gm_dates
-  
-  ## for each team
-  for (team in names(std_by_date_df)) {
-    
-    ## grab team's vector with NA "holes" to retro-fill
-    x <- std_by_date_df[, team]
-    
-    ## retro-fill NAs
-    x <- retro_fill_nas(x)
-    
-    ## first game date (and dates prior to the first game) should be assigned NA
-    first_gm_date <- df[df$team==team, 'date'][1]
-    na_indices <- 1:which(first_gm_date==gm_dates)
-    x[na_indices] <- NA
-    
-    ## put retro-filled vector back into df
-    std_by_date_df[, team] <- x
-  }
-  
-  ## return standing-by-date df
-  return(std_by_date_df)
-}
-
-
-## this function takes in a vector of numeric values and return letter-based 
-## ranks (A, B, C, ...) based on quantile distribution, where A signifies the best 
-## performance indicator
-ret_ABC_rnks_by_qntl <- function(x, higher_num_bttr_perf) {
-  
-  ## use previous seasons to calculate quantiles
-  qntls <- quantile(x, probs=seq(0, 1, 1/3), na.rm=TRUE)
-  
-  ## if higher numeric value signifies better performance
-  if (higher_num_bttr_perf) {
-    rnks <- ifelse(x >= qntls[3], 'A', 
-                   ifelse(x <= qntls[2], 'C', 'B'))
-  }
-  
-  ## if higher numeric value signifies lower performance
-  else {
-    rnks <- ifelse(x >= qntls[3], 'C',
-                   ifelse(x <= qntls[2], 'A', 'B'))
-  }
-  
-  ## return
-  return(rnks)
-}
-
-
-## this function takes in a vector of numeric values and return letter-based
-## ranks (A, B, C) based on standard deviation, where A signifies the best 
-## performance indicator
-ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf) {
-  
-  ## calculate mean and sd of te numeric values provided
-  mean <- mean(x)
-  sd <- sd(x)
-  
-  ## if higher numeric value signifies better performance
-  if (higher_num_bttr_perf) {
-    rnks <- ifelse(x >= (mean + sd), 'A', 
-                   ifelse(x <= (mean - sd), 'C', 'B'))
-  }
-  
-  ## if higher numeric value signifies lower performance
-  else {
-    rnks <- ifelse(x >= (mean + sd), 'C',
-                   ifelse(x <= (mean - sd), 'A', 'B'))
-  }  
-  
-  ## return 
-  return(rnks)
-}
-
-
-## this function takes in standing-by-date df and creates 
-## rank-standing-by-date df
-create_rnkd_tm_std_by_date_df <- function(master_df, metric, higher_num_bttr_perf, method) {
-  
-  ## apply the following lines of code by season
-  ms_df <- ddply(master_df, 'season', function(ss_df) {
-    
-    ## create standing-by-date df (consists of numeric values)
-    std_by_date_df <- create_std_by_date_df(ss_df, metric)
-    
-    ## initialize two ranked-standings-by-date dfs 
-    ## by copying dimensions from original df
-    rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df) 
-    
-    ## index where all row values are filled and NA-free
-    complete_row_strt_ind <- max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
-    
-    ## starting from rows where performance values are present for all teams
-    for (i in complete_row_strt_ind:nrow(std_by_date_df)) {
-      
-      ## get current standing performance as a vector
-      x <- as.numeric(std_by_date_df[i, ])
-
-      ## derive quantile-derivation ranks
-      if (method=='qntl') {
-        rnks <- ret_ABC_rnks_by_qntl(x, higher_num_bttr_perf)
-      } 
-      
-      ## derive sd-derivation ranks
-      else if (method=='sd') {
-        rnks <- ret_ABC_rnks_by_sd(x, higher_num_bttr_perf)
-      }
-
-      ## add vector of ranks as row
-      rnkd_std_by_date_df[i, ] <- rnks
-    }
-    
-    ## convert matrix to df
-    rnkd_std_by_date_df <- as.data.frame(rnkd_std_by_date_df, stringsAsFactors=FALSE)
-
-    ## add date column  
-    rnkd_std_by_date_df$date <- as.Date(rownames(rnkd_std_by_date_df))
-    
-    ## get rank nomenclature prefix from metric
-    rnk_nm_prefix <- strsplit(metric, '_')[[1]][1]
-    
-    ## get rank nomenclature suffix from method
-    rnk_nm_suffix <- ifelse(method=='qntl', '_qntl_rnk',
-                            ifelse(method=='sd', '_sd_rnk', '_rnk'))
-    
-    ## get rank nomenclature
-    rnk_col_nm <- paste0(rnk_nm_prefix, rnk_nm_suffix)
-    
-    ## melt dfs
-    rnk_df <- melt(rnkd_std_by_date_df, 
-                   id.vars='date', 
-                   variable.name='team', 
-                   value.name=rnk_col_nm)
-    
-    ## set names for melted df
-    names(rnk_df) <- c('date', 'team', rnk_col_nm)
-
-    ## return df for single season
-    rnk_df
-  })
-  
-  ## un-factor team column
-  ms_df$team <- as.character(ms_df$team)
-  
-  ## return
-  return(ms_df)
-}
-
-
-## this function adds A-B-C offensive/defensive rank standings columns
-add_rnk_cols <- function(master_df, metric, higher_num_bttr_perf, method) {
-  
-  ## for each metric and its order direction
-  for (i in 1:length(metric)) {
-    
-    ## for each method
-    for (m in method) {
-      
-      ## create ranked-team-standing-by-date df
-      rnkd_tm_std_by_date_df <- create_rnkd_tm_std_by_date_df(master_df, metric[i], higher_num_bttr_perf[i], method=m)
-      
-      ## merge those dfs onto original master df
-      master_df <- left_join(master_df, rnkd_tm_std_by_date_df, by=c('season', 'team', 'date'))
-    }
-  }
-  
-  ## return
-  return(master_df)
-}
-
-
 ## this function takes in df of game logs and returns 
 ## a matrix of PPP (pts per pos); element A(i, j) represents 
 ## PPP of ith team agaist jth team in the matrix
@@ -638,5 +427,229 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
 
 
 
+## this function takes in a vector a retro-fills any NA values 
+## e.g. c(NA, 1, 2, NA, NA, 3) would become c(1, 1, 2, 3, 3, 3)
+retro_fill_nas <- function(x) {
+  
+  ## get a vector of non-NA indices 
+  complete_nna_indices <- which(!is.na(x))
+  
+  ## for each non-NA index, apply retro-fill
+  for (ind in complete_nna_indices) {
+    
+    ## get value to retro-fill
+    retro_fill_val <- x[ind]
+    
+    ## get indices of values to retro-fill
+    complete_retro_na_indices <- which(is.na(x[1:ind]))
+    
+    ## retro-fill with value
+    x[complete_retro_na_indices] <- retro_fill_val
+  }
+  
+  ## return
+  return(x)
+}
+
+
+## this function creates performance-standing-by-date df
+create_std_by_date_df <- function(master_df, metric) {
+  
+  ## create df with relevant columns
+  df <- master_df[, c('date', 'team', metric)]
+  
+  ## create an initial standing-by-date df that contains NA "holes"
+  std_by_date_df <- dcast(df, date ~ team, value.var=metric)
+  
+  ## store game dates in a variable
+  gm_dates <- std_by_date_df$date
+  
+  ## remove game dates column in df and store as row names
+  std_by_date_df$date <- NULL
+  rownames(std_by_date_df) <- gm_dates
+  
+  ## for each team
+  for (team in names(std_by_date_df)) {
+    
+    ## grab team's vector with NA "holes" to retro-fill
+    x <- std_by_date_df[, team]
+    
+    ## retro-fill NAs
+    x <- retro_fill_nas(x)
+    
+    ## first game date (and dates prior to the first game) should be assigned NA
+    first_gm_date <- df[df$team==team, 'date'][1]
+    na_indices <- 1:which(first_gm_date==gm_dates)
+    x[na_indices] <- NA
+    
+    ## put retro-filled vector back into df
+    std_by_date_df[, team] <- x
+  }
+  
+  ## return standing-by-date df
+  return(std_by_date_df)
+}
+
+
+## this function takes in a vector of numeric values and return letter-based 
+## ranks (A, B, C, ...) based on quantile distribution, where A signifies the best 
+## performance indicator
+ret_ABC_rnks_by_qntl <- function(x, higher_num_bttr_perf) {
+  
+  ## use previous seasons to calculate quantiles
+  qntls <- quantile(x, probs=seq(0, 1, 1/3), na.rm=TRUE)
+  
+  ## if higher numeric value signifies better performance
+  if (higher_num_bttr_perf) {
+    rnks <- ifelse(x >= qntls[3], 'A', 
+                   ifelse(x <= qntls[2], 'C', 'B'))
+  }
+  
+  ## if higher numeric value signifies lower performance
+  else {
+    rnks <- ifelse(x >= qntls[3], 'C',
+                   ifelse(x <= qntls[2], 'A', 'B'))
+  }
+  
+  ## return
+  return(rnks)
+}
+
+
+## this function takes in a vector of numeric values and return letter-based
+## ranks (A, B, C) based on standard deviation, where A signifies the best 
+## performance indicator
+ret_ABC_rnks_by_sd <- function(x, higher_num_bttr_perf) {
+  
+  ## calculate mean and sd of te numeric values provided
+  mean <- mean(x)
+  sd <- sd(x)
+  
+  ## if higher numeric value signifies better performance
+  if (higher_num_bttr_perf) {
+    rnks <- ifelse(x >= (mean + sd), 'A', 
+                   ifelse(x <= (mean - sd), 'C', 'B'))
+  }
+  
+  ## if higher numeric value signifies lower performance
+  else {
+    rnks <- ifelse(x >= (mean + sd), 'C',
+                   ifelse(x <= (mean - sd), 'A', 'B'))
+  }  
+  
+  ## return 
+  return(rnks)
+}
+
+
+## this function takes in standing-by-date df and creates 
+## rank-standing-by-date df
+create_rnkd_tm_std_by_date_df <- function(master_df, metric, higher_num_bttr_perf, method) {
+  
+  ## apply the following lines of code by season
+  ms_df <- ddply(master_df, 'season', function(ss_df) {
+    
+    ## create standing-by-date df (consists of numeric values)
+    std_by_date_df <- create_std_by_date_df(ss_df, metric)
+    
+    ## initialize two ranked-standings-by-date dfs 
+    ## by copying dimensions from original df
+    rnkd_std_by_date_df <- create_empty_df_copy(std_by_date_df) 
+    
+    ## index where all row values are filled and NA-free
+    complete_row_strt_ind <- max(apply(std_by_date_df, 2, function(x) min(which(!is.na(x)))))
+    
+    ## starting from rows where performance values are present for all teams
+    for (i in complete_row_strt_ind:nrow(std_by_date_df)) {
+      
+      ## get current standing performance as a vector
+      x <- as.numeric(std_by_date_df[i, ])
+      
+      ## derive quantile-derivation ranks
+      if (method=='qntl') {
+        rnks <- ret_ABC_rnks_by_qntl(x, higher_num_bttr_perf)
+      } 
+      
+      ## derive sd-derivation ranks
+      else if (method=='sd') {
+        rnks <- ret_ABC_rnks_by_sd(x, higher_num_bttr_perf)
+      }
+      
+      ## add vector of ranks as row
+      rnkd_std_by_date_df[i, ] <- rnks
+    }
+    
+    ## convert matrix to df
+    rnkd_std_by_date_df <- as.data.frame(rnkd_std_by_date_df, stringsAsFactors=FALSE)
+    
+    ## add date column  
+    rnkd_std_by_date_df$date <- as.Date(rownames(rnkd_std_by_date_df))
+    
+    ## get rank nomenclature prefix from metric
+    rnk_nm_prefix <- strsplit(metric, '_')[[1]][1]
+    
+    ## get rank nomenclature suffix from method
+    rnk_nm_suffix <- ifelse(method=='qntl', '_qntl_rnk',
+                            ifelse(method=='sd', '_sd_rnk', '_rnk'))
+    
+    ## get rank nomenclature
+    rnk_col_nm <- paste0(rnk_nm_prefix, rnk_nm_suffix)
+    
+    ## melt dfs
+    rnk_df <- melt(rnkd_std_by_date_df, 
+                   id.vars='date', 
+                   variable.name='team', 
+                   value.name=rnk_col_nm)
+    
+    ## set names for melted df
+    names(rnk_df) <- c('date', 'team', rnk_col_nm)
+    
+    ## return df for single season
+    rnk_df
+  })
+  
+  ## un-factor team column
+  ms_df$team <- as.character(ms_df$team)
+  
+  ## return
+  return(ms_df)
+}
+
+
+## this function adds A-B-C offensive/defensive rank standings columns
+add_rnk_cols <- function(master_df, metric, 
+                         higher_num_bttr_perf, 
+                         method, add_opp_cols=FALSE) {
+  
+  ## get original column names
+  orig_cols <- names(master_df)
+    
+  ## for each metric and its order direction
+  for (i in 1:length(metric)) {
+    
+    ## for each method
+    for (m in method) {
+      
+      ## create ranked-team-standing-by-date df
+      rnkd_tm_std_by_date_df <- create_rnkd_tm_std_by_date_df(master_df, metric[i], higher_num_bttr_perf[i], method=m)
+      
+      ## merge those dfs onto original master df
+      master_df <- left_join(master_df, rnkd_tm_std_by_date_df, by=c('season', 'team', 'date'))
+    }
+  }
+  
+  ## add opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(master_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    master_df <- fill_in_opp_cols(master_df, cols=new_cols)
+  }
+  
+  ## return
+  return(master_df)
+}
 
 

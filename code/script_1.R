@@ -217,21 +217,32 @@ write.csv(master, './data/master_backup.csv', row.names=FALSE)
 
 
 
-## add general cumulative sum columns for p, pA, pos, posA
-master_df <- subset(master, season==2012)
+## add various general cumulative performance columns
+master <- add_cum_gen_perf_cols(master, 
+                                metric=c('oeff', 'oeffA', 
+                                         'FGP', 'FGPA', 
+                                         'rqP', 'rqPA'), 
+                                add_opp_cols=TRUE)
 x <- add_cum_gen_perf_cols(master_df, 
                            metric=c('oeff', 'oeffA', 
                                     'FGP', 'FGPA', 
                                     'rqP', 'rqPA'), 
-                           add_opp_cols=TRUE)
+                           add_opp_cols=F)
 
 
+master_df <- subset(master, season==2012)
+x <- add_cum_gen_perf_cols(master_df, 
+                           metric=c('rqP'), 
+                           add_opp_cols=F)
+y <- x[ , c('season', 'date', 'team', 'n', 'rqP', 'rqP_cumsum_gen', 'rqP_cum_gen')]
+head(y, 50)
 
 ## add columns for offensive and defensive rankings
 master <- add_rnk_cols(master, 
                        metric=c('oeff_cum_gen', 'oeffA_cum_gen'), 
                        higher_num_bttr_perf=c(TRUE, FALSE),
-                       method='qntl')
+                       method='qntl',
+                       add_opp_cols=TRUE)
 
 ## create another backup
 write.csv(master, './data/master_backup2.csv', row.names=FALSE)
