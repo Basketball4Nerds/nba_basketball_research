@@ -217,22 +217,15 @@ write.csv(master, './data/master_backup.csv', row.names=FALSE)
 
 
 
-#### add general cumulative sum columns for p, pA, pos, posA
-cum_cols <- c('p', 'pA', 'pos', 'posA', 'FGM', 'FGA', 'FGMA', 'FGAA', 'rqP', 'rqPA')
-master <- add_cum_sum_cols(master, cols=cum_cols, 
-                           new_colnm_apnd_str='gen')
+## add general cumulative sum columns for p, pA, pos, posA
+master_df <- subset(master, season==2012)
+x <- add_cum_gen_perf_cols(master_df, 
+                           metric=c('oeff', 'oeffA', 
+                                    'FGP', 'FGPA', 
+                                    'rqP', 'rqPA'), 
+                           add_opp_cols=TRUE)
 
-## general offensive efficiency: points per possesion x100
-master$oeff_cum_gen <- master$p_cumsum_gen / master$pos_cumsum_gen * 100
 
-## general opponent offensive efficiency: points per possession x100
-master$oeffA_cum_gen <- master$pA_cumsum_gen / master$posA_cumsum_gen * 100
-
-## general field goal percentage
-master$FGP_cum_gen <- master$FGM_cumsum_gen / master$FGA_cumsum_gen
-
-## general field goal percentage allowed
-master$FGPA_cum_gen <- master$FGMA_cumsum_gen / master$FGAA_cumsum_gen
 
 ## add columns for offensive and defensive rankings
 master <- add_rnk_cols(master, 
@@ -245,13 +238,20 @@ write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
-
-
 ## vary-by-variable win percentage
 master <- add_vary_by_wpc_cols(master, 
                                vary_by=c('site', 'cnf', 
                                          'oeff_qntl_rnk', 
-                                         'oeffA_qntl_rnk'))
+                                         'oeffA_qntl_rnk'),
+                               add_opp_cols=TRUE)
+
+
+master_df <- subset(master, season==2012)
+master_df <- add_vary_by_wpc_cols(master_df, 
+                                  vary_by=c('site', 'cnf', 
+                                            'oeff_qntl_rnk', 
+                                            'oeffA_qntl_rnk'),
+                                  add_opp_cols=TRUE)
 
 ## vary-by-variable performance:
 # 'rqP', 'rqPA'
@@ -259,11 +259,6 @@ master <- add_vary_by_wpc_cols(master,
 # 'FGP', 'FGPA'
 # 'wPc'
 # 'pos', 'posA'
-min(master_df$season)
-
-
-
-
 
 ## define columns for SMA calculations
 # smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')

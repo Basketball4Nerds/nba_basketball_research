@@ -1,6 +1,12 @@
 ############ GENERAL/HELPER/MISCELLANEOUS FUNCTIONS ################
 
 
+## this function removes any columns matched by given regex expression
+rm_colnms_by_regex_mtch <- function(df, regex_expr) {
+  return(df[ , !grepl(regex_expr, names(df))])
+}
+
+
 ## this function takes in a df and returns an empty copy of the original
 create_empty_df_copy <- function(df) {
   empty_df_copy <- matrix(NA, nrow=nrow(df), ncol=ncol(df))

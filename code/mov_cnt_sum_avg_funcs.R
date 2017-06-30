@@ -290,3 +290,79 @@ add_cum_sum_cols <- function(df, cols, agg_vars=NULL,
 }
 
 
+
+
+## this function adds cumulative general performance columns based on given metrics
+add_cum_gen_perf_cols <- function(master_df, 
+                                  metric=c('oeff', 'oeffA', 
+                                           'FGP', 'FGPA', 
+                                           'rqP', 'rqPA'), 
+                                  add_opp_cols=FALSE) {
+  
+  ## get original column names
+  orig_cols <- names(master_df)
+  
+  ## initialize empty vector to contain columns for cumulative sum calculations
+  cum_cols <- c()
+  
+  ## iteratively add to cum_col vector by given metric
+  for (m in metric) {
+    if (m=='oeff') cum_cols <- c(cum_cols, 'p', 'pos')
+    else if (m=='oeffA') cum_cols <- c(cum_cols, 'pA', 'posA')  
+    else if (m=='FGP') cum_cols <- c(cum_cols, 'FGM', 'FGA')
+    else if (m=='FGPA') cum_cols <- c(cum_cols, 'FGMA', 'FGAA')
+    else if (m=='rqP') cum_cols <- c(cum_cols, 'rqP')
+    else if (m=='rqPA') cum_cols <- c(cum_cols, 'rqPA')
+  }
+  
+  ## add cumulative sum columns
+  master_df <- add_cum_sum_cols(master_df, cols=cum_cols, 
+                                new_colnm_apnd_str='gen',
+                                add_opp_cols=TRUE)  
+  
+  ## general offensive efficiency: points per possesion x100
+  if ('oeff' %in% metric) {
+    master_df$oeff_cum_gen <- master_df$p_cumsum_gen / master_df$pos_cumsum_gen * 100    
+  } 
+  
+  ## general opponent offensive efficiency: points per possession x100
+  if ('oeffA' %in% metric) {
+    master_df$oeffA_cum_gen <- master_df$pA_cumsum_gen / master_df$posA_cumsum_gen * 100
+  } 
+  
+  ## general field goal percentage
+  if ('FGP' %in% metric) {
+    master_df$FGP_cum_gen <- master_df$FGM_cumsum_gen / master_df$FGA_cumsum_gen
+  }
+  
+  ## general field goal percentage allowed
+  if ('FGPA' %in% metric) {
+    master_df$FGPA_cum_gen <- master_df$FGMA_cumsum_gen / master_df$FGAA_cumsum_gen
+  }
+  
+  ## general regular quarter points
+  if ('rqP' %in% metric) {
+    master_df$rqP_cum_gen <- master_df$rqP_cumsum_gen / master_df$n
+  }
+  
+  ## general regular quarter points allowed
+  if ('rqPA' %in% metric) {
+    master_df$rqPA_cum_gen <- master_df$rqPA_cumsum_gen / master_df$n
+  }
+  
+  ## remove intermediary "cumsum" columns
+  master_df <- rm_colnms_by_regex_mtch(master_df, regex_expr='cumsum')
+
+  ## fill in opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(master_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    master_df <- fill_in_opp_cols(master_df, cols=new_cols)
+  }
+  
+  ## return
+  return(master_df)
+}
