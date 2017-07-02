@@ -220,6 +220,7 @@ master <- add_cum_gen_perf_cols(master,
                                 metric=c('oeff', 'oeffA', 
                                          'FGP', 'FGPA', 
                                          'rqP', 'rqPA'), 
+                                agg_vars=NULL,
                                 add_opp_cols=TRUE)
 
 ## add columns for offensive and defensive rankings
@@ -234,30 +235,23 @@ write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
-## vary-by-variable win percentage
-master <- add_vary_by_wpc_cols(master, 
-                               vary_by=c('site', 'cnf', 
-                                         'oeff_qntl_rnk', 
-                                         'oeffA_qntl_rnk'),
-                               add_opp_cols=TRUE)
+## variable-specific (e.g. site-specific) win percentage
+master <- add_varsp_wpc_cols(master, 
+                             vary_by=c('site', 'cnf', 
+                                       'oeff_qntl_rnk', 
+                                       'oeffA_qntl_rnk'),
+                             add_opp_cols=TRUE)
 
+## create backup
+write.csv(master, './data/master_backup3.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
 
-master_df <- subset(master, season==2012)
-master_df <- add_vary_by_wpc_cols(master_df, 
-                                  vary_by=c('site', 'cnf', 
-                                            'oeff_qntl_rnk', 
-                                            'oeffA_qntl_rnk'),
-                                  add_opp_cols=TRUE)
+## variable-specific (e.g. conference-specific) performance
 
-## vary-by-variable performance:
-# 'rqP', 'rqPA'
-# 'oeff', 'oeffA'
-# 'FGP', 'FGPA'
-# 'wPc'
-# 'pos', 'posA'
 
 ## define columns for SMA calculations
-# smaCols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
+cols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
 smaCols <- c('p')
 
 ## add SMA columns 

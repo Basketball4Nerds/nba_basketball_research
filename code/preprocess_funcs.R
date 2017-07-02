@@ -1,98 +1,103 @@
 ############ PREPROCESSOR FUNCTIONS ################
 
-## this function takes in df and "fills in" the selected metrics
-## for opponent by join method
-fill_in_opp_cols <- function(df, cols) {
+add_cum_perf_cols <- function(df, 
+                              metric=c('oeff', 'oeffA', 
+                                       'FGP', 'FGPA', 
+                                       'rqP', 'rqPA',
+                                       'pos', 'posA'), 
+                              vary_by=NULL,
+                              rnd_dgt=3,
+                              add_opp_cols=FALSE) {
   
-  ## make a partial copy of df
-  df_pc <- df[ , c('date', 'team', cols)]
-  
-  ## add o_ prefix to all column names except the date
-  names(df_pc) <- paste0('o_', names(df_pc))
-  names(df_pc)[names(df_pc)=='o_date'] <- 'date'
-  
-  ## make a left join
-  df <- left_join(df, df_pc, by=c('date', 'o_team'))
-  
-  ## return 
-  return(df)
-}
-
-
-## this function adds running count columns of wins/losses 
-## as well as running sum columns of other numeric values
-## by home/away, opponent def/off rank, opponent conf, etc.
-add_varsp_runsum_cols <- function(master_df, cols, 
-                                  by=list('site', 'cnf'), add_opp_cols) {
-  
-  ## original cols
-  orig_cols <- colnames(master_df)
-  
-  ## sort by date
-  master_df <- sortByCol(master_df, col='date')
-  
-  ## for each season-team combo
-  ## (running tallies should contain only per-season-per-team counts)
-  master_df <- ddply(master_df, c('season', 'team'), function(x) {
+  ## recursion base case
+  if (is.null(vary_by)) {
     
-    ## calculate total number of games played by team per season
-    n <- nrow(x)
     
-    ## for each variable-specification, add counts
-    for (by_elem in by) {
-      
-      ## create variable-specific var_df
-      var_df <- createVarDf(by=by_elem)
-      
-      ## for each variability dimension (e.g. by site, by opponent conference, etc.)
-      for (j in 1:nrow(var_df)) {
-        
-        tm_tag <- var_df[j, 'tm_tags']
-        o_tag <- var_df[j, 'o_tags']
-        var_df_row <- var_df[j, ]
-        varsp_ind <- createVarSpIndex(master_df=x, var_df_row=var_df_row, n_min=0)
-        
-        ## for each column
-        for (col in cols) {
-          
-          ## adding w, l, n counts by variable specificity
-          if (col %in% c('w', 'l', 'n')) {
-            if (col=='w')
-              x[ , paste0('w', tm_tag)] <- c(0, cumsum(x$won & varsp_ind)[-n])
-            else if (col=='l')
-              x[ , paste0('l', tm_tag)] <- c(0, cumsum(!x$won & varsp_ind)[-n])
-            else if (col=='n')
-              x[ , paste0('n', tm_tag)] <- c(0, cumsum(varsp_ind)[-n])
-          }
-
-          ## adding cumulative sum by variable specificity
-          else {
-            target_vals <- rep(0, n)
-            target_vals[varsp_ind] <- x[[col]][varsp_ind]
-            x[ , paste0(col, tm_tag)] <- c(0, cumsum(target_vals)[-n])
-          }
-        }
-      }
+    
+    ## get original column names
+    orig_cols <- names(df)
+    
+    ## order the base subsets
+    df <- df[order(df$date), ]
+    
+    ## initialize empty vector to contain columns for cumulative sum calculations
+    cum_cols <- c()
+    
+    ## iteratively add to cum_col vector by given metric
+    for (m in metric) {
+      if (m=='oeff') cum_cols <- c(cum_cols, 'p', 'pos')
+      else if (m=='oeffA') cum_cols <- c(cum_cols, 'pA', 'posA')  
+      else if (m=='FGP') cum_cols <- c(cum_cols, 'FGM', 'FGA')
+      else if (m=='FGPA') cum_cols <- c(cum_cols, 'FGMA', 'FGAA')
+      else if (m=='rqP') cum_cols <- c(cum_cols, 'rqP')
+      else if (m=='rqPA') cum_cols <- c(cum_cols, 'rqPA')
     }
     
-    ## return 
-    x
-  })
-  
-  ## add opponent columns
-  if (add_opp_cols) {
+    ## add cumulative sum columns
+    df <- add_cum_sum_cols(df, 
+                           cols=cum_cols,
+                           agg_vars=NULL,
+                           new_colnm_apnd_str='gen',
+                           add_opp_cols=FALSE)
     
-    ## get new columns created
-    new_cols <- setdiff(colnames(master_df), orig_cols)
+    ## general offensive efficiency: points per possesion x100
+    if ('oeff' %in% metric) {
+      df$oeff_cum_gen <- df$p_cumsum_gen / df$pos_cumsum_gen * 100    
+    } 
     
-    ## create win percentage columns for opponent
-    master_df <- fill_in_opp_cols(master_df, cols=new_cols)
+    ## general opponent offensive efficiency: points per possession x100
+    if ('oeffA' %in% metric) {
+      df$oeffA_cum_gen <- df$pA_cumsum_gen / df$posA_cumsum_gen * 100
+    } 
+    
+    ## general field goal percentage
+    if ('FGP' %in% metric) {
+      df$FGP_cum_gen <- df$FGM_cumsum_gen / df$FGA_cumsum_gen
+    }
+    
+    ## general field goal percentage allowed
+    if ('FGPA' %in% metric) {
+      df$FGPA_cum_gen <- df$FGMA_cumsum_gen / df$FGAA_cumsum_gen
+    }
+    
+    ## general regular quarter points
+    if ('rqP' %in% metric) {
+      df$rqP_cum_gen <- df$rqP_cumsum_gen / df$n
+    }
+    
+    ## general regular quarter points allowed
+    if ('rqPA' %in% metric) {
+      df$rqPA_cum_gen <- df$rqPA_cumsum_gen / df$n
+    }
+    
+    ## remove intermediary "cumsum" columns
+    df <- rm_colnms_by_regex_mtch(df, regex_expr='cumsum')
+    
+    ## round digits
+    df <- round_df(df, rnd_dgt)
+    
+    ## fill in opponent columns
+    if (add_opp_cols) {
+      
+      ## get new columns created
+      new_cols <- setdiff(colnames(df), orig_cols)
+      
+      ## create win percentage columns for opponent
+      df <- fill_in_opp_cols(df, cols=new_cols)
+    }
+    
+    ## return
+    return(df)
   }
   
-  ## return 
-  return(master_df)
+  ## for each aggregation subset, apply function
+  output_df <- ddply(df, vary_by, function(x) {
+    add_cum_gen_perf_cols(df=x, metric=metric, vary_by=NULL, rnd_dgt=rnd_dgt, add_opp_cols=add_opp_cols)
+  })
+  
+  ## return
+  return(output_df)
 }
-
 
 ## this function adds win percentage columns from w, n columns
 add_wpc_cols_fr_w_n_cols <- function(df, rnd_dgts=3, add_opp_cols=FALSE) {
@@ -136,7 +141,7 @@ add_wpc_cols_fr_w_n_cols <- function(df, rnd_dgts=3, add_opp_cols=FALSE) {
 
 
 ## this function adds varied-by-variable win percentage columns to master df
-add_vary_by_wpc_cols <- function(master_df, 
+add_varsp_wpc_cols <- function(master_df, 
                                  vary_by, 
                                  rnd_dgts=3, 
                                  add_opp_cols=FALSE) {
@@ -157,6 +162,28 @@ add_vary_by_wpc_cols <- function(master_df,
   ## remove win and loss count columns
   master_df <- master_df[ , !(grepl('^w_', names(master_df)) | grepl('^l_', names(master_df)))]
   
+  ## return
+  return(master_df)
+}
+
+
+## this function adds varied-by-variable win percentage columns to master df
+add_varsp_cum_perf_cols <- function(master_df, 
+                                    metric,
+                                    vary_by, 
+                                    rnd_dgts=3, 
+                                    add_opp_cols=FALSE) {
+  
+  ## for each vary-by variable
+  for (var in vary_by) {
+    
+    ## add varied-by-variable cumulative win count (w) and game count (n)
+    master_df <- add_cum_cnt_cols(master_df, 
+                                  cols=c('w', 'n'),
+                                  agg_vars=var,
+                                  new_colnm_apnd_str=tocamel(paste0(var, '_sp')))
+  }
+
   ## return
   return(master_df)
 }

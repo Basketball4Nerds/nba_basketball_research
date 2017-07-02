@@ -1,28 +1,165 @@
+## this function tweaks vary-by variables for proper aggregation
+treat_varyby_vars <- function(vary_by) {
+  
+  ## remove 'o_' prefices if exist
+  vary_by <- gsub('^o_', '', vary_by)
+  
+  ## add 'o_' to each vary-by variable except for site
+  vary_by <- ifelse(vary_by=='site', vary_by, paste0('o_', vary_by))
+  
+  ## return
+  vary_by
+}
 
 
+## this function creates new column name for various moving cnt, sum, avg functions
+create_new_cum_col_nm <- function(col, 
+                                  new_colnm_apnd_str, 
+                                  type=c('cumcnt', 'cumsum', 'cummean', 'sma', 'ema'),
+                                  n=NULL) {
+  
+  ## set type
+  type <- tolower(type[1])
+  
+  ## replace new column name append string with 'gen' if nothing was specified
+  new_colnm_apnd_str <- ifelse(is.null(new_colnm_apnd_str), 'gen', new_colnm_apnd_str)
+  
+  ## case for cum count
+  if (type=='cumcnt') {
+    new_colnm <- paste0(col, '_', new_colnm_apnd_str)
+  } 
+  
+  ## case for cum sum or cum mean
+  else if (type %in% c('cumsum', 'cummean')) {
+    new_colnm <- paste0(col, '_', type, '_', new_colnm_apnd_str) 
+  } 
+  
+  ## case for moving average (with n)
+  else if (type %in% c('sma', 'ema')) { 
+    new_colnm <- paste0(col, '_', tolower(type), n, '_', new_colnm_apnd_str) 
+  }
+  
+  ## error case
+  else {
+    stop('Wrong type given to create new column name.') 
+  }
 
-## this function adds new columns for moving averages 
-## (e.g. simple moving averages or running standard deviations)
-add_movavg_cols <- function(master_df, cols, 
-                            type=c('SMA', 'EMA', 'cummean'), 
-                            n=10, cover_less_than_n=TRUE, 
-                            agg_vars=NULL, new_colnm_apnd_str='', 
-                            rnd_dgt=3, add_opp_cols=FALSE) {
+  ## replace double underscores to one if exist
+  new_colnm <- gsub('__', '_', new_colnm)
+  
+  ## return 
+  return(new_colnm)
+}
 
-  ## base case for single team-season df
-  if (is_sngl_ssn_tm_df(master_df)) {
+
+## this function add variable-specific win, loss, and game counts 
+add_cum_cnt_cols <- function(master_df, 
+                             cols=c('w', 'l', 'n'), 
+                             vary_by=NULL, 
+                             new_colnm_apnd_str=NULL,
+                             add_opp_cols=FALSE) {
+  
+  ## recursive base case (when no aggregation variable was given)
+  if (is.null(vary_by)) {
     
-    if (is.null(agg_vars)) {
-
+    ## split df by team-season
+    df_lst <- split(master_df, list(master_df$team, master_df$season))
+    
+    ## add cumulative count columns for each team-season df
+    df_lst <- lapply(df_lst, function(df) {
+      
       ## get original column names
       orig_cols <- names(df)
-      
-      ## set type
-      type <- type[1]
       
       ## order the base subsets
       df <- df[order(df$date), ]
       
+      ## calculate nrow
+      n <- nrow(df)
+      
+      ## for each column
+      for (col in cols) {
+        
+        ## calculate running counts
+        if (col=='w')
+          run_cnts <- c(0, cumsum(df$won)[-n])
+        else if (col=='l')
+          run_cnts <- c(0, cumsum(!df$won)[-n])
+        else if (col=='n')
+          run_cnts <- seq(0, n-1)
+        
+        ## create new col name
+      new_colnm <- create_new_cum_col_nm(col, new_colnm_apnd_str, type='cumcnt')
+        
+        ## add run count as a column
+        df[[run_cnt_colnm]] <- run_cnts
+      }
+      
+      ## add opponent columns
+      if (add_opp_cols) {
+        
+        ## get new columns created
+        new_cols <- setdiff(colnames(df), orig_cols)
+        
+        ## create win percentage columns for opponent
+        df <- fill_in_opp_cols(df, cols=new_cols)
+      } 
+      
+      ## add to list
+      df
+    })
+    
+    ## collapse list of dfs into df
+    master_df <- do.call(rbind.data.frame, c(df_lst, stringsAsFactors=FALSE))
+    
+    ## return
+    return(master_df)
+  }
+  
+  ## for each aggregation variable
+  for (var in vary_by) {
+    
+    ## add cumulative count cols
+    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
+      add_cum_cnt_cols(x, cols=cols, vary_by=NULL, new_colnm_apnd_str=var)
+    })
+  }
+  
+  ## return
+  return(master_df)
+}
+
+
+## this function adds new columns for moving averages 
+## (e.g. simple moving averages or running standard deviations)
+add_movavg_cols <- function(master_df, 
+                            cols, 
+                            type=c('sma', 'ema', 'cummean'), 
+                            n=10, 
+                            cover_less_than_n=TRUE, 
+                            vary_by=NULL, 
+                            new_colnm_apnd_str=NULL, 
+                            rnd_dgt=3, 
+                            add_opp_cols=FALSE) {
+
+  ## recursive base case
+  if (is.null(vary_by)) {
+    
+    ## split df by team-season
+    df_lst <- split(master_df, list(master_df$team, master_df$season))
+    
+    ## add moving average columns for each team-season df
+    df_lst <- lapply(df_lst, function(df) {
+
+      ## get original column names
+      orig_cols <- names(master_df)
+      
+      ## set type
+      type <- type[1]
+    
+      ## order the base subsets
+      df <- df[order(df$date), ]
+
       ## for each column
       for (col in cols) {
         
@@ -39,10 +176,10 @@ add_movavg_cols <- function(master_df, cols,
           run_vals <- round(run_vals, rnd_dgt)
           
           ## create new column name
-          run_valsColNm <- paste0(col, '_', tolower(type), new_colnm_apnd_str)
+          new_colnm <- create_new_cum_col_nm(col, new_colnm_apnd_str, type)
           
           ## add MA vals to df as column
-          df[[run_valsColNm]] <- run_vals
+          df[[new_colnm]] <- run_vals
         }
         
         ## for SMA and EMA
@@ -61,10 +198,10 @@ add_movavg_cols <- function(master_df, cols,
             run_vals <- round(run_vals, rnd_dgt)
             
             ## create new column name
-            run_valsColNm <- paste0(col, '_', tolower(type), i, new_colnm_apnd_str)
-            
+            new_colnm <- create_new_cum_col_nm(col, new_colnm_apnd_str, type, i)
+
             ## add MA vals to df as column
-            df[[run_valsColNm]] <- run_vals
+            df[[new_colnm]] <- run_vals
           }
         }
       }
@@ -78,183 +215,138 @@ add_movavg_cols <- function(master_df, cols,
         ## create win percentage columns for opponent
         df <- fill_in_opp_cols(df, cols=new_cols)
       }
-    }
-
-    ## for each aggregation subset, apply function
-    output_df <- ddply(df, agg_vars, function(x) {
-      add_movavg_cols(df=x, cols=cols, type=type, n=n, cover_less_than_n=cover_less_than_n, 
-                agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
+      
+      ## store to list
+      df
     })
-    
-  }
-  
-  ## case for multiple team-season df
-  else {
-    
-    ## split master df by team-season
-    df_lst <- split(master_df, list(master_df$team, master_df$season))
-    
-    ## for each team-season df, add moving average cols
-    ret_df_lst <- lapply(df_lst, function(x) {
-      x <- add_movavg_cols(x, 
-                           cols=cols, 
-                           type=type, n=n, 
-                           cover_less_than_n=cover_less_than_n,
-                           agg_vars=agg_vars, 
-                           new_colnm_apnd_str=new_colnm_apnd_str,
-                           rnd_dgt=rnd_dgt)
-      x
-    })
-    
-    
-  }
-  
-  ## return
-  return(output_df)
-}
 
-
-## this function add variable-specific win, loss, and game counts 
-add_cum_cnt_cols <- function(df, cols=c('w', 'l', 'n'), 
-                             agg_vars=NULL, 
-                             new_colnm_apnd_str='',
-                             add_opp_cols=FALSE) {
-  
-  ## adjust add_vars based on df type for recursion
-  agg_vars <- treat_agg_vars_for_recursion(df, agg_vars)
-  
-  ## recursionn base case
-  if (is.null(agg_vars)) {
-    
-    ## get original column names
-    orig_cols <- names(df)
-    
-    ## order the base subsets
-    df <- df[order(df$date), ]
-    
-    ## calculate nrow
-    n <- nrow(df)
-    
-    ## for each column
-    for (col in cols) {
-      
-      ## create new column name
-      run_cnt_colnm <- paste0(col, '_', new_colnm_apnd_str)
-      run_cnt_colnm <- gsub('__', '_', run_cnt_colnm)
-      
-      ## calculate running counts
-      if (col=='w')
-        run_cnts <- c(0, cumsum(df$won)[-n])
-      else if (col=='l')
-        run_cnts <- c(0, cumsum(!df$won)[-n])
-      else if (col=='n')
-        run_cnts <- seq(0, n-1)
-      
-      ## add run count as a column
-      df[[run_cnt_colnm]] <- run_cnts
-    }
-    
-    ## add opponent columns
-    if (add_opp_cols) {
-      
-      ## get new columns created
-      new_cols <- setdiff(colnames(df), orig_cols)
-      
-      ## create win percentage columns for opponent
-      df <- fill_in_opp_cols(df, cols=new_cols)
-    }
+    ## collapse list of dfs into df
+    master_df <- do.call(rbind.data.frame, c(df_lst, stringsAsFactors=FALSE))
     
     ## return
-    return(df)
+    return(master_df)
   }
   
-  ## for each aggregation subset, apply function
-  output_df <- ddply(df, agg_vars, function(x) {
-    add_cum_cnt_cols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str)
-  })
   
+  ## for each aggregation variable
+  for (var in vary_by) {
+    
+    ## add moving average cols
+    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
+      add_movavg_cols(x, 
+                      cols=cols, 
+                      type=type, 
+                      n=n, 
+                      cover_less_than_n=cover_less_than_n, 
+                      vary_by=NULL, 
+                      new_colnm_apnd_str=var,
+                      rnd_dgt=rnd_dgt,
+                      add_opp_cols=add_opp_cols)
+    })
+  }
+
   ## return
-  return(output_df)
+  return(master_df)
 }
 
 
 ## this function adds cumulative sum columns
-add_cum_sum_cols <- function(df, cols, agg_vars=NULL, 
+add_cum_sum_cols <- function(master_df, 
+                             cols, 
+                             vary_by=NULL, 
                              new_colnm_apnd_str='', 
-                             rnd_dgt=3, add_opp_cols=FALSE) {
-  
-  ## adjust add_vars based on df type for recursion
-  agg_vars <- treat_agg_vars_for_recursion(df, agg_vars)
-  
+                             rnd_dgt=3, 
+                             add_opp_cols=FALSE) {
+
   ## recursion base case
-  if (is.null(agg_vars)) {
+  if (is.null(vary_by)) {
     
-    ## get original column names
-    orig_cols <- names(df)
+    ## split df by team-season
+    df_lst <- split(master_df, list(master_df$team, master_df$season))
     
-    ## order the base subsets
-    df <- df[order(df$date), ]
-    
-    ## for each column
-    for (col in cols) {
+    ## add moving average columns for each team-season df
+    df_lst <- lapply(df_lst, function(df) {
       
-      ## calculate MA
-      run_vals <- cumsum(df[[col]])
+      ## get original column names
+      orig_cols <- names(df)
       
-      ## offset (shift) MA vals by 1
-      run_vals <- c(NA, run_vals[-length(run_vals)])
+      ## order the base subsets
+      df <- df[order(df$date), ]
+
+      ## for each column
+      for (col in cols) {
+        
+        ## calculate MA
+        run_vals <- cumsum(df[[col]])
+        
+        ## offset (shift) MA vals by 1
+        run_vals <- c(NA, run_vals[-length(run_vals)])
+        
+        ## round MA values
+        run_vals <- round(run_vals, rnd_dgt)
+        
+        ## create new column name
+        new_colnm <- create_new_cum_col_nm(col, new_colnm_apnd_str, type='cumsum')
+        
+        ## add MA vals to df as column
+        df[[new_colnm]] <- run_vals
+      }
       
-      ## round MA values
-      run_vals <- round(run_vals, rnd_dgt)
+      ## add opponent columns
+      if (add_opp_cols) {
+        
+        ## get new columns created
+        new_cols <- setdiff(colnames(df), orig_cols)
+        
+        ## create win percentage columns for opponent
+        df <- fill_in_opp_cols(df, cols=new_cols)
+      }
       
-      ## create new column name
-      run_valsColNm <- paste0(col, '_cumsum_', new_colnm_apnd_str)
-      run_valsColNm <- gsub('__', '_', run_valsColNm)
-      
-      ## add MA vals to df as column
-      df[[run_valsColNm]] <- run_vals
-    }
-    
-    ## add opponent columns
-    if (add_opp_cols) {
-      
-      ## get new columns created
-      new_cols <- setdiff(colnames(df), orig_cols)
-      
-      ## create win percentage columns for opponent
-      df <- fill_in_opp_cols(df, cols=new_cols)
-    }
+      ## return
+      return(df)
+    })
+   
+    ## collapse list of dfs into df
+    master_df <- do.call(rbind.data.frame, c(df_lst, stringsAsFactors=FALSE))
     
     ## return
-    return(df)
+    return(master_df)
   }
   
-  ## for each aggregation subset, apply function
-  output_df <- ddply(df, agg_vars, function(x) {
-    add_cum_sum_cols(df=x, cols=cols, agg_vars=NULL, new_colnm_apnd_str=new_colnm_apnd_str, rnd_dgt=rnd_dgt)
-  })
+  ## for each aggregation variable
+  for (var in vary_by) {
+    
+    ## add moving average cols
+    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
+      add_cum_sum_cols(x, 
+                      cols=cols, 
+                      vary_by=NULL, 
+                      new_colnm_apnd_str=var,
+                      rnd_dgt=rnd_dgt,
+                      add_opp_cols=add_opp_cols)
+    })
+  }
   
   ## return
-  return(output_df)
+  return(master_df)
 }
 
 
 
 
-## this function adds cumulative general performance columns based on given metrics
-add_cum_gen_perf_cols <- function(df, 
-                                  metric=c('oeff', 'oeffA', 
-                                           'FGP', 'FGPA', 
-                                           'rqP', 'rqPA'), 
-                                  agg_vars=NULL,
-                                  rnd_dgt=3,
-                                  add_opp_cols=FALSE) {
-  
-  ## adjust add_vars based on df type for recursion
-  agg_vars <- treat_agg_vars_for_recursion(df, agg_vars)
+## this function adds cumulative performance columns
+## WORK ON THIS FUNCTION HERE!!!!
+add_cum_perf_cols <- function(df, 
+                              metric=c('oeff', 'oeffA', 
+                                       'FGP', 'FGPA', 
+                                       'rqP', 'rqPA',
+                                       'pos', 'posA'), 
+                              vary_by=NULL,
+                              rnd_dgt=3,
+                              add_opp_cols=FALSE) {
   
   ## recursion base case
-  if (is.null(agg_vars)) {
+  if (is.null(vary_by)) {
     
     ## get original column names
     orig_cols <- names(df)
@@ -276,7 +368,9 @@ add_cum_gen_perf_cols <- function(df,
     }
     
     ## add cumulative sum columns
-    df <- add_cum_sum_cols(df, cols=cum_cols,
+    df <- add_cum_sum_cols(df, 
+                           cols=cum_cols,
+                           agg_vars=NULL,
                            new_colnm_apnd_str='gen',
                            add_opp_cols=FALSE)
     
@@ -331,8 +425,8 @@ add_cum_gen_perf_cols <- function(df,
   }
   
   ## for each aggregation subset, apply function
-  output_df <- ddply(df, agg_vars, function(x) {
-    add_cum_gen_perf_cols(df=x, metric=metric, agg_vars=NULL, rnd_dgt=rnd_dgt, add_opp_cols=add_opp_cols)
+  output_df <- ddply(df, vary_by, function(x) {
+    add_cum_gen_perf_cols(df=x, metric=metric, vary_by=NULL, rnd_dgt=rnd_dgt, add_opp_cols=add_opp_cols)
   })
   
   ## return
