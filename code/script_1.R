@@ -242,11 +242,11 @@ write.csv(master, './data/master_backup3.csv', row.names=FALSE)
 # master$date <- as.Date(master$date)
 
 ## variable-specific (e.g. site-specific) win percentage
-master <- add_varsp_wpc_cols(master, 
-                             vary_by=c('site', 'cnf', 
-                                       'oeff_qntl_rnk', 
-                                       'oeffA_qntl_rnk'),
-                             add_opp_cols=TRUE)
+master <- add_wpc_cols(master, 
+                       vary_by=c('site', 'cnf', 
+                                 'oeff_qntl_rnk', 
+                                 'oeffA_qntl_rnk'),
+                       add_opp_cols=TRUE)
 
 ## create backup
 write.csv(master, './data/master_backup3.csv', row.names=FALSE)
