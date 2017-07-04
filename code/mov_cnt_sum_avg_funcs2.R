@@ -323,15 +323,12 @@ add_cum_perf_cols <- function(master_df,
     cumsum_cols <- unique(cumsum_cols)
 
     ## add cum sum columns
-    print('hola')
-    print(cumsum_cols)
     master_df <- add_cum_sum_cols(master_df, 
                            cols=cumsum_cols,
                            vary_by=NULL,
                            new_colnm_apnd_str=new_colnm_apnd_str,
                            add_opp_cols=FALSE)
-    print('tia')
-    
+
     ## add cum cnt columns (if applicable)
     if (any(metric %in% c('rqP', 'rqPA', 'pos', 'posA'))) {
       master_df <- add_cum_cnt_cols(master_df, 

@@ -216,41 +216,18 @@ write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master$date <- as.Date(master$date)
 
 ## add various general cumulative performance columns
-t <- add_cum_perf_cols(master, 
+master <- add_cum_perf_cols(master, 
                             metric=c('oeff', 'oeffA', 
                                      'FGP', 'FGPA', 
                                      'rqP', 'rqPA',
                                      'pos', 'posA'), 
                             vary_by=NULL,
                             add_opp_cols=TRUE)
-cumsum_cols <- c("p", "pos", 
-                 "pA", "posA", 
-                 "FGM", "FGA",
-                 "FGMA", "FGAA",
-                 "rqP",  "rqPA")
-t <- add_cum_sum_cols(master, 
-                      cols=cumsum_cols,
-                      vary_by=NULL,
-                      new_colnm_apnd_str=NULL,
-                      add_opp_cols=FALSE)
 
-
-
-df_lst <- split(master, list(master$team, master$season))
-df_lst2 <- df_lst
-
-t <- df_lst[[9]]
-dim(t)
-t$season[1]
-t$team[1]
-master_df <- subset(master, season==2012)
-x <- add_cum_perf_cols(master_df, 
-                                metric=c('oeff', 'oeffA', 
-                                         'FGP', 'FGPA', 
-                                         'rqP', 'rqPA', 
-                                         'pos', 'posA'), 
-                                vary_by=NULL,
-                                add_opp_cols=TRUE)
+## create backup 2
+write.csv(master, './data/master_backup2.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
 
 ## add columns for offensive and defensive rankings
 master <- add_rnk_cols(master, 
@@ -259,9 +236,9 @@ master <- add_rnk_cols(master,
                        method='qntl',
                        add_opp_cols=TRUE)
 
-## create another backup
-write.csv(master, './data/master_backup2.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
+## create backup 3
+write.csv(master, './data/master_backup3.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
 ## variable-specific (e.g. site-specific) win percentage
