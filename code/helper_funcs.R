@@ -172,3 +172,57 @@ createOddsDf <- function(spreads, totals) {
   ## return
   return(odds)
 }
+
+
+## this function tweaks vary-by variables for proper aggregation
+treat_varyby_vars <- function(vary_by) {
+  
+  ## remove 'o_' prefices if exist
+  vary_by <- gsub('^o_', '', vary_by)
+  
+  ## add 'o_' to each vary-by variable except for site
+  vary_by <- ifelse(vary_by=='site', vary_by, paste0('o_', vary_by))
+  
+  ## return
+  vary_by
+}
+
+
+## this function creates new column name for various 
+## cum cnt, cum sum, mv avg functions
+create_new_cum_colnm <- function(col, 
+                                 new_colnm_apnd_str, 
+                                 type=c('cumcnt', 'cumsum', 'cummean', 
+                                        'cumperf', 'sma', 'ema'),
+                                 n=NULL) {
+  
+  ## set type
+  type <- tolower(type[1])
+  
+  ## replace new column name append string with 'gen' if nothing was specified
+  new_colnm_apnd_str <- ifelse(is.null(new_colnm_apnd_str) || new_colnm_apnd_str=='',
+                               'gen', new_colnm_apnd_str)
+  
+  ## case for cum count
+  if (type=='cumcnt') {
+    new_colnm <- paste0(col, '_', new_colnm_apnd_str)
+  } 
+  
+  ## case for cum sum or cum mean
+  else if (type %in% c('cumsum', 'cummean', 'cumperf')) {
+    new_colnm <- paste0(col, '_', type, '_', new_colnm_apnd_str) 
+  } 
+  
+  ## case for moving average (with n)
+  else if (type %in% c('sma', 'ema')) { 
+    new_colnm <- paste0(col, '_', tolower(type), n, '_', new_colnm_apnd_str) 
+  }
+  
+  ## replace double underscores to one if exist
+  new_colnm <- gsub('__', '_', new_colnm)
+  
+  ## return 
+  return(new_colnm)
+}
+
+

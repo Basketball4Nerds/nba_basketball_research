@@ -216,16 +216,45 @@ write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master$date <- as.Date(master$date)
 
 ## add various general cumulative performance columns
-master <- add_cum_gen_perf_cols(master, 
+t <- add_cum_perf_cols(master, 
+                            metric=c('oeff', 'oeffA', 
+                                     'FGP', 'FGPA', 
+                                     'rqP', 'rqPA',
+                                     'pos', 'posA'), 
+                            vary_by=NULL,
+                            add_opp_cols=TRUE)
+cumsum_cols <- c("p", "pos", 
+                 "pA", "posA", 
+                 "FGM", "FGA",
+                 "FGMA", "FGAA",
+                 "rqP",  "rqPA")
+t <- add_cum_sum_cols(master, 
+                      cols=cumsum_cols,
+                      vary_by=NULL,
+                      new_colnm_apnd_str=NULL,
+                      add_opp_cols=FALSE)
+
+
+
+df_lst <- split(master, list(master$team, master$season))
+df_lst2 <- df_lst
+
+t <- df_lst[[9]]
+dim(t)
+t$season[1]
+t$team[1]
+master_df <- subset(master, season==2012)
+x <- add_cum_perf_cols(master_df, 
                                 metric=c('oeff', 'oeffA', 
                                          'FGP', 'FGPA', 
-                                         'rqP', 'rqPA'), 
-                                agg_vars=NULL,
+                                         'rqP', 'rqPA', 
+                                         'pos', 'posA'), 
+                                vary_by=NULL,
                                 add_opp_cols=TRUE)
 
 ## add columns for offensive and defensive rankings
 master <- add_rnk_cols(master, 
-                       metric=c('oeff_cum_gen', 'oeffA_cum_gen'), 
+                       metric=c('oeff_cumperf_gen', 'oeffA_cumperf_gen'), 
                        higher_num_bttr_perf=c(TRUE, FALSE),
                        method='qntl',
                        add_opp_cols=TRUE)
