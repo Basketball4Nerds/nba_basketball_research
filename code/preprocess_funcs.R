@@ -1,7 +1,9 @@
 ############ PREPROCESSOR FUNCTIONS ################
 
 ## this function adds win percentage columns from w, n columns
-add_wpc_cols_fr_w_n_cols <- function(df, rnd_dgts=3, add_opp_cols=FALSE) {
+add_wpc_cols_fr_w_n_cols <- function(df, 
+                                     rnd_dgt=3, 
+                                     add_opp_cols=FALSE) {
 
   ## get original columns
   orig_cols <- colnames(df)
@@ -20,7 +22,7 @@ add_wpc_cols_fr_w_n_cols <- function(df, rnd_dgts=3, add_opp_cols=FALSE) {
     win_cnt_col <- win_cnt_cols[i]
     gm_cnt_col <- gm_cnt_cols[i]
     win_pc_col <- win_pc_cols[i]
-    df[win_pc_col] <- round(df[win_cnt_col] / df[gm_cnt_col], rnd_dgts)
+    df[win_pc_col] <- round(df[win_cnt_col] / df[gm_cnt_col], rnd_dgt)
   }
   
   ## replace NaN w/ NA
@@ -42,53 +44,63 @@ add_wpc_cols_fr_w_n_cols <- function(df, rnd_dgts=3, add_opp_cols=FALSE) {
 
 
 ## this function adds varied-by-variable win percentage columns to master df
-add_varsp_wpc_cols <- function(master_df, 
-                                 vary_by, 
-                                 rnd_dgts=3, 
-                                 add_opp_cols=FALSE) {
+add_wpc_cols <- function(master_df, 
+                         vary_by=NULL, 
+                         new_colnm_apnd_str=NULL,
+                         rnd_dgt=3, 
+                         add_opp_cols=FALSE,
+                         rm_n_cnt_cols=FALSE) {
+
+  ## recursive base case
+  if (is.null(vary_by)) {
+
+    ## get original column names
+    orig_cols <- names(master_df)
+    
+    ## add varied-by-variable cumulative win count (w) and game count (n)
+    ## (do not add opponent cols)
+    master_df <- add_cum_cnt_cols(master_df, 
+                                  cols=c('w', 'n'),
+                                  vary_by=NULL,
+                                  new_colnm_apnd_str=new_colnm_apnd_str,
+                                  add_opp_cols=FALSE)
+    
+    ## create and add win percentage columns from w, n columns
+    ## (add opponent cols if specified)
+    master_df <- add_wpc_cols_fr_w_n_cols(master_df, 
+                                          rnd_dgt=rnd_dgt, 
+                                          add_opp_cols=add_opp_cols)
+    
+    ## remove win count columns
+    ## (remove only w_ cnt cols since opponent cols were not added)
+    master_df <- master_df[ , !(grepl('^w_', names(master_df)))]
+    
+    ## remove n-game count column if specified
+    if (rm_n_cnt_cols) {
+      master_df <- master_df[ , !(grepl('^n_', names(master_df)))]
+    }
+    
+    ## return 
+    return(master_df)
+  }
 
   ## for each vary-by variable
   for (var in vary_by) {
     
-    ## add varied-by-variable cumulative win count (w) and game count (n)
-    master_df <- add_cum_cnt_cols(master_df, 
-                                  cols=c('w', 'n'),
-                                  agg_vars=var,
-                                  new_colnm_apnd_str=tocamel(paste0(var, '_sp')))
+    ## add win perc cols
+    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
+      add_wpc_cols(x, 
+                   vary_by=NULL,
+                   new_colnm_apnd_str=var,
+                   rnd_dgt=rnd_dgt,
+                   add_opp_cols=add_opp_cols, 
+                   rm_n_cnt_cols=rm_n_cnt_cols)
+    })
   }
-  
-  ## create and add win percentage columns from w, n columns
-  master_df <- add_wpc_cols_fr_w_n_cols(master_df, rnd_dgts, add_opp_cols)
-    
-  ## remove win and loss count columns
-  master_df <- master_df[ , !(grepl('^w_', names(master_df)) | grepl('^l_', names(master_df)))]
   
   ## return
   return(master_df)
 }
-
-
-## this function adds varied-by-variable win percentage columns to master df
-add_varsp_cum_perf_cols <- function(master_df, 
-                                    metric,
-                                    vary_by, 
-                                    rnd_dgts=3, 
-                                    add_opp_cols=FALSE) {
-  
-  ## for each vary-by variable
-  for (var in vary_by) {
-    
-    ## add varied-by-variable cumulative win count (w) and game count (n)
-    master_df <- add_cum_cnt_cols(master_df, 
-                                  cols=c('w', 'n'),
-                                  agg_vars=var,
-                                  new_colnm_apnd_str=tocamel(paste0(var, '_sp')))
-  }
-
-  ## return
-  return(master_df)
-}
-
 
 
 ## function to add two columns (j and o_j) for propagation juice
