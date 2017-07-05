@@ -49,6 +49,7 @@ add_wpc_cols <- function(master_df,
                          new_colnm_apnd_str=NULL,
                          rnd_dgt=3, 
                          add_opp_cols=FALSE,
+                         rm_w_cnt_cols=FALSE,
                          rm_n_cnt_cols=FALSE) {
 
   ## recursive base case
@@ -66,18 +67,42 @@ add_wpc_cols <- function(master_df,
                                   add_opp_cols=FALSE)
     
     ## create and add win percentage columns from w, n columns
-    ## (add opponent cols if specified)
     master_df <- add_wpc_cols_fr_w_n_cols(master_df, 
                                           rnd_dgt=rnd_dgt, 
-                                          add_opp_cols=add_opp_cols)
+                                          add_opp_cols=FALSE)
     
-    ## remove win count columns
-    ## (remove only w_ cnt cols since opponent cols were not added)
-    master_df <- master_df[ , !(grepl('^w_', names(master_df)))]
+    ## for debugging
+    # wpc_cols <- names(master_df)[grepl('wpc_', names(master_df))]
+    # wpc_col <- wpc_cols[length(wpc_cols)]
+    # print(wpc_col)
+    # print(table(is.infinite(master_df[[wpc_col]])))
     
-    ## remove n-game count column if specified
-    if (rm_n_cnt_cols) {
-      master_df <- master_df[ , !(grepl('^n_', names(master_df)))]
+    ## IMPORTANT; IMPORTANT; IMPORTANT
+    ## for some reason, removing win count columns here creates Inf and >= 1 values 
+    ## in wpc columns (it shouldn't) when vary_by take on multiple values; 
+    ## e.g. when vary_by is set to c('site', 'o_cnf');
+    ## was not able to figure out why and debug; 
+    ## therefore, DO NOT remove win count columns here inside this recursive function
+    
+    # ## remove win count column
+    # master_df <- master_df[ , !(grepl('^w_', names(master_df)))]
+    # 
+    # ## remove n-game count column if specified
+    # if (rm_n_cnt_cols) {
+    #   master_df <- master_df[ , !(grepl('^n_', names(master_df)))]
+    # }
+    
+    ## for debugging
+    # print(table(is.infinite(master_df[[wpc_col]])))
+    
+    ## fill in opponent columns
+    if (add_opp_cols) {
+      
+      ## get new columns created
+      new_cols <- setdiff(colnames(master_df), orig_cols)
+      
+      ## create win percentage columns for opponent
+      master_df <- fill_in_opp_cols(master_df, cols=new_cols)
     }
     
     ## return 
@@ -101,6 +126,7 @@ add_wpc_cols <- function(master_df,
   ## return
   return(master_df)
 }
+
 
 
 ## function to add two columns (j and o_j) for propagation juice

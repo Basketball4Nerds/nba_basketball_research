@@ -5,7 +5,9 @@ master <- games
 
 ## exclude playoff games (for now since playoff data is not available for 1995 - 2001)
 ddply(master, 'season', function(x) {table(x$playoffs)})
-master <- subset(master, playoffs==0)
+master <- subset(master, playoffs==0)  # flaw in data; does not filter out all playoff games
+master <- subset(master, n < 82)
+ddply(master, c('team', 'season'), nrow)
 
 ## change home/away to H/A for site variable
 master$site <- ifelse(master$site=='home', 'H', 'A')
@@ -211,7 +213,7 @@ master <- addJCols(master, init_j=100, dist_wgts=c(0.05, 0.1, 0.15))
 master <- round_df(master, 3)
 
 ## create backup
-write.csv(master, './data/master_backup.csv', row.names=FALSE)
+write.csv(x, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
@@ -241,20 +243,43 @@ write.csv(master, './data/master_backup3.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
-## variable-specific (e.g. site-specific) win percentage
-master$wpc <- round(master$w / master$n, 3)
-master$o_wpc <- round(master$o_w / master$o_n, 3)
-master$wpc <- master$o_wpc <- NULL
 
+## add general win percentage
 master <- add_wpc_cols(master, 
-                       vary_by=c('site', 'cnf', 
-                                 'oeff_qntl_rnk', 
-                                 'oeffA_qntl_rnk'),
+                       vary_by=NULL, 
+                       rm_n_cnt_cols=FALSE,
                        add_opp_cols=TRUE)
 
-## create backup
-write.csv(master, './data/master_backup3.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
+## add variable-specific (e.g. site-specific) win percentage
+# x <- add_wpc_cols(master, 
+#                        vary_by=c('site', 'cnf', 
+#                                  'oeff_qntl_rnk', 
+#                                  'oeffA_qntl_rnk'),
+#                        rm_n_cnt_cols=FALSE,
+#                        add_opp_cols=TRUE)
+## FIX HERE; SEE tail(x)
+
+
+
+x <- master[ , c('season', 'date', 
+                 'team', 'o_team', 
+                 'site', 'o_cnf', 
+                 'o_oeff_qntl_rnk', 'o_oeffA_qntl_rnk', 
+                 'won')]
+x2012 <- subset(x, season==2012)
+bucks2012 <- subset(x2012, team=='Bucks')
+
+bucks2012_1 <- add_wpc_cols(bucks2012, vary_by=c('site', 'cnf'))
+bucks2012_1 <- sortByCol(bucks2012_1, col=c('team', 'o_cnf'))
+head(bucks2012_1)
+
+
+
+
+
+## create backup 4
+write.csv(master, './data/master_backup4.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup4.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
 ## variable-specific (e.g. conference-specific) performance
