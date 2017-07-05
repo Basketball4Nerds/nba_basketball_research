@@ -251,15 +251,14 @@ master <- add_wpc_cols(master,
                        add_opp_cols=TRUE)
 
 ## add variable-specific (e.g. site-specific) win percentage
-# x <- add_wpc_cols(master, 
-#                        vary_by=c('site', 'cnf', 
-#                                  'oeff_qntl_rnk', 
-#                                  'oeffA_qntl_rnk'),
-#                        rm_n_cnt_cols=FALSE,
-#                        add_opp_cols=TRUE)
+x <- add_wpc_cols(master,
+                       vary_by=c('site', 'cnf',
+                                 'oeff_qntl_rnk',
+                                 'oeffA_qntl_rnk'),
+                       rm_n_cnt_cols=FALSE,
+                       add_opp_cols=TRUE)
+
 ## FIX HERE; SEE tail(x)
-
-
 
 x <- master[ , c('season', 'date', 
                  'team', 'o_team', 

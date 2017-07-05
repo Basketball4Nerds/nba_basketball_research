@@ -8,25 +8,6 @@ add_wpc_cols_fr_w_n_cols <- function(df,
   ## get original columns
   orig_cols <- colnames(df)
   
-  ## get win count column names
-  win_cnt_cols <- colnames(df)[grepl('^w_', colnames(df))]
-  
-  ## get game count column names
-  gm_cnt_cols <- colnames(df)[grepl('^n_', colnames(df))]  
-  
-  ## create win percent column names
-  win_pc_cols <- gsub('^w', 'wpc', win_cnt_cols)
-  
-  ## for each win count column name  
-  for (i in 1:length(win_cnt_cols)) {
-    win_cnt_col <- win_cnt_cols[i]
-    gm_cnt_col <- gm_cnt_cols[i]
-    win_pc_col <- win_pc_cols[i]
-    df[win_pc_col] <- round(df[win_cnt_col] / df[gm_cnt_col], rnd_dgt)
-  }
-  
-  ## replace NaN w/ NA
-  df[is.nan.data.frame(df)] <- NA
   
   ## fill in opponent columns
   if (add_opp_cols) {
@@ -43,6 +24,7 @@ add_wpc_cols_fr_w_n_cols <- function(df,
 }
 
 
+## this function adds win percentage columns to master df
 ## this function adds varied-by-variable win percentage columns to master df
 add_wpc_cols <- function(master_df, 
                          vary_by=NULL, 
@@ -51,82 +33,61 @@ add_wpc_cols <- function(master_df,
                          add_opp_cols=FALSE,
                          rm_w_cnt_cols=FALSE,
                          rm_n_cnt_cols=FALSE) {
+  
+  ## get original column names
+  orig_cols <- names(master_df)
+  
+  ## add varied-by-variable cumulative win count (w) and game count (n)
+  ## (do not add opponent cols)
+  master_df <- add_cum_cnt_cols(master_df, 
+                                cols=c('w', 'n'),
+                                vary_by=vary_by,
+                                add_opp_cols=FALSE)
 
-  ## recursive base case
-  if (is.null(vary_by)) {
-
-    ## get original column names
-    orig_cols <- names(master_df)
+  
+  ## get a vector of win count column names
+  win_cnt_cols <- colnames(master_df)[grepl('^w_', colnames(master_df))]
+  
+  ## get a vector of game count column names
+  gm_cnt_cols <- colnames(master_df)[grepl('^n_', colnames(master_df))]
+  
+  ## create a vector win percent column names
+  win_pc_cols <- gsub('^w', 'wpc', win_cnt_cols)
+  
+  ## for each pair of w-and-n column names
+  for (i in 1:length(win_cnt_cols)) {
+    win_cnt_col <- win_cnt_cols[i]
+    gm_cnt_col <- gm_cnt_cols[i]
+    win_pc_col <- win_pc_cols[i]
     
-    ## add varied-by-variable cumulative win count (w) and game count (n)
-    ## (do not add opponent cols)
-    master_df <- add_cum_cnt_cols(master_df, 
-                                  cols=c('w', 'n'),
-                                  vary_by=NULL,
-                                  new_colnm_apnd_str=new_colnm_apnd_str,
-                                  add_opp_cols=FALSE)
-    
-    ## create and add win percentage columns from w, n columns
-    master_df <- add_wpc_cols_fr_w_n_cols(master_df, 
-                                          rnd_dgt=rnd_dgt, 
-                                          add_opp_cols=FALSE)
-    
-    ## for debugging
-    # wpc_cols <- names(master_df)[grepl('wpc_', names(master_df))]
-    # wpc_col <- wpc_cols[length(wpc_cols)]
-    # print(wpc_col)
-    # print(table(is.infinite(master_df[[wpc_col]])))
-    
-    ## IMPORTANT; IMPORTANT; IMPORTANT
-    ## for some reason, removing win count columns here creates Inf and >= 1 values 
-    ## in wpc columns (it shouldn't) when vary_by take on multiple values; 
-    ## e.g. when vary_by is set to c('site', 'o_cnf');
-    ## was not able to figure out why and debug; 
-    ## therefore, DO NOT remove win count columns here inside this recursive function
-    
-    # ## remove win count column
-    # master_df <- master_df[ , !(grepl('^w_', names(master_df)))]
-    # 
-    # ## remove n-game count column if specified
-    # if (rm_n_cnt_cols) {
-    #   master_df <- master_df[ , !(grepl('^n_', names(master_df)))]
-    # }
-    
-    ## for debugging
-    # print(table(is.infinite(master_df[[wpc_col]])))
-    
-    ## fill in opponent columns
-    if (add_opp_cols) {
-      
-      ## get new columns created
-      new_cols <- setdiff(colnames(master_df), orig_cols)
-      
-      ## create win percentage columns for opponent
-      master_df <- fill_in_opp_cols(master_df, cols=new_cols)
-    }
-    
-    ## return 
-    return(master_df)
-  }
-
-  ## for each vary-by variable
-  for (var in vary_by) {
-    
-    ## add win perc cols
-    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
-      add_wpc_cols(x, 
-                   vary_by=NULL,
-                   new_colnm_apnd_str=var,
-                   rnd_dgt=rnd_dgt,
-                   add_opp_cols=add_opp_cols, 
-                   rm_n_cnt_cols=rm_n_cnt_cols)
-    })
+    ## calculate win perc and add as a column
+    master_df[win_pc_col] <- round(master_df[win_cnt_col] / master_df[gm_cnt_col], rnd_dgt)
   }
   
-  ## return
+  ## replace NaN w/ NA
+  master_df[is.nan.data.frame(master_df)] <- NA
+
+  ## remove win count columns if specified
+  if (rm_w_cnt_cols)
+    master_df <- master_df[ , !(grepl('^w_', names(master_df)))]
+  
+  ## remove n-game count columns if specified
+  if (rm_n_cnt_cols) 
+    master_df <- master_df[ , !(grepl('^n_', names(master_df)))]
+  
+  ## fill in opponent columns
+  if (add_opp_cols) {
+    
+    ## get new columns created
+    new_cols <- setdiff(colnames(master_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    master_df <- fill_in_opp_cols(master_df, cols=new_cols)
+  }
+  
+  ## return 
   return(master_df)
 }
-
 
 
 ## function to add two columns (j and o_j) for propagation juice
