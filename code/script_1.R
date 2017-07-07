@@ -12,14 +12,14 @@ ddply(master, c('team', 'season'), nrow)
 ## change home/away to H/A for site variable
 master$site <- ifelse(master$site=='home', 'H', 'A')
 
+# ## create opponent site variable
+# ## this is redundant info but provides programmatic
+# ## convenience for createWinPred() much later
+# master$o_site <- ifelse(master$site=='H', 'A', 'H')
+
 ## un-factor teams (for later, for the left_join() function to work)
 master$team <- as.character(master$team)
 master$o_team <- as.character(master$o_team)
-
-## create opponent site variable 
-## this is redundant info but provides programmatic 
-## convenience for createWinPred() much later
-master$o_site <- ifelse(master$site=='H', 'A', 'H')
 
 ## remove data points for future games
 master <- master[!is.na(master$pts), ]
@@ -247,46 +247,50 @@ write.csv(master, './data/master_backup3.csv', row.names=FALSE)
 ## add general win percentage
 master <- add_wpc_cols(master, 
                        vary_by=NULL, 
-                       rm_n_cnt_cols=FALSE,
+                       rm_w_cnt_cols=TRUE,
+                       rm_n_cnt_cols=TRUE,
                        add_opp_cols=TRUE)
 
 ## add variable-specific (e.g. site-specific) win percentage
-x <- add_wpc_cols(master,
+master <- add_wpc_cols(master,
                        vary_by=c('site', 'cnf',
                                  'oeff_qntl_rnk',
                                  'oeffA_qntl_rnk'),
+                       rm_w_cnt_cols=TRUE,
                        rm_n_cnt_cols=FALSE,
                        add_opp_cols=TRUE)
-
-## FIX HERE; SEE tail(x)
-
-x <- master[ , c('season', 'date', 
-                 'team', 'o_team', 
-                 'site', 'o_cnf', 
-                 'o_oeff_qntl_rnk', 'o_oeffA_qntl_rnk', 
-                 'won')]
-x2012 <- subset(x, season==2012)
-bucks2012 <- subset(x2012, team=='Bucks')
-
-bucks2012_1 <- add_wpc_cols(bucks2012, vary_by=c('site', 'cnf'))
-bucks2012_1 <- sortByCol(bucks2012_1, col=c('team', 'o_cnf'))
-head(bucks2012_1)
-
-
-
-
 
 ## create backup 4
 write.csv(master, './data/master_backup4.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup4.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
-## variable-specific (e.g. conference-specific) performance
+
+## add general performance
+
+
+
+## add variable-specific (e.g. conference-specific) performance
 
 
 ## define columns for SMA calculations
-cols <- c('rqP', 'rqPA', 'FGP', 'FGPA', 'PPP', 'PPPA')
-smaCols <- c('p')
+
+## UPDATE ADD_CUM_PERF_COLS()?????
+add_cum_perf_cols <- function(master_df, 
+                              metric=c('oeff', 'oeffA', 
+                                       'FGP', 'FGPA', 
+                                       'rqP', 'rqPA',
+                                       'pos', 'posA'), 
+                              vary_by=NULL,
+                              new_colnm_apnd_str=NULL,
+                              rnd_dgt=3,
+                              add_opp_cols=FALSE)
+
+cols <- c('oeff', 'oeffA', 
+  'FGP', 'FGPA', 
+  'rqP', 'rqPA',
+  'pos', 'posA')
+
 
 ## add SMA columns 
 

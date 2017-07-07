@@ -1,29 +1,5 @@
 ############ PREPROCESSOR FUNCTIONS ################
 
-## this function adds win percentage columns from w, n columns
-add_wpc_cols_fr_w_n_cols <- function(df, 
-                                     rnd_dgt=3, 
-                                     add_opp_cols=FALSE) {
-
-  ## get original columns
-  orig_cols <- colnames(df)
-  
-  
-  ## fill in opponent columns
-  if (add_opp_cols) {
-    
-    ## get new columns created
-    new_cols <- setdiff(colnames(df), orig_cols)
-    
-    ## create win percentage columns for opponent
-    df <- fill_in_opp_cols(df, cols=new_cols)
-  }
-  
-  ## return
-  return(df)
-}
-
-
 ## this function adds win percentage columns to master df
 ## this function adds varied-by-variable win percentage columns to master df
 add_wpc_cols <- function(master_df, 

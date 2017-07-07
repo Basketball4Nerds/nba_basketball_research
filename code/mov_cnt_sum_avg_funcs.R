@@ -374,137 +374,140 @@ add_cum_perf_cols <- function(master_df,
                               rnd_dgt=3,
                               add_opp_cols=FALSE) {
   
-  ## recursion base case
-  if (is.null(vary_by)) {
+  
+  ## get original column names
+  orig_cols <- names(master_df)
+  
+  ## initialize an empty vector to store columns for cumulative sum calculations
+  cols_to_cumsum <- c()
+  
+  ## get a vector cols for cumulative sum calculation
+  if ('oeff' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'p', 'pos')
+  if ('oeffA' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'pA', 'posA')  
+  if ('FGP' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'FGM', 'FGA')
+  if ('FGPA' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'FGMA', 'FGAA')
+  if ('rqP' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'rqP')
+  if ('rqPA' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'rqPA')
+  if ('pos' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'pos')
+  if ('posA' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'posA')
+  
+  ## remove duplicate cols
+  cols_to_cumsum <- unique(cols_to_cumsum)
+  
+  ## add cum sum columns
+  master_df <- add_cum_sum_cols(master_df,
+                                cols=cols_to_cumsum,
+                                vary_by=vary_by,
+                                new_colnm_apnd_str=new_colnm_apnd_str,
+                                add_opp_cols=FALSE)
+  
+  ## for the metrics that require gm-cnt cols
+  if (any(c('rqP', 'rqPA', 'pos', 'posA') %in% metric)) {
     
-    ## get original column names
-    orig_cols <- names(master_df)
-    
-    ## initialize an empty vector to store columns for cumulative sum calculations
-    cumsum_cols <- c()
-    
-    ## iteratively add to cumsum_col vector by given metric
-    for (m in metric) {
-      if (m=='oeff') cumsum_cols <- c(cumsum_cols, 'p', 'pos')
-      else if (m=='oeffA') cumsum_cols <- c(cumsum_cols, 'pA', 'posA')  
-      else if (m=='FGP') cumsum_cols <- c(cumsum_cols, 'FGM', 'FGA')
-      else if (m=='FGPA') cumsum_cols <- c(cumsum_cols, 'FGMA', 'FGAA')
-      else if (m=='rqP') cumsum_cols <- c(cumsum_cols, 'rqP')
-      else if (m=='rqPA') cumsum_cols <- c(cumsum_cols, 'rqPA')
-      else if (m=='pos') cumsum_cols <- c(cumsum_cols, 'pos')
-      else if (m=='posA') cumsum_cols <- c(cumsum_cols, 'posA')
-    }
-    
-    ## remove duplicate cols
-    cumsum_cols <- unique(cumsum_cols)
-    
-    ## add cum sum columns
-    master_df <- add_cum_sum_cols(master_df, 
-                                  cols=cumsum_cols,
-                                  vary_by=NULL,
+    ## add cum cnt columns
+    master_df <- add_cum_cnt_cols(master_df, 
+                                  cols='n', 
+                                  vary_by=vary_by, 
                                   new_colnm_apnd_str=new_colnm_apnd_str,
                                   add_opp_cols=FALSE)
-    
-    ## add cum cnt columns (if applicable)
-    if (any(metric %in% c('rqP', 'rqPA', 'pos', 'posA'))) {
-      master_df <- add_cum_cnt_cols(master_df, 
-                                    cols='n', 
-                                    vary_by=NULL, 
-                                    new_colnm_apnd_str=new_colnm_apnd_str)
-    }
-    
-    ## create a named vector of cumulative performance column names
-    cumperf_colnms <- create_new_cum_colnm(col=metric, type='cumperf', new_colnm_apnd_str)
-    names(cumperf_colnms) <- metric
-    
-    ## create a named vector of cumulative sum column names
-    cumsum_colnms <- create_new_cum_colnm(col=cumsum_cols, type='cumsum', new_colnm_apnd_str)
-    names(cumsum_colnms) <- cumsum_cols    
-    
-    ## create cumulative cnt column name
-    n_cumcnt_colnm <- create_new_cum_colnm(col='n', type='cumcnt', new_colnm_apnd_str)
-    
-    ## offensive efficiency: points per possesion x100
-    if ('oeff' %in% metric) {
-      master_df[[cumperf_colnms['oeff']]] <- 
-        master_df[[cumsum_colnms['p']]] / master_df[[cumsum_colnms['pos']]] * 100  
-    } 
-    
-    ## opponent offensive efficiency: points per possession x100
-    if ('oeffA' %in% metric) {
-      master_df[[cumperf_colnms['oeffA']]] <- 
-        master_df[[cumsum_colnms['pA']]] / master_df[[cumsum_colnms['posA']]] * 100
-    } 
-    
-    ## field goal percentage
-    if ('FGP' %in% metric) {
-      master_df[[cumperf_colnms['FGP']]] <- 
-        master_df[[cumsum_colnms['FGM']]] / master_df[[cumsum_colnms['FGA']]]
-    }
-    
-    ## field goal percentage allowed
-    if ('FGPA' %in% metric) {
-      master_df[[cumperf_colnms['FGPA']]] <- 
-        master_df[[cumsum_colnms['FGMA']]] / master_df[[cumsum_colnms['FGAA']]]
-    }
-    
-    ## regular quarter points
-    if ('rqP' %in% metric) {
-      master_df[[cumperf_colnms['rqP']]] <- 
-        master_df[[cumsum_colnms['rqP']]] / master_df[[n_cumcnt_colnm]]
-    }
-    
-    ## regular quarter points allowed
-    if ('rqPA' %in% metric) {
-      master_df[[cumperf_colnms['rqPA']]] <- 
-        master_df[[cumsum_colnms['rqPA']]] / master_df[[n_cumcnt_colnm]]
-    }
-    
-    ## possessions
-    if ('pos' %in% metric) {
-      master_df[[cumperf_colnms['pos']]] <- 
-        master_df[[cumsum_colnms['pos']]] / master_df[[n_cumcnt_colnm]]
-    }
-    
-    if ('posA' %in% metric) {
-      master_df[[cumperf_colnms['posA']]] <- 
-        master_df[[cumsum_colnms['posA']]] / master_df[[n_cumcnt_colnm]]
-    }
-    
-    ## remove intermediary columns
-    # master_df <- rm_colnms_by_regex_mtch(master_df, regex_expr='cumsum')
-    # master_df <- rm_colnms_by_regex_mtch(master_df, regex_expr='cumcnt')
-    master_df <- master_df[ , c(orig_cols, cumperf_colnms)]
-    
-    ## round digits
-    master_df <- round_df(master_df, rnd_dgt)
-    
-    ## fill in opponent columns
-    if (add_opp_cols) {
-      
-      ## get new columns created
-      new_cols <- setdiff(colnames(master_df), orig_cols)
-      
-      ## create win percentage columns for opponent
-      master_df <- fill_in_opp_cols(master_df, cols=new_cols)
-    }
-    
-    ## return
-    return(master_df)
   }
   
-  ## for each aggregation variable
-  for (var in vary_by) {
+  ## get cumsum columns required for oeff calculations
+  p_cumsum_cols <- sort(colnames(master_df)[grepl('^p_cumsum_', colnames(master_df))])
+  pA_cumsum_cols <- sort(colnames(master_df)[grepl('^pA_cumsum_', colnames(master_df))])
+  pos_cumsum_cols <- sort(colnames(master_df)[grepl('^pos_cumsum_', colnames(master_df))])
+  posA_cumsum_cols <- sort(colnames(master_df)[grepl('^posA_cumsum_', colnames(master_df))])
+  FGM_cumsum_cols <- sort(colnames(master_df)[grepl('^FGM_cumsum_', colnames(master_df))])
+  FGMA_cumsum_cols <- sort(colnames(master_df)[grepl('^FGMA_cumsum_', colnames(master_df))])
+  FGA_cumsum_cols <- sort(colnames(master_df)[grepl('^FGA_cumsum_', colnames(master_df))])
+  FGAA_cumsum_cols <- sort(colnames(master_df)[grepl('^FGAA_cumsum_', colnames(master_df))])
+  rqP_cumsum_cols <- sort(colnames(master_df)[grepl('^rqP_cumsum_', colnames(master_df))])
+  rqPA_cumsum_cols <- sort(colnames(master_df)[grepl('^rqPA_cumsum_', colnames(master_df))])
+  
+  ## get a vector of gm-cnt columns
+  gm_cnt_cols <- sort(colnames(master_df)[grepl('^n_', colnames(master_df))])
+  
+  ## create cumperf column names
+  oeff_cumperf_cols <- gsub('^p_cumsum', 'oeff_cumperf', p_cumsum_cols)
+  oeffA_cumperf_cols <- gsub('^pA_cumsum', 'oeffA_cumperf', pA_cumsum_cols)
+  FGP_cumperf_cols <- gsub('^FGM_cumsum', 'FGP_cumperf', FGM_cumsum_cols)
+  FGPA_cumperf_cols <- gsub('^FGMA_cumsum', 'FGPA_cumperf', FGMA_cumsum_cols)
+  rqP_cumperf_cols <- gsub('^rqP_cumsum', 'rqP_cumperf', rqP_cumsum_cols)
+  rqPA_cumperf_cols <- gsub('^rqPA_cumsum', 'rqPA_cumperf', rqPA_cumsum_cols)
+  pos_cumperf_cols <- gsub('^pos_cumsum', 'pos_cumperf', pos_cumperf_cols)
+  posA_cumperf_cols <- gsub('^posA_cumsum', 'posA_cumperf', posA_cumperf_cols)
+  
+  ## offensive efficiency: points per possesion x100
+  if ('oeff' %in% metric) {
+    for (i in 1:length(oeff_cumperf_cols)) {
+      master_df[[oeff_cumperf_cols[i]]] <- (master_df[[p_cumsum_cols[i]]] / master_df[[pos_cumsum_cols[i]]]) * 100
+    }
+  } 
+  
+  ## opponent offensive efficiency: points per possession x100
+  if ('oeffA' %in% metric) {
+    for (i in 1:length(oeffA_cumperf_cols)) {
+      master_df[[oeffA_cumperf_cols[i]]] <- (master_df[[pA_cumsum_cols[i]]] / master_df[[posA_cumsum_cols[i]]]) * 100
+    }
+  } 
+  
+  ## field goal percentage
+  if ('FGP' %in% metric) {
+    for (i in 1:length(FGP_cumperf_cols)) {
+      master_df[[FGP_cumperf_cols[i]]] <- round(master_df[[FGM_cumsum_cols[i]]] / master_df[[FGA_cumsum_cols[i]]], rnd_dgt)
+    }
+  }
+  
+  ## field goal percentage allowed
+  if ('FGPA' %in% metric) {
+    for (i in 1:length(FGPA_cumperf_cols)) {
+      master_df[[FGPA_cumperf_cols[i]]] <- round(master_df[[FGMA_cumsum_cols[i]]] / master_df[[FGAA_cumsum_cols[i]]], rnd_dgt)
+    }
+  }
+  
+  ## regular quarter points
+  if ('rqP' %in% metric) {
+    for (i in 1:length(rqP_cumperf_cols)) {
+      master_df[[rqP_cumperf_cols[i]]] <- round(master_df[[rqP_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
+    }
+  }
+  
+  ## regular quarter points allowed
+  if ('rqPA' %in% metric) {
+    for (i in 1:length(rqPA_cumperf_cols)) {
+      master_df[[rqPA_cumperf_cols[i]]] <- round(master_df[[rqPA_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
+    }
+  }
+  
+  ## possessions
+  if ('pos' %in% metric) {
+    for (i in 1:length(pos_cumperf_cols)) {
+      master_df[[pos_cumperf_cols[i]]] <- round(master_df[[pos_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
+    }
+  }
+  
+  ## possessions allowed
+  if ('posA' %in% metric) {
+    for (i in 1:length(posA_cumperf_cols)) {
+      master_df[[posA_cumperf_cols[i]]] <- round(master_df[[posA_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
+    }
+  }
+  
+  ## remove intermediary columns (remove cumcnt and cumsum columns)
+  cumperf_cols <- colnames(master_df)[grepl('_cumperf_', colnames(master_df))]
+  master_df <- master_df[ , c(orig_cols, cumperf_cols)]
+  
+  ## round digits
+  master_df <- round_df(master_df, rnd_dgt)
+  
+  ## fill in opponent columns
+  if (add_opp_cols) {
     
-    ## add cumulative perf cols
-    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
-      add_cum_perf_cols(x, 
-                        metric=metric, 
-                        vary_by=NULL, 
-                        new_colnm_apnd_str=var,
-                        rnd_dgt=rnd_dgt, 
-                        add_opp_cols=add_opp_cols)
-    })
+    ## get new columns created
+    new_cols <- setdiff(colnames(master_df), orig_cols)
+    
+    ## create win percentage columns for opponent
+    master_df <- fill_in_opp_cols(master_df, cols=new_cols)
   }
   
   ## return
