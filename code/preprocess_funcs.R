@@ -101,8 +101,8 @@ addJCols <- function(master_df, init_j=100, dist_wgts=c(0.05, 0.1, 0.15)) {
       j_vec <- o_j_vec <- rep(NA, nrow(x))
       
       ## populate j with initial value of j 
-      j_vec[x$n==0] <- init_j
-      o_j_vec[x$o_n==0] <- init_j
+      j_vec[x$n_gen==0] <- init_j
+      o_j_vec[x$o_n_gen==0] <- init_j
       
       ## go through each game record (every other row)
       for (i in seq(from=1, to=nrow(x), by=2)) {

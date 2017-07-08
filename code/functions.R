@@ -210,7 +210,7 @@ createVarSpIndex <- function(master_df, var_df_row, n_min) {
   if (all(c(min_n_col, o_min_n_col) %in% names(master_df))) 
     ind <- (master_df[[min_n_col]] >= n_min) && (master_df[[o_min_n_col]] >= n_min)
   else
-    ind <- (master_df$n >= n_min) && (master_df$o_n >= n_min)
+    ind <- (master_df$n_gen >= n_min) && (master_df$o_n_gen >= n_min)
   ind_lst <- c(ind_lst, list(ind))
   
   ## reduce list of index conditions with "and" operator

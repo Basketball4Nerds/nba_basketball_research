@@ -16,7 +16,7 @@ pred_win_by_site <- function(master_df, params) {
   pred <- master_df$site=='H'
   
   ## snuff out certain predictions and replace with NA by using min n-game threshold
-  pred[master_df$n < params$n_min | master_df$o_n < params$n_min] <- NA
+  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
   
   ## return  
   return(pred)
@@ -103,7 +103,7 @@ pred_win_by_line <- function(master_df, params) {
   }
   
   ## snuff out certain predictions and replace with NA by using min n-game threshold
-  pred[master_df$n < params$n_min | master_df$o_n < params$n_min] <- NA
+  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
   
   ## return
   return(pred)
@@ -141,7 +141,7 @@ pred_win_by_mtchmrgn <- function(master_df, params) {
   } 
   
   ## snuff out certain predictions and replace with NA by using min n-game threshold
-  pred[master_df$n < params$n_min | master_df$o_n < params$n_min] <- NA
+  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
   
   ## return  
   return(pred)

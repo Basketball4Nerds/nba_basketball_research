@@ -380,7 +380,7 @@ add_cum_perf_cols <- function(master_df,
   
   ## initialize an empty vector to store columns for cumulative sum calculations
   cols_to_cumsum <- c()
-  
+
   ## get a vector cols for cumulative sum calculation
   if ('oeff' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'p', 'pos')
   if ('oeffA' %in% metric) cols_to_cumsum <- c(cols_to_cumsum, 'pA', 'posA')  
@@ -426,7 +426,7 @@ add_cum_perf_cols <- function(master_df,
   
   ## get a vector of gm-cnt columns
   gm_cnt_cols <- sort(colnames(master_df)[grepl('^n_', colnames(master_df))])
-  
+
   ## create cumperf column names
   oeff_cumperf_cols <- gsub('^p_cumsum', 'oeff_cumperf', p_cumsum_cols)
   oeffA_cumperf_cols <- gsub('^pA_cumsum', 'oeffA_cumperf', pA_cumsum_cols)
@@ -434,9 +434,10 @@ add_cum_perf_cols <- function(master_df,
   FGPA_cumperf_cols <- gsub('^FGMA_cumsum', 'FGPA_cumperf', FGMA_cumsum_cols)
   rqP_cumperf_cols <- gsub('^rqP_cumsum', 'rqP_cumperf', rqP_cumsum_cols)
   rqPA_cumperf_cols <- gsub('^rqPA_cumsum', 'rqPA_cumperf', rqPA_cumsum_cols)
-  pos_cumperf_cols <- gsub('^pos_cumsum', 'pos_cumperf', pos_cumperf_cols)
-  posA_cumperf_cols <- gsub('^posA_cumsum', 'posA_cumperf', posA_cumperf_cols)
+  pos_cumperf_cols <- gsub('^pos_cumsum', 'pos_cumperf', pos_cumsum_cols)
+  posA_cumperf_cols <- gsub('^posA_cumsum', 'posA_cumperf', posA_cumsum_cols)
   
+  head(master)
   ## offensive efficiency: points per possesion x100
   if ('oeff' %in% metric) {
     for (i in 1:length(oeff_cumperf_cols)) {
@@ -495,7 +496,7 @@ add_cum_perf_cols <- function(master_df,
   
   ## remove intermediary columns (remove cumcnt and cumsum columns)
   cumperf_cols <- colnames(master_df)[grepl('_cumperf_', colnames(master_df))]
-  master_df <- master_df[ , c(orig_cols, cumperf_cols)]
+  master_df <- master_df[ , unique(c(orig_cols, cumperf_cols))]
   
   ## round digits
   master_df <- round_df(master_df, rnd_dgt)

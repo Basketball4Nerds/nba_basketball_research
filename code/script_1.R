@@ -80,8 +80,8 @@ names(master)[names(master)=='o_pQtr'] <- 'pQtrA' # opponent quarter points allo
 names(master)[names(master)=='o_bgstLd'] <- 'bgstLdA' # opponent biggest lead allowed
 
 ## add game number cols
-master$n <- master$w + master$l
-master$o_n <- master$o_w + master$o_l
+master$n_gen <- master$w + master$l
+master$o_n_gen <- master$o_w + master$o_l
 
 ## add conference information
 master$cnf <- TeamCityConfDf$Conference[match(master$team, TeamCityConfDf$Team)]
@@ -213,35 +213,25 @@ master <- addJCols(master, init_j=100, dist_wgts=c(0.05, 0.1, 0.15))
 master <- round_df(master, 3)
 
 ## create backup
-write.csv(x, './data/master_backup.csv', row.names=FALSE)
+write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
 ## add various general cumulative performance columns
-master <- add_cum_perf_cols(master, 
-                            metric=c('oeff', 'oeffA', 
-                                     'FGP', 'FGPA', 
+master <- add_cum_perf_cols(master,
+                            metric=c('oeff', 'oeffA',
+                                     'FGP', 'FGPA',
                                      'rqP', 'rqPA',
-                                     'pos', 'posA'), 
+                                     'pos', 'posA'),
                             vary_by=NULL,
                             add_opp_cols=TRUE)
 
-## create backup 2
-write.csv(master, './data/master_backup2.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
-# master$date <- as.Date(master$date)
-
 ## add columns for offensive and defensive rankings
-master <- add_rnk_cols(master, 
-                       metric=c('oeff_cumperf_gen', 'oeffA_cumperf_gen'), 
+master <- add_rnk_cols(master,
+                       metric=c('oeff_cumperf_gen', 'oeffA_cumperf_gen'),
                        higher_num_bttr_perf=c(TRUE, FALSE),
                        method='qntl',
                        add_opp_cols=TRUE)
-
-## create backup 3
-write.csv(master, './data/master_backup3.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
-# master$date <- as.Date(master$date)
 
 ## add general win percentage
 master <- add_wpc_cols(master, 
@@ -252,128 +242,27 @@ master <- add_wpc_cols(master,
 
 ## add variable-specific (e.g. site-specific) win percentage
 master <- add_wpc_cols(master,
-                       vary_by=c('site', 'o_cnf',
+                       vary_by=c('site', 
+                                 'o_cnf',
                                  'o_oeff_qntl_rnk',
                                  'o_oeffA_qntl_rnk'),
                        rm_w_cnt_cols=TRUE,
                        rm_n_cnt_cols=FALSE,
                        add_opp_cols=TRUE)
 
-## create backup 4
-write.csv(master, './data/master_backup4.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup4.csv', stringsAsFactors=FALSE)
+## add variable-specific (e.g. conference-specific) performance
+master <- add_cum_perf_cols(master,
+                            metric=c('oeff', 'oeffA', 
+                                     'FGP', 'FGPA', 
+                                     'rqP', 'rqPA',
+                                     'pos', 'posA'),
+                            vary_by=c('site', 'o_cnf', 
+                                      'o_oeff_qntl_rnk', 
+                                      'o_oeffA_qntl_rnk'),
+                            add_opp_cols=TRUE)
+
+## make a backup
+write.csv(master, './data/master_backup2.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
-
-### CONTINUE HERE!!!!!
-### CONTINUE HERE!!!!!
-### CONTINUE HERE!!!!!
-### CONTINUE HERE!!!!!
-### CONTINUE HERE!!!!!
-
-## add general performance
-x <- add_cum_perf_cols(master_df,                               
-                       metric=c('oeff', 'oeffA', 
-                                'FGP', 'FGPA', 
-                                'rqP', 'rqPA',
-                                'pos', 'posA'))
-
-
-## add variable-specific (e.g. conference-specific) performance
-x <- add_cum_perf_cols(master_df,                               
-                       metric=c('oeff', 'oeffA', 
-                                'FGP', 'FGPA', 
-                                'rqP', 'rqPA',
-                                'pos', 'posA'),
-                       vary_by=c('site', 'o_cnf', 
-                                 'o_oeff_qntl_rnk', 
-                                 'o_oeffA_qntl_rnk'))
-names(x)
-
-## define columns for SMA calculations
-
-
-
-## add SMA columns 
-
-## site specific
-## opponent conference specific
-## opponent rank specific
-
-y <- master[master$season==1995, c('season', 'date', 'team', 'o_team', 'won', 'site', 'o_cnf', smaCols)]
-
-## general
-y0 <- addMaCols(df=y, type='sma', n=10, cols='p', aggVars=c('team', 'season'), colApndStr='_gen')
-
-## site-specific
-y1 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'site'), colApndStr='_ssp')
-
-## cnf-specific
-y2 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'o_cnf'), colApndStr='_cfsp')
-
-## off-grp-specific
-y3 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'gPPP'), colApndStr='_ogsp')
-
-## def-grp-specific
-y4 <- addMaCols(df=y, type='sma', n=10, cols=smaCols, aggVars=c('team', 'season', 'gPPPA'), colApndStr='_dgsp')
-
-## site-cnf-specific
-table(master_df$OG)
-table(master_df$DG)
-
-## site
-
-
-
-y <- sortByCol(y, col=c('date', 'team'))
-y0 <- sortByCol(y0, col=c('date', 'team'))
-y1 <- sortByCol(y1, col=c('date', 'team'))
-y2 <- sortByCol(y2, col=c('date', 'team'))
-# y3 <- sortByCol(y3, col=c('date', 'team'))
-# y4 <- sortByCol(y4, col=c('date', 'team'))
-
-z <- cbind(y, y0[ , 14:19], y1[ , 14:19], y2[ , 14:19])
-head(z)
-
- 
-
-#### various SMA metrics
-## - PPP SMA
-## - PPPA SMA
-##
-## - regular quarter points SMA
-## - opponent's regular quarter points allowed SMA
-##
-## - point mrgn SMA
-## - opponent's point mrgn SMA
-##
-## - FG percentage SMA
-## - opponent's FG percentage allowed SMA
-##
-## - 3-pointer FG percentage SMA
-## - opponent's 3-pointer FG percentage allowed SMA
-## 
-## - 2-pointer FG percentage SMA
-## - opponent's 2-pointer FG percentage allowed SMA
-##
-## - assists SMA
-## - steals SMA
-## - opponent's blocks SMA
-## - opponent's turnovers SMA
-## - fouls SMA
-## 
-## - (percentage of) points from 3-pointers SMA
-## - (percentage of) points from 2-pointers SMA
-## - (percentage of) points from free throws SMA
-## - (percentage of) points in paint SMA
-## - (percentage of) points from fast breaks SMA
-##
-## - (percentage of) rebounds while on defense SMA
-## - (percentage of) rebounds while on offense SMA
-##
-## - lead changes SMA
-## - biggest leads SMA
-##
-## - matchup stats
-## - rest
-## - opponent's rest

@@ -1136,3 +1136,35 @@ add_varsp_runsum_cols <- function(master_df, cols,
 
 
 
+#### various SMA metrics
+##
+## - point mrgn SMA
+## - opponent's point mrgn SMA
+##
+## - 3-pointer FG percentage SMA
+## - opponent's 3-pointer FG percentage allowed SMA
+## 
+## - 2-pointer FG percentage SMA
+## - opponent's 2-pointer FG percentage allowed SMA
+##
+## - assists SMA
+## - steals SMA
+## - opponent's blocks SMA
+## - opponent's turnovers SMA
+## - fouls SMA
+## 
+## - (percentage of) points from 3-pointers SMA
+## - (percentage of) points from 2-pointers SMA
+## - (percentage of) points from free throws SMA
+## - (percentage of) points in paint SMA
+## - (percentage of) points from fast breaks SMA
+##
+## - (percentage of) rebounds while on defense SMA
+## - (percentage of) rebounds while on offense SMA
+##
+## - lead changes SMA
+## - biggest leads SMA
+##
+## - matchup stats
+## - rest
+## - opponent's rest

@@ -298,8 +298,8 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
         if (method=='sd') {
           
           ## use previous seasons to calculate mean and sd
-          prevSnsMean <- mean(df[df$season < season & df$n >= minN, metric], na.rm=TRUE)
-          prevSnsSd <- sd(df[df$season < season & df$n >= minN, metric], na.rm=TRUE)
+          prevSnsMean <- mean(df[df$season < season & df$n_gen >= minN, metric], na.rm=TRUE)
+          prevSnsSd <- sd(df[df$season < season & df$n_gen >= minN, metric], na.rm=TRUE)
           
           ## if higher numeric value signifies better performance
           if (higherNumBttrPerf) {
@@ -318,7 +318,7 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
         else if (method=='qntl') {
           
           ## use previous seasons to calculate quantiles
-          prevQntls <- quantile(df[df$season < season & df$n >= minN, metric], 
+          prevQntls <- quantile(df[df$season < season & df$n_gen >= minN, metric], 
                                 probs=seq(0, 1, 1/3), na.rm=TRUE)
           
           ## if higher numeric value signifies better performance
@@ -368,8 +368,8 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
         if (method=='sd') {
           
           ## use previous dates to calculate mean and sd
-          prevDatesMean <- mean(df[df$date < date & df$n >= minN, metric], na.rm=TRUE)
-          prevDatesSd <- sd(df[df$date < date & df$n >= minN, metric], na.rm=TRUE)
+          prevDatesMean <- mean(df[df$date < date & df$n_gen >= minN, metric], na.rm=TRUE)
+          prevDatesSd <- sd(df[df$date < date & df$n_gen >= minN, metric], na.rm=TRUE)
           
           ## if higher numeric value signifies better performance
           if (higherNumBttrPerf) {
@@ -388,7 +388,7 @@ addABCGradeCol <- function(df, metrics, higherNumBetterPerf,
         else if (method=='qntl') {
           
           ## use previous dates to calculate quantiles
-          prevQntls <- quantile(df[df$date < date & df$n >= minN, metric], 
+          prevQntls <- quantile(df[df$date < date & df$n_gen >= minN, metric], 
                                 probs=seq(0, 1, 1/3), na.rm=TRUE)
           
           ## if higher numeric value signifies better performance
