@@ -1168,3 +1168,48 @@ add_varsp_runsum_cols <- function(master_df, cols,
 ## - matchup stats
 ## - rest
 ## - opponent's rest
+
+
+
+
+predWinVarSp <- function(master_df, params) {
+  
+  ## create var_df to obtain rows of variations
+  var_df <- createVarDf(by=params$by)
+  
+  ## initialize prediction values
+  pred <- rep(NA, nrow(master_df))
+  
+  ## for each variation listed in var_df
+  for (i in 1:nrow(var_df)) {
+    var_df_row <- var_df[i, ]
+    
+    ## select team and opponent metrics
+    if (metric=='wPc') {
+      metric_col <- var_df_row$wPcCol
+      o_metric_col <- var_df_row$o_wPcCol
+    } else if (metric=='sma10') {
+      next  # skip for not; come back later and modify this part
+    }
+    
+    ## create index of metric comparisons to make
+    ind <- createVarSpIndex(master_df, var_df_row, n_min)
+    
+    ## make predictions for the applicable index
+    if (is.na(min_diff)) {
+      pred[ind] <- ifelse(master_df[[metric_col]] > master_df[[o_metric_col]], TRUE,
+                          ifelse(master_df[[metric_col]] < master_df[[o_metric_col]], FALSE, NA))[ind]
+    } else {
+      pred[ind] <- ifelse(master_df[[metric_col]] - master_df[[o_metric_col]] >= min_diff, TRUE,
+                          ifelse(master_df[[metric_col]] - master_df[[o_metric_col]] <= -min_diff, FALSE, NA))[ind]
+    }
+  }
+}
+
+
+
+
+
+
+
+

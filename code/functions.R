@@ -1,30 +1,185 @@
 
-## this function creates a list of initialized team objects
-createTmObLst <- function(gm_sch_df) {
+## this function predicts win by site (simply that home team will win)
+pred_win_by_site <- function(master_df, params) {
   
-  ## initialize an empty list
-  tm_obs_lst <- vector(mode = "list", length = length(TEAMS))
+  ## stop if minimum differential was specified for site metric  
+  if (!is.na(params$min_diff)) 
+    stop('Invalid params given. min_diff cannot be specified with site metric')
   
-  ## label the list objects
-  names(tm_obs_lst) <- TEAMS
+  ## stop if variable-specification set
+  if (!is.na(params$by)) 
+    stop(sprintf('Invalid params given. by cannot be specified with %s metric.', params$metric))
   
-  ## for each team name
-  for (team_name in TEAMS) {
-    
-    ## create team object
-    tm_ob <- Team(name=team_name, gm_sch_df=gm_sch_df)
-    
-    ## add to list of team objects
-    tm_obs_lst[[team_name]] <- tm_ob
+  ## set n_min value to 0 if NA
+  params$n_min <- ifelse(is.na(params$n_min), 0, params$n_min)
+  
+  ## predict win if home game
+  pred <- master_df$site=='H'
+  
+  ## snuff out certain predictions and replace with NA by using min n-game threshold
+  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
+  
+  ## return  
+  return(pred)
+}
+
+
+# non-variable metrics: 
+# site -> pred_win_by_site
+# line -> pred_win_by_comp
+# mtchmrgn -> pred_win_by_mtchmrgn 
+#          -> pred_win_by_comp
+# j -> pred_win_by_comp 
+# rst -> pred_win_by_comp
+# wPc -> pred_win_by_comp
+
+# variable metrics: 
+# wPc -> pred_win_by_comp 
+# 'oeff_cum_gen', 'oeffA_cum_gen' -> pred_win_by_comp
+# 'FGP_cum_gen', 'FGPA_cum_gen' -> pred_win_by_comp
+
+# n_min
+# min_diff
+# vary_by
+
+
+
+## this function predicts win by comparing two metrics
+pred_win_by_comp <- function(master_df, params, higher_num_ind_bttr_perf) {
+  
+  ## create opponent metric if not present in params
+  if (!('o_metric' %in% params)) o_metric <- paste0('o_', metric)
+  
+  ## return error if opponent metric not found in df
+  if (!(o_metric %in% names(master_df))) stop('Could not find opponent metric.')
+  
+  ## set comparison 1 and comparison 2
+  if (higher_num_ind_bttr_perf) 
+    # when higher number represents higher performance
+  { comp1 <- master_df[[metric]]; comp2 <- master_df[[o_metric]] }
+  else 
+    # when higher number represents lower performance
+  { comp1 <- master_df[[o_metric]]; comp2 <- master_df[[metric]] }
+  
+  ## make prediction
+  if (is.na(params$min_diff)) {
+    # when min_diff is not set  
+    pred <- ifelse(comp1 > comp2, TRUE,
+                   ifelse(comp1 < comp2, FALSE, NA)) 
+  } else {
+    # when min_diff is set
+    pred <- ifelse(comp1 - comp2 >= params$min_diff, TRUE,
+                   ifelse(comp1 - comp2 <= -params$min_diff, FALSE, NA))
   }
   
   ## return
-  return(tm_obs_lst)
+  return(pred)
 }
 
 
 
 
+
+
+## this function predicts win by line (simply that favored team will win)
+pred_win_by_line <- function(master_df, params) {
+  
+  ## stop if variable-specification set
+  if (!is.na(params$by)) 
+    stop(sprintf('Invalid params given. by cannot be specified with %s metric.', params$metric))
+  
+  ## set n_min value to 0 if NA
+  params$n_min <- ifelse(is.na(params$n_min), 0, params$n_min)
+  
+  ## make pred when min_diff is set
+  if (is.na(params$min_diff)) {
+    pred <- ifelse(master_df$line < 0, TRUE, 
+                   ifelse(master_df$line > 0, FALSE, NA))
+  } 
+  
+  ## make pred when min_diff is not set
+  else {
+    pred <- ifelse(master_df$line <= -params$min_diff, TRUE, 
+                   ifelse(master_df$line >= params$min_diff, FALSE, NA))
+  }
+  
+  ## snuff out certain predictions and replace with NA by using min n-game threshold
+  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
+  
+  ## return
+  return(pred)
+}
+
+
+# params <- list(metric='site', n_min=10, min_diff=NA, by='cnf')
+# x <- predWinBySite(master_df, params)
+# 
+# params <- list(metric='line', n_min=10, min_diff=10, by='cnf')
+# x <- predWinByLine(master_df, params)
+# 
+# params <- list(metric='mtch_mrgn', n_min=10, min_diff=2, by=NA)
+# x <- predWinByMtchMrgn(master_df, params)
+
+
+## this function predicts that whichever team who has won more games 
+## against the other team will win
+pred_win_by_mtchmrgn <- function(master_df, params) {
+  
+  ## stop if variable-specification set
+  if (!is.na(params$by)) 
+    stop(sprintf('Invalid params given. by cannot be specified with %s metric.', params$metric))
+  
+  ## make pred when min_diff is set
+  if (is.na(params$min_diff))   {
+    pred <- ifelse(master_df$mtch_mrgn > 0 , TRUE, 
+                   ifelse(master_df$mtch_mrgn < 0, FALSE, NA))
+  } 
+  
+  ## make pred when min_diff is not set
+  else {
+    pred <- ifelse(master_df$mtch_mrgn >= params$min_diff, TRUE, 
+                   ifelse(master_df$mtch_mrgn <= -params$min_diff, FALSE, NA))
+  } 
+  
+  ## snuff out certain predictions and replace with NA by using min n-game threshold
+  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
+  
+  ## return  
+  return(pred)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+## this function takes master_df, var_df, by, and n_min
+## and output a vector of win predictions
+pred_win <- function(master_df, params) {
+  
+  ## stop if a given metric cannot be variable-specific (e.g. site cannot be varied by conference)
+  if (params$metric %in% c('site', 'line', 'mtchmrgn', 'j', 'rst')) 
+    if (!all(is.na(params$by))) stop('Invalid params given. The metric cannot be variable-specific.')
+  
+  
+  ## 
+  if (params$metric=='site')
+    pred <- pred_win_by_site(master_df, params)
+  else if (params$metric=='line') 
+    pred <- pred_win_by_line(master_df, params)
+  else if (params$metric=='mtchmrgn')
+    pred <- pred_win_by_mtchmrg
+  
+  
+  ## return
+  return(pred)
+}
 
 
 ############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################

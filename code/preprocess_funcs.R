@@ -66,6 +66,30 @@ add_wpc_cols <- function(master_df,
 }
 
 
+## this function creates a list of initialized team objects
+createTmObLst <- function(gm_sch_df) {
+  
+  ## initialize an empty list
+  tm_obs_lst <- vector(mode = "list", length = length(TEAMS))
+  
+  ## label the list objects
+  names(tm_obs_lst) <- TEAMS
+  
+  ## for each team name
+  for (team_name in TEAMS) {
+    
+    ## create team object
+    tm_ob <- Team(name=team_name, gm_sch_df=gm_sch_df)
+    
+    ## add to list of team objects
+    tm_obs_lst[[team_name]] <- tm_ob
+  }
+  
+  ## return
+  return(tm_obs_lst)
+}
+
+
 ## function to add two columns (j and o_j) for propagation juice
 addJCols <- function(master_df, init_j=100, dist_wgts=c(0.05, 0.1, 0.15)) {
 
