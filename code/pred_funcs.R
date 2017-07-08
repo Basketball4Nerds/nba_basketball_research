@@ -1,3 +1,25 @@
+## this function predicts win if team's metric is higher than that of opponent
+pred_win_higher_val <- function(tm_vals, o_vals) {
+  
+  ## make prediction
+  pred <- ifelse(tm_vals > o_vals, TRUE,
+                 ifelse(tm_vals < o_vals, FALSE, NA))
+  
+  ## return 
+  return(pred)
+}
+
+## this function predicts win if team's metric is lower than that of opponent
+pred_win_lower_val <- function(tm_vals, o_vals) {
+  
+  ## make prediction
+  pred <- ifelse(tm_vals < o_vals, TRUE,
+                 ifelse(tm_vals > o_vals, FALSE, NA))
+  
+  ## return 
+  return(pred)
+}
+
 ## this function predicts win by site (simply that home team will win)
 pred_win_by_site <- function(master_df, params) {
   

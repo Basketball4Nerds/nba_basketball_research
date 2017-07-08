@@ -29,15 +29,6 @@ createTmObLst <- function(gm_sch_df) {
 
 ############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################
 
-## this function calculates prediction accuracy from confusion matrix
-calcAccFrConfMtx <- function(confMtx, rndDgt=3) {
-  confMtx <- as.matrix(confMtx)
-  accPerc <- sum(diag(confMtx)) / sum(confMtx)
-  accPerc <- round(accPerc, rndDgt)
-  return(accPerc)
-}
-
-
 ## this function creates a "variation df"
 ## which lists out different combinations
 ## of team vs. opponent based on 
@@ -157,13 +148,13 @@ createSimpleRetroWinPredAccDf <- function(df, cols) {
     pred <- df[ , col] > df[ , o_col]
 
     ## create confusion matrix
-    cnfMtx <- table(df$won, pred)
+    cnf_mtx <- table(df$won, pred)
 
     ## calculate prediction accuracy
-    acc <- calcAccFrConfMtx(cnfMtx)
+    acc <- calc_acc_fr_cnf_mtx(cnf_mtx)
 
     ## calculate the number of data points to calculate retro pred acc
-    nDp <- sum(cnfMtx)
+    nDp <- sum(cnf_mtx)
 
     ## create a list element
     lstElm <- c(col, acc, nDp)
@@ -282,7 +273,7 @@ createWinPredAccDf <- function(master_df, params_df, rm.irr.cols=FALSE) {
     ## make prediction, calculate accuracy, calculate sample size
     pred <- createWinPred(master_df, params)
     cnf_mtx <- table(master_df$won, pred)
-    acc <- calcAccFrConfMtx(cnf_mtx)
+    acc <- calc_acc_fr_cnf_mtx(cnf_mtx)
     n_pred <- sum(cnf_mtx)
 
     ## append result to vectors
@@ -359,7 +350,7 @@ createWinPredAccDfByMetCmb <- function(master_df, metric_cmb_lst) {
       
       ## add results to vector
       label_vec <- c(label_vec, label)
-      acc_vec <- c(acc_vec, calcAccFrConfMtx(cnf_mtx))
+      acc_vec <- c(acc_vec, calc_acc_fr_cnf_mtx(cnf_mtx))
       n_pred_vec <- c(n_pred_vec, sum(cnf_mtx))
     }
   }

@@ -1,15 +1,41 @@
 
 ## subset
-x <- subset(master, season==2012)
+master_df <- subset(master, season==2012)
 
 ## get wpc cols
-wpc_cols <- names(x)[grepl('wpc_', names(x))]
-cumperf_cols <- names(x)[grepl('cumperf', names(x))]
-gm_cnt_cols <- names(x)[grepl('n_', names(x))]
 
 
 
 
+wpc_cols <- sort(names(master_df)[grepl('^wpc_', names(master_df))])
+o_wpc_cols <- sort(names(master_df)[grepl('^o_wpc_', names(master_df))])
+
+gm_cnt_cols <- names(master_df)[grepl('^n_', names(master_df))]
+o_gm_cnt_cols <- names(master_df)[grepl('^o_n_', names(master_df))]
+
+o_cumperf_cols <- names(master_df)[grepl('^o_.*cumperf_', names(master_df))]
+cumperf_cols <- gsub('^o_', '', o_cumperf_cols)
+
+
+
+pred_win_by_wpc <- function(master_df) {
+  
+  
+  
+  for (i in 1:length(wpc_cols)) {
+    wpc_col <- wpc_cols[i]
+    o_wpc_col <- o_wpc_cols[i]
+    gm_cnt_col <- gm_cnt_cols[i]
+    
+    pred <- pred_win_higher_val(master_df[[wpc_col]], master_df[[o_wpc_col]])
+    
+    cnf_mtx <- table(master_df$won, pred)
+    n_pred <- sum(cnf_mtx)
+    acc <- calc_acc_fr_cnf_mtx(cnf_mtx)
+  
+  }
+  
+}
 
 
 #### examine win prediction accuracy with simple metrics comparison
