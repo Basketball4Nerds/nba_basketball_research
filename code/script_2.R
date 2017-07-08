@@ -18,16 +18,27 @@ cumperf_cols <- gsub('^o_', '', o_cumperf_cols)
 
 
 
-pred_win_by_wpc <- function(master_df) {
+
+
+
+
+## this function creates a wpc win pred acc df
+create_wpc_win_pred_acc_df <- function(master_df, min_diff, min_n) {
   
-  
-  
+  ## for each 
   for (i in 1:length(wpc_cols)) {
+    
+    ## get cols to compare
     wpc_col <- wpc_cols[i]
     o_wpc_col <- o_wpc_cols[i]
+    
+    ## 
     gm_cnt_col <- gm_cnt_cols[i]
+    o_gm_cnt_col <- o_gm_cnt_cols[i]
+    
     
     pred <- pred_win_higher_val(master_df[[wpc_col]], master_df[[o_wpc_col]])
+    
     
     cnf_mtx <- table(master_df$won, pred)
     n_pred <- sum(cnf_mtx)

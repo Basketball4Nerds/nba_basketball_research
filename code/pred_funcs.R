@@ -1,24 +1,37 @@
 ## this function predicts win if team's metric is higher than that of opponent
-pred_win_higher_val <- function(tm_vals, o_vals) {
+pred_win_higher_val <- function(tm_vals, o_vals, min_diff=NULL) {
   
   ## make prediction
-  pred <- ifelse(tm_vals > o_vals, TRUE,
-                 ifelse(tm_vals < o_vals, FALSE, NA))
-  
+  if (is.null(min_diff)) {
+    pred <- ifelse(tm_vals > o_vals, TRUE,
+                   ifelse(tm_vals < o_vals, FALSE, NA)) 
+  } else {
+    pred <- ifelse(tm_vals - o_vals >= abs(min_diff), TRUE,
+                   ifelse(tm_vals - o_vals <= -abs(min_diff), FALSE, NA))
+  }
+
   ## return 
   return(pred)
 }
 
 ## this function predicts win if team's metric is lower than that of opponent
-pred_win_lower_val <- function(tm_vals, o_vals) {
+pred_win_lower_val <- function(tm_vals, o_vals, min_diff=NULL) {
   
   ## make prediction
-  pred <- ifelse(tm_vals < o_vals, TRUE,
-                 ifelse(tm_vals > o_vals, FALSE, NA))
+  if (is.null(min_diff)) {
+    pred <- ifelse(tm_vals < o_vals, TRUE,
+                   ifelse(tm_vals > o_vals, FALSE, NA))
+  } else {
+    pred <- ifelse(o_vals - tm_vals >= abs(min_diff), TRUE,
+                   ifelse(tm_vals - o_vals >= abs(min_diff), FALSE, NA))
+  }
   
   ## return 
   return(pred)
 }
+
+
+
 
 ## this function predicts win by site (simply that home team will win)
 pred_win_by_site <- function(master_df, params) {
@@ -132,14 +145,14 @@ pred_win_by_line <- function(master_df, params) {
 }
 
 
-params <- list(metric='site', n_min=10, min_diff=NA, by='cnf')
-x <- predWinBySite(master_df, params)
-
-params <- list(metric='line', n_min=10, min_diff=10, by='cnf')
-x <- predWinByLine(master_df, params)
-
-params <- list(metric='mtch_mrgn', n_min=10, min_diff=2, by=NA)
-x <- predWinByMtchMrgn(master_df, params)
+# params <- list(metric='site', n_min=10, min_diff=NA, by='cnf')
+# x <- predWinBySite(master_df, params)
+# 
+# params <- list(metric='line', n_min=10, min_diff=10, by='cnf')
+# x <- predWinByLine(master_df, params)
+# 
+# params <- list(metric='mtch_mrgn', n_min=10, min_diff=2, by=NA)
+# x <- predWinByMtchMrgn(master_df, params)
 
 
 ## this function predicts that whichever team who has won more games 
