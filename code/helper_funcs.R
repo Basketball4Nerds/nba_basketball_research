@@ -175,7 +175,7 @@ createOddsDf <- function(spreads, totals) {
 
 
 ## this function tweaks vary-by variables for proper aggregation
-treat_varyby_vars <- function(vary_by) {
+assure_correct_varyby_vars <- function(vary_by) {
   
   ## remove 'o_' prefices if exist
   vary_by <- gsub('^o_', '', vary_by)
@@ -203,6 +203,13 @@ create_new_cum_colnm <- function(col,
   new_colnm_apnd_str <- ifelse(is.null(new_colnm_apnd_str) || new_colnm_apnd_str=='',
                                'gen', new_colnm_apnd_str)
   
+  ## remove opponent specification from append string (e.g. p_cumsum_cnf, not p_cumsum_o_cnf)
+  new_colnm_apnd_str <- gsub('^o_', '', new_colnm_apnd_str)
+  
+  ## camel-case when append string contains underscore(s)
+  ## (e.g. p_cumsum_oeffQntlRnk, not p_cumsum_oeff_qntl_rnk)
+  new_colnm_apnd_str <- camelCase(new_colnm_apnd_str)
+  
   ## case for cum count
   if (type=='cumcnt') {
     new_colnm <- paste0(col, '_', new_colnm_apnd_str)
@@ -229,4 +236,26 @@ create_new_cum_colnm <- function(col,
 ## this function determines if given df is a single season-team df
 is_sngl_ssn_tm_df <- function(df) {
   return(length(unique(df$season))==1 && length(unique(df$team))==1) 
+}
+
+
+## this function camel-cases a string
+## http://www.stat.cmu.edu/~hseltman/files/camelCase.R
+camelCase = function(sv, upper=FALSE, capIsNew=FALSE, alreadyTrimmed=FALSE) {
+  if (!is.character(sv)) stop("'sv' must be a string vector")
+  if (!alreadyTrimmed) sv = gsub("[[:space:]]*$", "", gsub("^[[:space:]]*", "", sv))
+  if (capIsNew) {
+    sv = gsub("([A-Z])", " \\1", sv)
+    sv = gsub("^[[:space:]]", "", sv)
+    sv = tolower(sv)
+  }
+  apart = strsplit(sv, split="[[:space:][:punct:]]")
+  apart = lapply(apart, tolower)
+  capitalize = function(x) paste0(toupper(substring(x,1,1)), substring(x,2))
+  if (upper) {
+    apart = lapply(apart, capitalize)
+  } else {
+    apart = lapply(apart, function(x) c(x[1], capitalize(x[-1])))
+  }
+  return(sapply(apart, paste, collapse=""))
 }

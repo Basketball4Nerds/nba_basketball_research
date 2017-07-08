@@ -179,7 +179,7 @@ add_movavg_cols <- function(master_df,
   for (var in vary_by) {
     
     ## add moving average cols
-    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
+    master_df <- ddply(master_df, assure_correct_varyby_vars(var), function(x) {
       add_movavg_cols(x, 
                       cols=cols, 
                       type=type, 
@@ -266,9 +266,9 @@ add_cum_cnt_cols <- function(master_df,
   
   ## for each aggregation variable
   for (var in vary_by) {
-    
+
     ## add cumulative count cols
-    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
+    master_df <- ddply(master_df, assure_correct_varyby_vars(var), function(x) {
       add_cum_cnt_cols(x, cols=cols, vary_by=NULL, new_colnm_apnd_str=var)
     })
   }
@@ -348,7 +348,7 @@ add_cum_sum_cols <- function(master_df,
   for (var in vary_by) {
     
     ## add moving average cols
-    master_df <- ddply(master_df, treat_varyby_vars(var), function(x) {
+    master_df <- ddply(master_df, assure_correct_varyby_vars(var), function(x) {
       add_cum_sum_cols(x, 
                        cols=cols, 
                        vary_by=NULL, 

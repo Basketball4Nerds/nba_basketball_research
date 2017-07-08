@@ -243,7 +243,6 @@ write.csv(master, './data/master_backup3.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
-
 ## add general win percentage
 master <- add_wpc_cols(master, 
                        vary_by=NULL, 
@@ -253,9 +252,9 @@ master <- add_wpc_cols(master,
 
 ## add variable-specific (e.g. site-specific) win percentage
 master <- add_wpc_cols(master,
-                       vary_by=c('site', 'cnf',
-                                 'oeff_qntl_rnk',
-                                 'oeffA_qntl_rnk'),
+                       vary_by=c('site', 'o_cnf',
+                                 'o_oeff_qntl_rnk',
+                                 'o_oeffA_qntl_rnk'),
                        rm_w_cnt_cols=TRUE,
                        rm_n_cnt_cols=FALSE,
                        add_opp_cols=TRUE)
@@ -266,30 +265,33 @@ write.csv(master, './data/master_backup4.csv', row.names=FALSE)
 # master$date <- as.Date(master$date)
 
 
-## add general performance
+### CONTINUE HERE!!!!!
+### CONTINUE HERE!!!!!
+### CONTINUE HERE!!!!!
+### CONTINUE HERE!!!!!
+### CONTINUE HERE!!!!!
 
+## add general performance
+x <- add_cum_perf_cols(master_df,                               
+                       metric=c('oeff', 'oeffA', 
+                                'FGP', 'FGPA', 
+                                'rqP', 'rqPA',
+                                'pos', 'posA'))
 
 
 ## add variable-specific (e.g. conference-specific) performance
-
+x <- add_cum_perf_cols(master_df,                               
+                       metric=c('oeff', 'oeffA', 
+                                'FGP', 'FGPA', 
+                                'rqP', 'rqPA',
+                                'pos', 'posA'),
+                       vary_by=c('site', 'o_cnf', 
+                                 'o_oeff_qntl_rnk', 
+                                 'o_oeffA_qntl_rnk'))
+names(x)
 
 ## define columns for SMA calculations
 
-## UPDATE ADD_CUM_PERF_COLS()?????
-add_cum_perf_cols <- function(master_df, 
-                              metric=c('oeff', 'oeffA', 
-                                       'FGP', 'FGPA', 
-                                       'rqP', 'rqPA',
-                                       'pos', 'posA'), 
-                              vary_by=NULL,
-                              new_colnm_apnd_str=NULL,
-                              rnd_dgt=3,
-                              add_opp_cols=FALSE)
-
-cols <- c('oeff', 'oeffA', 
-  'FGP', 'FGPA', 
-  'rqP', 'rqPA',
-  'pos', 'posA')
 
 
 ## add SMA columns 
