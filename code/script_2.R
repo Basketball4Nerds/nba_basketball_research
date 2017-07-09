@@ -95,6 +95,11 @@ j_wpa_df <- create_win_pred_acc_df(master_df,
                                    metric_cols=j_cols, 
                                    min_diff=c(20, 40, 60))
 
+## create win pred acc df with rst cols
+quantile(master_df$rst - master_df$o_rst, na.rm=TRUE)
+rst_wpa_df <- create_win_pred_acc_df(master_df, 
+                                     metric_cols='rst', 
+                                     min_diff=c(1, 2, 3))
 
 
 

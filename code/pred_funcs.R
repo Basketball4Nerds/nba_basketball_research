@@ -1,3 +1,51 @@
+## this function returns a vector of metrics being evaluated from metric columns
+get_metrics_fr_metric_cols <- function(metric_cols) {
+  metrics <- unlist(lapply(strsplit(metric_cols, '_'), function(x) {x[1]}))
+  metrics <- gsub('j[0-9]*', 'j', metrics)
+  return(metrics)
+}
+
+
+## create vector of gm cnt cols 
+get_gm_cnt_cols_fr_metric_cols <- function(metric_cols) {
+  
+  ## get vector of metrics being evaluated
+  metrics <- get_metrics_fr_metric_cols(metric_cols)
+  
+  ## initialize vector to store gm cnt col names
+  gm_cnt_cols <- c()
+  
+  ## for each metric column name (and its metric)
+  for (i in 1:length(metric_cols)) {
+    
+    ## get metric column name and its metric in evaluation
+    metric_col <- metric_cols[i]
+    metric <- metrics[i]
+    
+    ## if metric can be variable-specific (e.g. site-specific)
+    if (metric %in% c('wpc', 'cumperf')) {
+      
+      ## get vary-by suffix from metric column name
+      varyby_suffix <- rev(strsplit(metric_col, '_')[[1]])[1]
+
+      ## construct gm cnt col
+      gm_cnt_col <- paste0('n_', varyby_suffix)
+    }
+    
+    ## if metric cannot be variable-specific
+    else if (metric %in% c('j', 'line', 'site', 'mtchmrgn')) {
+      gm_cnt_col <- 'n_gen'
+    } 
+    
+    ## append gm cnt col nm to vector
+    gm_cnt_cols <- c(gm_cnt_cols, gm_cnt_col)
+  }
+  
+  ## return
+  return(gm_cnt_cols)
+}
+
+
 ## this function predicts win if team's metric is higher than that of opponent
 pred_win_higher_val <- function(tm_vals, o_vals, min_diff=NULL) {
   
@@ -60,7 +108,17 @@ pred_win_by_site <- function(site_vec) {
 # vary_by
 
 
-# line, rst, mtchmrgn, site
+# line, mtchmrgn, site
+
+## create win pred acc df with rst cols
+quantile(master_df$line, na.rm=TRUE)
+rst_wpa_df <- create_win_pred_acc_df(master_df, 
+                                     metric_cols='rst', 
+                                     min_diff=c(1, 2, 3))
+
+
+get_metrics_fr_metric_cols(metric_cols)
+o_gm_cnt_cols <- paste0('o_', gm_cnt_cols)
 
 
 ## this function creates win pred acc df of given metric columns
@@ -72,13 +130,9 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   ## create vector of opponent metrics
   o_metric_cols <- paste0('o_', metric_cols)
 
-  ## create vector of gm cnt cols 
-  gm_cnt_cols <- paste0('n_', unlist(lapply(strsplit(metric_cols, '_'), function(x) {rev(x)[1]})))
-  o_gm_cnt_cols <- paste0('o_', gm_cnt_cols)
   
+
   ## create vector of metrics used for evaluation
-  metrics <- unlist(lapply(strsplit(metric_cols, '_'), function(x) {x[1]}))
-  metrics <- gsub('j[0-9]*', 'j', metrics)
 
   ## initialize vectors to store values
   metric_col_vec <- acc_vec <- n_pred_vec <- min_n_vec <- min_diff_vec <- c()
@@ -105,18 +159,33 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
       
       ## make prediction
       # case when higher metric val predicts win
-      if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc', 'j')) {
+      if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc', 'j', 'rst')) {
         pred <- pred_win_higher_val(tm_vals=master_df[[metric_col]], 
                                     o_vals=master_df[[o_metric_col]], 
                                     min_diff=md)
       } 
       
       # case when lower metric val predicts win
-      else if (metric %in% c('oeffA', 'FGPA', 'rqPA', 'posA', 'line')) {
+      else if (metric %in% c('oeffA', 'FGPA', 'rqPA', 'posA')) {
         pred <- pred_win_lower_val(tm_vals=master_df[[metric_col]], 
                                    o_vals=master_df[[o_metric_col]], 
                                    min_diff=md)
       } 
+      
+      # case when home-team is predicted to win
+      else if (metric=='site') {
+        next
+      }
+      
+      # case when favored team is predicted to win
+      else if (metric=='line') {
+        
+      }
+      
+      # case when 
+      else if (metric=='mtchmrgn') {
+        
+      }
       
       # error case
       else {
@@ -157,3 +226,7 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   ## return 
   return(acc_df)
 }
+
+
+
+

@@ -109,8 +109,9 @@ master$pMrgn <- master$p - master$pA
 master$rqP <- master$pQ1 + master$pQ2 + master$pQ3 + master$pQ4
 master$rqPA <- master$pQ1A + master$pQ2A + master$pQ3A + master$pQ4A
 
-## match w-l differential
-master$mtch_mrgn <- master$mtch_w - master$mtch_l
+## matchup w-l differential
+# master$mtch_mrgn <- master$mtch_w - master$mtch_l
+master$mtchmrgn <- master$mtch_w - master$mtch_l
 
 ## conditional whether games was won
 master$won <- master$p > master$pA
