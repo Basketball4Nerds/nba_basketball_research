@@ -1207,6 +1207,14 @@ predWinVarSp <- function(master_df, params) {
 }
 
 
+# grab cumperf cols: method 1
+cumperf_cols <- names(master_df)[grepl("^(?!o_).*cumperf_", names(master_df), perl = TRUE)]
+
+# grab cumperf cols: method 2
+o_cumperf_cols <- names(master_df)[grepl('^o_.*cumperf_', names(master_df))]
+cumperf_cols <- gsub('^o_', '', o_cumperf_cols)
+
+
 
 
 

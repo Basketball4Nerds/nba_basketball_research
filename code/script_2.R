@@ -2,8 +2,77 @@
 ## subset
 master_df <- subset(master, season==2012)
 
+## create win pred accuracy df with wpc cols
+quantile(master_df$wpc_gen - master_df$o_wpc_gen, na.rm=TRUE)
+wpc_cols <- names(master_df)[grepl('^wpc_', names(master_df))]
+wpc_wpa_df <- create_win_pred_acc_df(master_df, 
+                                     metric_cols=wpc_cols, 
+                                     min_diff=c(0.1, 0.15, 0.2), 
+                                     min_n=c(5, 10))
 
+## creaet win pred acc df with oeff cumperf cols
+quantile(master_df$oeff_cumperf_gen - master_df$o_oeff_cumperf_gen, na.rm=TRUE)
+oeff_cumperf_cols <- names(master_df)[grepl("^oeff_cumperf_", names(master_df), perl = TRUE)]
+oeff_wpa_df <- create_win_pred_acc_df(master_df, 
+                                      metric_cols=oeff_cumperf_cols, 
+                                      min_diff=c(1.5, 3, 4.5), 
+                                      min_n=c(5, 10))
 
+## creaet win pred acc df with oeffA cumperf cols
+quantile(master_df$oeffA_cumperf_gen - master_df$o_oeffA_cumperf_gen, na.rm=TRUE)
+oeffA_cumperf_cols <- names(master_df)[grepl("^oeffA_cumperf_", names(master_df), perl = TRUE)]
+oeffA_wpa_df <- create_win_pred_acc_df(master_df, 
+                                       metric_cols=oeffA_cumperf_cols, 
+                                       min_diff=c(1.5, 3, 4.5), 
+                                       min_n=c(5, 10))
+
+## create win pred acc df with FGP cumperf cols
+quantile(master_df$FGP_cumperf_gen - master_df$o_FGP_cumperf_gen, na.rm=TRUE)
+FGP_cumperf_cols <- names(master_df)[grepl("^FGP_cumperf_", names(master_df), perl = TRUE)]
+FGP_wpa_df <- create_win_pred_acc_df(master_df, 
+                                     metric_cols=FGP_cumperf_cols, 
+                                     min_diff=c(0.015, 0.02, 0.025), 
+                                     min_n=c(5, 10))
+
+## create win pred acc df with FGPA cumperf cols
+quantile(master_df$FGPA_cumperf_gen - master_df$o_FGPA_cumperf_gen, na.rm=TRUE)
+FGPA_cumperf_cols <- names(master_df)[grepl("^FGPA_cumperf_", names(master_df), perl = TRUE)]
+FGPA_wpa_df <- create_win_pred_acc_df(master_df, 
+                                      metric_cols=FGPA_cumperf_cols, 
+                                      min_diff=c(0.015, 0.02, 0.025), 
+                                      min_n=c(5, 10))
+
+## creaet win pred acc df with rqP cumperf cols
+quantile(master_df$rqP_cumperf_gen - master_df$o_rqP_cumperf_gen, na.rm=TRUE)
+rqP_cumperf_cols <- names(master_df)[grepl("^rqP_cumperf_", names(master_df), perl = TRUE)]
+rqP_wpa_df <- create_win_pred_acc_df(master_df, 
+                                     metric_cols=rqP_cumperf_cols, 
+                                     min_diff=c(2.5, 5, 7.5), 
+                                     min_n=c(5, 10))
+
+## creaet win pred acc df with rqPA cumperf cols
+quantile(master_df$rqPA_cumperf_gen - master_df$o_rqPA_cumperf_gen, na.rm=TRUE)
+rqPA_cumperf_cols <- names(master_df)[grepl("^rqPA_cumperf_", names(master_df), perl = TRUE)]
+rqPA_wpa_df <- create_win_pred_acc_df(master_df, 
+                                      metric_cols=rqPA_cumperf_cols, 
+                                      min_diff=c(2.5, 5, 7.5), 
+                                      min_n=c(5, 10))
+
+## creaet win pred acc df with pos cumperf cols
+quantile(master_df$pos_cumperf_gen - master_df$o_pos_cumperf_gen, na.rm=TRUE)
+pos_cumperf_cols <- names(master_df)[grepl("^pos_cumperf_", names(master_df), perl = TRUE)]
+pos_wpa_df <- create_win_pred_acc_df(master_df, 
+                                     metric_cols=pos_cumperf_cols, 
+                                     min_diff=c(1.5, 2, 2.5), 
+                                     min_n=c(5, 10))
+
+## creaet win pred acc df with posA cumperf cols
+quantile(master_df$posA_cumperf_gen - master_df$o_posA_cumperf_gen, na.rm=TRUE)
+posA_cumperf_cols <- names(master_df)[grepl("^posA_cumperf_", names(master_df), perl = TRUE)]
+posA_wpa_df <- create_win_pred_acc_df(master_df, 
+                                      metric_cols=posA_cumperf_cols, 
+                                      min_diff=c(1.5, 2, 2.5), 
+                                      min_n=c(5, 10))
 
 
 

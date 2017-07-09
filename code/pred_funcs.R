@@ -122,21 +122,3 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   return(acc_df)
 }
 
-
-
-## grab all wpc cols
-wpc_cols <- sort(names(master_df)[grepl('^wpc_', names(master_df))])
-o_wpc_cols <- sort(names(master_df)[grepl('^o_wpc_', names(master_df))])
-
-## grab all cumperf cols
-o_cumperf_cols <- sort(names(master_df)[grepl('^o_.*cumperf_', names(master_df))])
-cumperf_cols <- gsub('^o_', '', o_cumperf_cols)
-
-## grab all gm cnt cols
-gm_cnt_cols <- sort(names(master_df)[grepl('^n_', names(master_df))])
-o_gm_cnt_cols <- sort(names(master_df)[grepl('^o_n_', names(master_df))])
-
-
-x <- create_win_pred_acc_df(master_df, metric_cols=wpc_cols, min_diff=c(0.1, 0.15, 0.2), min_n=c(5, 10))
-x
-
