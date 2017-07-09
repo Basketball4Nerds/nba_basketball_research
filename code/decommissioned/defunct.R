@@ -1219,5 +1219,244 @@ cumperf_cols <- gsub('^o_', '', o_cumperf_cols)
 
 
 
+## this function predicts win by comparing two metrics
+pred_win_by_comp <- function(master_df, params, higher_num_ind_bttr_perf) {
+  
+  ## create opponent metric if not present in params
+  if (!('o_metric' %in% params)) o_metric <- paste0('o_', metric)
+  
+  ## return error if opponent metric not found in df
+  if (!(o_metric %in% names(master_df))) stop('Could not find opponent metric.')
+  
+  ## set comparison 1 and comparison 2
+  if (higher_num_ind_bttr_perf) 
+    # when higher number represents higher performance
+  { comp1 <- master_df[[metric]]; comp2 <- master_df[[o_metric]] }
+  else 
+    # when higher number represents lower performance
+  { comp1 <- master_df[[o_metric]]; comp2 <- master_df[[metric]] }
+  
+  ## make prediction
+  if (is.na(params$min_diff)) {
+    # when min_diff is not set  
+    pred <- ifelse(comp1 > comp2, TRUE,
+                   ifelse(comp1 < comp2, FALSE, NA)) 
+  } else {
+    # when min_diff is set
+    pred <- ifelse(comp1 - comp2 >= params$min_diff, TRUE,
+                   ifelse(comp1 - comp2 <= -params$min_diff, FALSE, NA))
+  }
+  
+  ## return
+  return(pred)
+}
 
+## this function predicts win by line (simply that favored team will win)
+pred_win_by_line <- function(master_df, params) {
+  
+  ## stop if variable-specification set
+  if (!is.na(params$by)) 
+    stop(sprintf('Invalid params given. by cannot be specified with %s metric.', params$metric))
+  
+  ## set n_min value to 0 if NA
+  params$n_min <- ifelse(is.na(params$n_min), 0, params$n_min)
+  
+  ## make pred when min_diff is set
+  if (is.na(params$min_diff)) {
+    pred <- ifelse(master_df$line < 0, TRUE, 
+                   ifelse(master_df$line > 0, FALSE, NA))
+  } 
+  
+  ## make pred when min_diff is not set
+  else {
+    pred <- ifelse(master_df$line <= -params$min_diff, TRUE, 
+                   ifelse(master_df$line >= params$min_diff, FALSE, NA))
+  }
+  
+  ## snuff out certain predictions and replace with NA by using min n-game threshold
+  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
+  
+  ## return
+  return(pred)
+}
+
+
+# params <- list(metric='site', n_min=10, min_diff=NA, by='cnf')
+# x <- predWinBySite(master_df, params)
+# 
+# params <- list(metric='line', n_min=10, min_diff=10, by='cnf')
+# x <- predWinByLine(master_df, params)
+# 
+# params <- list(metric='mtch_mrgn', n_min=10, min_diff=2, by=NA)
+# x <- predWinByMtchMrgn(master_df, params)
+
+
+## this function returns a vector of variable-specific index
+createVarSpIndex <- function(master_df, var_df_row, n_min) {
+  
+  ## grab variable columns
+  var_cols <- grep('^(o_)?site$|^(o_)?cnf$|^(o_)?OG$|^(o_)?DG$', names(var_df_row), value=TRUE)
+  
+  ## initialize list of indices      
+  ind_lst <- list()
+  
+  ## populate list of indices for each variable
+  for (var_col in var_cols) {
+    var_val <- var_df_row[[var_col]]
+    ind <- master_df[[var_col]]==var_val
+    ind_lst <- c(ind_lst, list(ind))
+  }
+  
+  ## add to list of indices requirement for n-game minimum threshold
+  min_n_col <- paste0('n', var_df_row$tm_tags)
+  o_min_n_col <- paste0('o_n', var_df_row$o_tags)
+  if (all(c(min_n_col, o_min_n_col) %in% names(master_df))) 
+    ind <- (master_df[[min_n_col]] >= n_min) && (master_df[[o_min_n_col]] >= n_min)
+  else
+    ind <- (master_df$n_gen >= n_min) && (master_df$o_n_gen >= n_min)
+  ind_lst <- c(ind_lst, list(ind))
+  
+  ## reduce list of index conditions with "and" operator
+  ind <- Reduce('&', ind_lst)
+  
+  ## return
+  return(ind)
+}
+
+## this function creates a "variation df"
+## which lists out different combinations
+## of team vs. opponent based on 
+## site, conference, and off/def rank group;
+## it also lists variable-specific team tags
+createVarDf <- function(by=c('site', 'cnf', 'OG', 'DG'),
+                        include.opp.cols=TRUE,
+                        metric=c('w_pc')) {
+  
+  ## weed out error cases
+  by <- unique(by)
+  if (!all(by %in% c('site', 'cnf', 'OG', 'DG'))) stop('Incorrect variable given. Try again.')
+  
+  ## specify variable options
+  site_opts <- c('H', 'A')
+  cnf_opts <- c('E', 'W')
+  OG_opts <- c('A', 'B', 'C')
+  DG_opts <- c('A', 'B', 'C')
+  
+  ## create options list
+  tm_opts_lst <- list()
+  o_opts_lst <- list()
+  for (var in by) {
+    tm_var_opts <- get(paste0(var, '_opts'))
+    tm_opts_lst <- c(tm_opts_lst, list(tm_var_opts))
+    o_var_opts <- get(paste0(var, '_opts'))
+    o_opts_lst <- c(o_opts_lst, list(o_var_opts))
+  }
+  opts_lst <- c(tm_opts_lst, o_opts_lst)
+  names(opts_lst) <- c(by, paste0('o_', by))
+  
+  ## create variable df from variable options list
+  var_df <- expand.grid(opts_lst)
+  
+  ## weed out incorrect cases (e.g. two teams both can't have home games)
+  if ('site' %in% by) 
+    var_df <- var_df[var_df$site != var_df$o_site, ]
+  
+  ## initialize specifity tag
+  tm_tags <- o_tags <- rep('', nrow(var_df))
+  
+  ## append H/A specificity
+  if ('site' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_a', var_df$site)
+    o_tags <- paste0(o_tags, '_a', var_df$o_site)
+  }
+  
+  ## append vs E/W specificity
+  if ('cnf' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_v', var_df$o_cnf)
+    o_tags <- paste0(o_tags, '_v', var_df$cnf)
+  }
+  
+  ## append vs offense group specificity
+  if ('OG' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_vOG', var_df$o_OG)
+    o_tags <- paste0(o_tags, '_vOG', var_df$OG)
+  }
+  
+  ## append vs defense group specificity
+  if ('DG' %in% names(var_df)) {
+    tm_tags <- paste0(tm_tags, '_vDG', var_df$o_DG)
+    o_tags <- paste0(o_tags, '_vDG', var_df$DG)
+  }
+  
+  ## incorporate the comparable metrics into the variation df
+  var_df <- cbind(var_df, tm_tags=tm_tags, o_tags=o_tags)
+  
+  ## if opponent metrics are not desired
+  if (!include.opp.cols) {
+    var_df <- var_df[ , !grepl('o_', names(var_df))]
+    var_df <- unique(var_df)
+  }
+  
+  ## apply as.character function to each column
+  var_df <- sapply(var_df, as.character)
+  
+  ## turn back into data frame
+  var_df <- as.data.frame(var_df, stringsAsFactors=FALSE)
+  
+  ## return
+  return(var_df)
+}
+
+## this function converts params_df and converts to params_lst
+convertParamsDfToLst <- function(params_df) {
+  params_lst <- apply(params_df, 1, as.list)
+  params_lst <- lapply(params_lst, function(x) {
+    x$n_min <- as.integer(x$n_min)
+    x$min_diff <- as.numeric(x$min_diff)
+    x
+  })
+  return(params_lst)
+}
+
+## this function returns df of win prediction accuracies
+## when predicting wins by various win metrics
+createWinPredAccDf <- function(master_df, params_df, rm.irr.cols=FALSE) {
+  
+  ## get params_lst from params_df
+  params_lst <- convertParamsDfToLst(params_df)
+  
+  ## create empty vectors to store values
+  acc_vec <- n_pred_vec <- c()
+  
+  ## for each list of parameters
+  for (params in params_lst) {
+    
+    print(params)
+    
+    ## make prediction, calculate accuracy, calculate sample size
+    pred <- createWinPred(master_df, params)
+    cnf_mtx <- table(master_df$won, pred)
+    acc <- calc_acc_fr_cnf_mtx(cnf_mtx)
+    n_pred <- sum(cnf_mtx)
+    
+    ## append result to vectors
+    acc_vec <- c(acc_vec, acc)
+    n_pred_vec <- c(n_pred_vec, n_pred)
+    print('suc')
+  }
+  
+  ## create return df
+  ret_df <- cbind.data.frame(params_df, acc=acc_vec, n_pred=n_pred_vec)
+  
+  # remove column whose values are all NAs or all 0s
+  if (rm.irr.cols) {
+    for (col in names(ret_df)) {
+      if (all(is.na(ret_df[[col]]))) ret_df[[col]] <- NULL
+      if (is.numeric(ret_df[[col]]) && all(ret_df[[col]]==0)) ret_df[[col]] <- NULL
+    }
+  }
+  
+  ## return
+  return(ret_df)
+}
 

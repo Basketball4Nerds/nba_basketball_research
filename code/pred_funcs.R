@@ -31,10 +31,44 @@ pred_win_lower_val <- function(tm_vals, o_vals, min_diff=NULL) {
   return(pred)
 }
 
+## this function predicts win by site (simply that home team will win)
+pred_win_by_site <- function(site_vec) {
+
+  ## predict win if home game
+  pred <- site_vec=='H'
+
+  ## return
+  return(pred)
+}
+
+# non-variable metrics: 
+# site -> pred_win_by_site
+# line -> pred_win_by_comp
+# mtchmrgn -> pred_win_by_mtchmrgn 
+#          -> pred_win_by_comp
+# j -> pred_win_by_comp 
+# rst -> pred_win_by_comp
+# wPc -> pred_win_by_comp
+
+# variable metrics: 
+# wPc -> pred_win_by_comp 
+# 'oeff_cum_gen', 'oeffA_cum_gen' -> pred_win_by_comp
+# 'FGP_cum_gen', 'FGPA_cum_gen' -> pred_win_by_comp
+
+# n_min
+# min_diff
+# vary_by
+
+
+# line, rst, mtchmrgn, site
+
 
 ## this function creates win pred acc df of given metric columns
 create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=0) {
 
+  ## clean metric_cols (in case opponent metric cols were given)
+  metric_cols <- gsub('^o_', '', metric_cols)
+  
   ## create vector of opponent metrics
   o_metric_cols <- paste0('o_', metric_cols)
 
@@ -44,9 +78,10 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   
   ## create vector of metrics used for evaluation
   metrics <- unlist(lapply(strsplit(metric_cols, '_'), function(x) {x[1]}))
+  metrics <- gsub('j[0-9]*', 'j', metrics)
 
   ## initialize vectors to store values
-  acc_vec <- n_pred_vec <- min_n_vec <- min_diff_vec <- c()
+  metric_col_vec <- acc_vec <- n_pred_vec <- min_n_vec <- min_diff_vec <- c()
   
   ## if min_diff is NULL, replace with 0 (in order to run for-loop later)
   if (is.null(min_diff)) min_diff <- 0
@@ -70,7 +105,7 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
       
       ## make prediction
       # case when higher metric val predicts win
-      if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc')) {
+      if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc', 'j')) {
         pred <- pred_win_higher_val(tm_vals=master_df[[metric_col]], 
                                     o_vals=master_df[[o_metric_col]], 
                                     min_diff=md)
@@ -98,8 +133,9 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
         cnf_mtx <- table(master_df$won, pred)
         acc <- calc_acc_fr_cnf_mtx(cnf_mtx)
         n_pred <- sum(cnf_mtx)
-        
+
         ## add values to vectors
+        metric_col_vec <- c(metric_col_vec, metric_col)
         acc_vec <- c(acc_vec, acc)
         n_pred_vec <- c(n_pred_vec, n_pred)
         min_n_vec <- c(min_n_vec, mn)
@@ -109,7 +145,7 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   }
   
   ## create df from vectors
-  acc_df <- cbind.data.frame(metric = metric_cols, 
+  acc_df <- cbind.data.frame(metric = metric_col_vec, 
                              acc = acc_vec, 
                              n_pred = n_pred_vec, 
                              min_n = min_n_vec,
@@ -121,4 +157,3 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   ## return 
   return(acc_df)
 }
-
