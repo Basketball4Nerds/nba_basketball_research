@@ -32,31 +32,36 @@ pred_win_lower_val <- function(tm_vals, o_vals, min_diff=NULL) {
 }
 
 
-## this function creates a wpc win pred acc df
-create_wpc_win_pred_acc_df <- function(master_df, min_diff=NULL, min_n=0) {
+## this function creates win pred acc df of given metric columns
+create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=0) {
+
+  ## create vector of opponent metrics
+  o_metric_cols <- paste0('o_', metric_cols)
+
+  ## create vector of gm cnt cols 
+  gm_cnt_cols <- paste0('n_', unlist(lapply(strsplit(metric_cols, '_'), function(x) {rev(x)[1]})))
+  o_gm_cnt_cols <- paste0('o_', gm_cnt_cols)
   
-  ## grab all wpc cols
-  wpc_cols <- sort(names(master_df)[grepl('^wpc_', names(master_df))])
-  o_wpc_cols <- sort(names(master_df)[grepl('^o_wpc_', names(master_df))])
-  
-  ## grab all gm cnt cols
-  gm_cnt_cols <- sort(names(master_df)[grepl('^n_', names(master_df))])
-  o_gm_cnt_cols <- sort(names(master_df)[grepl('^o_n_', names(master_df))])
-  
+  ## create vector of metrics used for evaluation
+  metrics <- unlist(lapply(strsplit(metric_cols, '_'), function(x) {x[1]}))
+
   ## initialize vectors to store values
   acc_vec <- n_pred_vec <- min_n_vec <- min_diff_vec <- c()
   
   ## if min_diff is NULL, replace with 0 (in order to run for-loop later)
   if (is.null(min_diff)) min_diff <- 0
-  
-  ## for each wpc col
-  for (i in 1:length(wpc_cols)) {
+
+  ## for each metric col
+  for (i in 1:length(metric_cols)) {
     
     ## get metric cols to compare
-    wpc_col <- wpc_cols[i]
-    o_wpc_col <- o_wpc_cols[i]
+    metric_col <- metric_cols[i]
+    o_metric_col <- o_metric_cols[i]
     
-    ## get gm cnt cols for filter
+    ## get metric used for comparison
+    metric <- metrics[i]
+
+    ## get gm cnt cols for filtering
     gm_cnt_col <- gm_cnt_cols[i]
     o_gm_cnt_col <- o_gm_cnt_cols[i]
     
@@ -64,9 +69,24 @@ create_wpc_win_pred_acc_df <- function(master_df, min_diff=NULL, min_n=0) {
     for (md in min_diff) {
       
       ## make prediction
-      pred <- pred_win_higher_val(tm_vals=master_df[[wpc_col]], 
-                                  o_vals=master_df[[o_wpc_col]], 
-                                  min_diff=md)
+      # case when higher metric val predicts win
+      if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc')) {
+        pred <- pred_win_higher_val(tm_vals=master_df[[metric_col]], 
+                                    o_vals=master_df[[o_metric_col]], 
+                                    min_diff=md)
+      } 
+      
+      # case when lower metric val predicts win
+      else if (metric %in% c('oeffA', 'FGPA', 'rqPA', 'posA', 'line')) {
+        pred <- pred_win_lower_val(tm_vals=master_df[[metric_col]], 
+                                   o_vals=master_df[[o_metric_col]], 
+                                   min_diff=md)
+      } 
+      
+      # error case
+      else {
+        stop(paste('Function unequipped to make predictions for the following metric:', metric))
+      }
       
       ## for each min_n specified 
       for (mn in min_n) {
@@ -89,7 +109,7 @@ create_wpc_win_pred_acc_df <- function(master_df, min_diff=NULL, min_n=0) {
   }
   
   ## create df from vectors
-  acc_df <- cbind.data.frame(metric = wpc_cols, 
+  acc_df <- cbind.data.frame(metric = metric_cols, 
                              acc = acc_vec, 
                              n_pred = n_pred_vec, 
                              min_n = min_n_vec,
@@ -102,4 +122,21 @@ create_wpc_win_pred_acc_df <- function(master_df, min_diff=NULL, min_n=0) {
   return(acc_df)
 }
 
+
+
+## grab all wpc cols
+wpc_cols <- sort(names(master_df)[grepl('^wpc_', names(master_df))])
+o_wpc_cols <- sort(names(master_df)[grepl('^o_wpc_', names(master_df))])
+
+## grab all cumperf cols
+o_cumperf_cols <- sort(names(master_df)[grepl('^o_.*cumperf_', names(master_df))])
+cumperf_cols <- gsub('^o_', '', o_cumperf_cols)
+
+## grab all gm cnt cols
+gm_cnt_cols <- sort(names(master_df)[grepl('^n_', names(master_df))])
+o_gm_cnt_cols <- sort(names(master_df)[grepl('^o_n_', names(master_df))])
+
+
+x <- create_win_pred_acc_df(master_df, metric_cols=wpc_cols, min_diff=c(0.1, 0.15, 0.2), min_n=c(5, 10))
+x
 
