@@ -27,7 +27,9 @@ get_gm_cnt_cols_fr_metric_cols <- function(metric_cols) {
     metric <- metrics[i]
     
     ## if metric can be variable-specific (e.g. site-specific)
-    if (metric %in% c('wpc', 'cumperf')) {
+    if (metric %in% c('wpc', 'cumperf', 
+                      'oeff', 'oeffA', 'FGP', 'FGPA', 
+                      'rqP', 'rqPA', 'pos', 'posA')) {
       
       ## get vary-by suffix from metric column name
       varyby_suffix <- rev(strsplit(metric_col, '_')[[1]])[1]
@@ -37,7 +39,7 @@ get_gm_cnt_cols_fr_metric_cols <- function(metric_cols) {
     }
     
     ## if metric cannot be variable-specific
-    else if (metric %in% c('j', 'line', 'site', 'mtchmrgn')) {
+    else if (metric %in% c('j', 'line', 'site', 'mtchmrgn', 'rst')) {
       gm_cnt_col <- 'n_gen'
     } 
     
@@ -256,7 +258,9 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   acc_df <- sortByCol(acc_df, col='acc', asc=FALSE)
   
   ## return 
-  return(acc_df)
+  if (is_valid_wpa_df(acc_df))
+    return(acc_df)
+  stop('Incorrect wpa_df produced; create_win_pred_acc_df() may be buggy.')
 }
 
 

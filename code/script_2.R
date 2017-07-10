@@ -78,7 +78,6 @@ posA_wpa_df <- create_win_pred_acc_df(master_df,
                                       min_diff=c(1.5, 2, 2.5), 
                                       min_n=c(5, 10))
 
-
 ## create win pred acc df with J cols
 quantile(master_df$j10 - master_df$o_j10, na.rm=TRUE)
 j_cols <- names(master_df)[grepl("^j", names(master_df), perl = TRUE)]
