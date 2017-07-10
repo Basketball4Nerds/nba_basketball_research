@@ -1251,35 +1251,6 @@ pred_win_by_comp <- function(master_df, params, higher_num_ind_bttr_perf) {
   return(pred)
 }
 
-## this function predicts win by line (simply that favored team will win)
-pred_win_by_line <- function(master_df, params) {
-  
-  ## stop if variable-specification set
-  if (!is.na(params$by)) 
-    stop(sprintf('Invalid params given. by cannot be specified with %s metric.', params$metric))
-  
-  ## set n_min value to 0 if NA
-  params$n_min <- ifelse(is.na(params$n_min), 0, params$n_min)
-  
-  ## make pred when min_diff is set
-  if (is.na(params$min_diff)) {
-    pred <- ifelse(master_df$line < 0, TRUE, 
-                   ifelse(master_df$line > 0, FALSE, NA))
-  } 
-  
-  ## make pred when min_diff is not set
-  else {
-    pred <- ifelse(master_df$line <= -params$min_diff, TRUE, 
-                   ifelse(master_df$line >= params$min_diff, FALSE, NA))
-  }
-  
-  ## snuff out certain predictions and replace with NA by using min n-game threshold
-  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
-  
-  ## return
-  return(pred)
-}
-
 
 # params <- list(metric='site', n_min=10, min_diff=NA, by='cnf')
 # x <- predWinBySite(master_df, params)

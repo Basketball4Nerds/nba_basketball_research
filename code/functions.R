@@ -10,32 +10,6 @@
 
 
 
-## this function predicts that whichever team who has won more games 
-## against the other team will win
-pred_win_by_mtchmrgn <- function(master_df, params) {
-  
-  ## stop if variable-specification set
-  if (!is.na(params$by)) 
-    stop(sprintf('Invalid params given. by cannot be specified with %s metric.', params$metric))
-  
-  ## make pred when min_diff is set
-  if (is.na(params$min_diff))   {
-    pred <- ifelse(master_df$mtch_mrgn > 0 , TRUE, 
-                   ifelse(master_df$mtch_mrgn < 0, FALSE, NA))
-  } 
-  
-  ## make pred when min_diff is not set
-  else {
-    pred <- ifelse(master_df$mtch_mrgn >= params$min_diff, TRUE, 
-                   ifelse(master_df$mtch_mrgn <= -params$min_diff, FALSE, NA))
-  } 
-  
-  ## snuff out certain predictions and replace with NA by using min n-game threshold
-  pred[master_df$n_gen < params$n_min | master_df$o_n_gen < params$n_min] <- NA
-  
-  ## return  
-  return(pred)
-}
 
 
 

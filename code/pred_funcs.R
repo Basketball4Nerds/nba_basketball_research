@@ -1,4 +1,6 @@
-## this function returns a vector of metrics being evaluated from metric columns
+## this function returns a vector of metrics being evaluated from given metric columns; 
+## example metric cols: 
+# x <- c('site', 'line', 'j10', 'mtch_mrgn', 'mtchmrgn', 'FGP_cumperf_site', 'wpc_cnf')
 get_metrics_fr_metric_cols <- function(metric_cols) {
   metrics <- unlist(lapply(strsplit(metric_cols, '_'), function(x) {x[1]}))
   metrics <- gsub('j[0-9]*', 'j', metrics)
@@ -6,7 +8,7 @@ get_metrics_fr_metric_cols <- function(metric_cols) {
 }
 
 
-## create vector of gm cnt cols 
+## this function returns a vector of corresponding gm cnt cols from given metric columns
 get_gm_cnt_cols_fr_metric_cols <- function(metric_cols) {
   
   ## get vector of metrics being evaluated
@@ -46,6 +48,16 @@ get_gm_cnt_cols_fr_metric_cols <- function(metric_cols) {
 }
 
 
+## this function returns a vector of corresponding opponent metric columns from given metric columns
+get_o_metric_cols_fr_metric_cols <- function(metric_cols) {
+  metric_cols <- gsub('^o_', '', metric_cols)
+  metrics <- get_metrics_fr_metric_cols(metric_cols)
+  o_metric_cols <- paste0('o_', metric_cols)
+  o_metric_cols[metrics %in% c('line', 'site', 'mtchmrgn')] <- NA
+  return(o_metric_cols)
+}
+
+
 ## this function predicts win if team's metric is higher than that of opponent
 pred_win_higher_val <- function(tm_vals, o_vals, min_diff=NULL) {
   
@@ -79,36 +91,58 @@ pred_win_lower_val <- function(tm_vals, o_vals, min_diff=NULL) {
   return(pred)
 }
 
+
 ## this function predicts win by site (simply that home team will win)
-pred_win_by_site <- function(site_vec) {
+pred_win_by_site <- function(site) {
 
   ## predict win if home game
-  pred <- site_vec=='H'
+  pred <- site=='H'
 
   ## return
   return(pred)
 }
 
-# non-variable metrics: 
-# site -> pred_win_by_site
-# line -> pred_win_by_comp
-# mtchmrgn -> pred_win_by_mtchmrgn 
-#          -> pred_win_by_comp
-# j -> pred_win_by_comp 
-# rst -> pred_win_by_comp
-# wPc -> pred_win_by_comp
 
-# variable metrics: 
-# wPc -> pred_win_by_comp 
-# 'oeff_cum_gen', 'oeffA_cum_gen' -> pred_win_by_comp
-# 'FGP_cum_gen', 'FGPA_cum_gen' -> pred_win_by_comp
+## this function predicts win by line (simply that favored team will win)
+pred_win_by_line <- function(line, min_diff=NULL) {
+ 
+  ## make pred when min_diff is set
+  if (is.null(min_diff) || min_diff==0) {
+    pred <- ifelse(line < 0, TRUE, 
+                   ifelse(line > 0, FALSE, NA))
+  } 
+  
+  ## make pred when min_diff is not set
+  else {
+    pred <- ifelse(line <= -abs(min_diff), TRUE, 
+                   ifelse(line >= abs(min_diff), FALSE, NA))
+  }
+  
+  ## return
+  return(pred)
+}
 
-# n_min
-# min_diff
-# vary_by
 
+## this function predicts win by matchup margin 
+## (simple that whoever won more previously against the other team would win)
+pred_win_by_mtchmrgn <- function(mtchmrgn, min_diff=NULL) {
+  
+  ## make pred when min_diff is set
+  if (is.null(min_diff) || min_diff==0)   {
+    pred <- ifelse(mtchmrgn > 0 , TRUE, 
+                   ifelse(mtchmrgn < 0, FALSE, NA))
+  } 
+  
+  ## make pred when min_diff is not set
+  else {
+    pred <- ifelse(mtchmrgn >= abs(min_diff), TRUE, 
+                   ifelse(mtchmrgn <= -abs(min_diff), FALSE, NA))
+  } 
 
-# line, mtchmrgn, site
+  ## return  
+  return(pred)
+}
+
 
 ## create win pred acc df with rst cols
 quantile(master_df$line, na.rm=TRUE)
@@ -116,9 +150,6 @@ rst_wpa_df <- create_win_pred_acc_df(master_df,
                                      metric_cols='rst', 
                                      min_diff=c(1, 2, 3))
 
-
-get_metrics_fr_metric_cols(metric_cols)
-o_gm_cnt_cols <- paste0('o_', gm_cnt_cols)
 
 
 ## this function creates win pred acc df of given metric columns
@@ -128,11 +159,10 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   metric_cols <- gsub('^o_', '', metric_cols)
   
   ## create vector of opponent metrics
-  o_metric_cols <- paste0('o_', metric_cols)
-
+  o_metric_cols <- get_o_metric_cols_fr_metric_cols(metric_cols)
   
-
   ## create vector of metrics used for evaluation
+  metrics <- get_metrics_fr_metric_cols(metric_cols)
 
   ## initialize vectors to store values
   metric_col_vec <- acc_vec <- n_pred_vec <- min_n_vec <- min_diff_vec <- c()
@@ -142,13 +172,16 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
 
   ## for each metric col
   for (i in 1:length(metric_cols)) {
-    
-    ## get metric cols to compare
-    metric_col <- metric_cols[i]
-    o_metric_col <- o_metric_cols[i]
-    
-    ## get metric used for comparison
+
+    ## get metric used for evaluation
     metric <- metrics[i]
+    
+    ## get specific metric column 
+    metric_col <- metric_cols[i]
+    
+    ## get specific opponent metric column (if applicable)
+    if (!(metric %in% c('line', 'site', 'mtchmrgn')))
+      o_metric_col <- o_metric_cols[i]
 
     ## get gm cnt cols for filtering
     gm_cnt_col <- gm_cnt_cols[i]
@@ -174,17 +207,17 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
       
       # case when home-team is predicted to win
       else if (metric=='site') {
-        next
+        pred <- pred_win_by_site(site=master_df$site)
       }
       
       # case when favored team is predicted to win
       else if (metric=='line') {
-        
+        pred <- pred_win_by_line(line=master_df$line)
       }
       
       # case when 
       else if (metric=='mtchmrgn') {
-        
+        pred <- pred_win_by_mtchmrgn(mtchmrgn=master_df$mtchmrgn)
       }
       
       # error case
