@@ -1,6 +1,8 @@
-## this function returns a vector of metrics being evaluated from given metric columns; 
 ## example metric cols: 
 # x <- c('site', 'line', 'j10', 'mtch_mrgn', 'mtchmrgn', 'FGP_cumperf_site', 'wpc_cnf')
+
+
+## this function returns a vector of metrics being evaluated from given metric columns; 
 get_metrics_fr_metric_cols <- function(metric_cols) {
   metrics <- unlist(lapply(strsplit(metric_cols, '_'), function(x) {x[1]}))
   metrics <- gsub('j[0-9]*', 'j', metrics)
@@ -144,14 +146,6 @@ pred_win_by_mtchmrgn <- function(mtchmrgn, min_diff=NULL) {
 }
 
 
-## create win pred acc df with rst cols
-quantile(master_df$line, na.rm=TRUE)
-rst_wpa_df <- create_win_pred_acc_df(master_df, 
-                                     metric_cols='rst', 
-                                     min_diff=c(1, 2, 3))
-
-
-
 ## this function creates win pred acc df of given metric columns
 create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=0) {
 
@@ -164,6 +158,10 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
   ## create vector of metrics used for evaluation
   metrics <- get_metrics_fr_metric_cols(metric_cols)
 
+  ## create vector of gm cnt cols used to evaluation
+  gm_cnt_cols <- get_gm_cnt_cols_fr_metric_cols(metric_cols)
+  o_gm_cnt_cols <- paste0('o_', gm_cnt_cols)
+  
   ## initialize vectors to store values
   metric_col_vec <- acc_vec <- n_pred_vec <- min_n_vec <- min_diff_vec <- c()
   
@@ -212,12 +210,12 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
       
       # case when favored team is predicted to win
       else if (metric=='line') {
-        pred <- pred_win_by_line(line=master_df$line)
+        pred <- pred_win_by_line(line=master_df$line, min_diff=md)
       }
       
       # case when 
       else if (metric=='mtchmrgn') {
-        pred <- pred_win_by_mtchmrgn(mtchmrgn=master_df$mtchmrgn)
+        pred <- pred_win_by_mtchmrgn(mtchmrgn=master_df$mtchmrgn, min_diff=md)
       }
       
       # error case
