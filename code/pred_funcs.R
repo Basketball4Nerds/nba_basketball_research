@@ -233,6 +233,7 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
         cnf_mtx <- table(master_df$won, pred)
         acc <- calc_acc_fr_cnf_mtx(cnf_mtx)
         n_pred <- sum(cnf_mtx)
+        # n_pred <- sum(!is.na(pred))
 
         ## add values to vectors
         metric_col_vec <- c(metric_col_vec, metric_col)
@@ -259,5 +260,24 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
 }
 
 
-
+## this fucntion checks validity of wpa_df under the following premise:
+## given the same metric and min_diff, there must be a fewer number of 
+## predictions made for higher min_n
+is_valid_wpa_df <- function(wpa_df) {
+  
+  ## split wpa_df into a list of dfs using metric and min_diff
+  wpa_df_lst <- split(wpa_df, list(wpa_df$metric, wpa_df$min_diff))
+  
+  ## check validity by checking there exists a lower n_pred for a higher min_n
+  valid_cond_lst <- lapply(wpa_df_lst, function(x) {
+    x <- sortByCol(x, col='min_n')
+    is.sorted(rev(x$n_pred))
+  })
+  
+  ## convert list of validity conditions to vector
+  valid_conds <- unlist(valid_cond_lst)
+  
+  ## return TRUE if all validity conditions are TRUE
+  return(all(valid_conds))
+}
 

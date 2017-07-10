@@ -5,9 +5,13 @@ master_df <- subset(master, season==2012)
 ## create win pred accuracy df with wpc cols
 quantile(master_df$wpc_gen - master_df$o_wpc_gen, na.rm=TRUE)
 wpc_cols <- names(master_df)[grepl('^wpc_', names(master_df))]
-wpc_wpa_df <- create_win_pred_acc_df(master_df, 
-                                     metric_cols=wpc_cols, 
-                                     min_diff=c(0.1, 0.15, 0.2), 
+# wpc_wpa_df <- create_win_pred_acc_df(master_df, 
+#                                      metric_cols=wpc_cols, 
+#                                      min_diff=c(0.1, 0.15, 0.2), 
+#                                      min_n=c(5, 10))
+wpc_wpa_df <- create_win_pred_acc_df(master_df,
+                                     metric_cols=wpc_cols,
+                                     min_diff=seq(0, 0.3, 0.05),
                                      min_n=c(5, 10))
 
 ## create win pred acc df with oeff cumperf cols
@@ -105,6 +109,11 @@ site_wpa_df <- create_win_pred_acc_df(master_df, metric_cols='site')
 
 
 
+ggplot(wpc_wpa_df, aes(x=n_pred, y=acc, color=metric, group=metric)) + 
+  geom_point() +
+  geom_line() + 
+  facet_grid(. ~ min_n)
+plot_wpa(wpc_wpa_df)
 
 
 # #### create prediction performance dfs of metric combinations
@@ -113,5 +122,3 @@ site_wpa_df <- create_win_pred_acc_df(master_df, metric_cols='site')
 # metric_cmb_lst <- createMetricCmbLst(metrics=c('line', 'wPc', 'j', 'site', 'mtch_mrgn', 'rst'))
 # smplcmb_pred_acc_df <- createWinPredAccDfByMetCmb(master_df, metric_cmb_lst)
 # sortByCol(smplcmb_pred_acc_df, col='acc', asc=FALSE)
-
-

@@ -270,3 +270,5 @@ calc_acc_fr_cnf_mtx <- function(cnf_mtx, rnd_dgt=3) {
 }
 
 
+## this function returns TRUE if vector is sorted in increasin order
+is.sorted <- function(x) { return(!is.unsorted(x)) }

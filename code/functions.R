@@ -1,27 +1,6 @@
 ############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## this function takes master_df, var_df, by, and n_min
 ## and output a vector of win predictions
 pred_win <- function(master_df, params) {
