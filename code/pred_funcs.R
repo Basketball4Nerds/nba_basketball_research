@@ -148,95 +148,117 @@ pred_win_by_mtchmrgn <- function(mtchmrgn, min_diff=NULL) {
 }
 
 
+## this fucntion checks validity of wpa_df under the following premise:
+## given the same metric and min_diff, there must be a fewer number of 
+## predictions made for higher min_n
+is_valid_wpa_df <- function(wpa_df) {
+  
+  ## split wpa_df into a list of dfs using metric and min_diff
+  wpa_df_lst <- split(wpa_df, list(wpa_df$metric, wpa_df$min_diff))
+  
+  ## check validity by checking there exists a lower n_pred for a higher min_n
+  valid_cond_lst <- lapply(wpa_df_lst, function(x) {
+    x <- sortByCol(x, col='min_n')
+    is.sorted(rev(x$n_pred))
+  })
+  
+  ## convert list of validity conditions to vector
+  valid_conds <- unlist(valid_cond_lst)
+  
+  ## return TRUE if all validity conditions are TRUE
+  return(all(valid_conds))
+}
+
+
+## this function makes win prediction based on a given metric column and master_df;
+## it is capable of making predictions based on the following metrics: 
+## oeff, oeffA, FGP, FGPA, rqP, rqPA, pos, posA, wpc, j, rst, line, site, mtchmrgn
+pred_win_by_metric_col <- function(master, metric_col, min_diff=NULL, min_n=0) {
+  
+  ## create metric used for evaluation
+  metric <- get_metrics_fr_metric_cols(metric_col)
+  
+  ## get specific opponent metric column (if applicable)
+  if (!(metric %in% c('line', 'site', 'mtchmrgn')))
+    o_metric_col <- get_o_metric_cols_fr_metric_cols(metric_col)
+  
+  ## create gm cnt cols used for filtering
+  gm_cnt_col <- get_gm_cnt_cols_fr_metric_cols(metric_col)
+  o_gm_cnt_col <- paste0('o_', gm_cnt_col)
+  
+  ## make prediction
+  # case when higher metric val predicts win
+  if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc', 'j', 'rst')) {
+    pred <- pred_win_higher_val(tm_vals=master_df[[metric_col]], 
+                                o_vals=master_df[[o_metric_col]], 
+                                min_diff=min_diff)
+  } 
+  
+  # case when lower metric val predicts win
+  else if (metric %in% c('oeffA', 'FGPA', 'rqPA', 'posA')) {
+    pred <- pred_win_lower_val(tm_vals=master_df[[metric_col]], 
+                               o_vals=master_df[[o_metric_col]], 
+                               min_diff=min_diff)
+  } 
+  
+  # case when home-team is predicted to win
+  else if (metric=='site') {
+    pred <- pred_win_by_site(site=master_df$site)
+  }
+  
+  # case when favored team is predicted to win
+  else if (metric=='line') {
+    pred <- pred_win_by_line(line=master_df$line, min_diff=min_diff)
+  }
+  
+  # case when 
+  else if (metric=='mtchmrgn') {
+    pred <- pred_win_by_mtchmrgn(mtchmrgn=master_df$mtchmrgn, min_diff=md)
+  }
+  
+  # error case
+  else {
+    stop(paste('pred_win_by_metric_col() unequipped to make predictions for the following metric:', metric))
+  }
+  
+  ## nullify predictions that were made with fewer than min_n
+  pred[master_df[[gm_cnt_col]] < min_n | master_df[[o_gm_cnt_col]] < min_n] <- NA
+  
+  ## return
+  return(pred)
+}
+
+
 ## this function creates win pred acc df of given metric columns
 create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=0) {
-
+  
   ## clean metric_cols (in case opponent metric cols were given)
   metric_cols <- gsub('^o_', '', metric_cols)
-  
-  ## create vector of opponent metrics
-  o_metric_cols <- get_o_metric_cols_fr_metric_cols(metric_cols)
-  
-  ## create vector of metrics used for evaluation
-  metrics <- get_metrics_fr_metric_cols(metric_cols)
-
-  ## create vector of gm cnt cols used to evaluation
-  gm_cnt_cols <- get_gm_cnt_cols_fr_metric_cols(metric_cols)
-  o_gm_cnt_cols <- paste0('o_', gm_cnt_cols)
   
   ## initialize vectors to store values
   metric_col_vec <- acc_vec <- n_pred_vec <- min_n_vec <- min_diff_vec <- c()
   
   ## if min_diff is NULL, replace with 0 (in order to run for-loop later)
   if (is.null(min_diff)) min_diff <- 0
-
+  
   ## for each metric col
-  for (i in 1:length(metric_cols)) {
-
-    ## get metric used for evaluation
-    metric <- metrics[i]
-    
-    ## get specific metric column 
-    metric_col <- metric_cols[i]
-    
-    ## get specific opponent metric column (if applicable)
-    if (!(metric %in% c('line', 'site', 'mtchmrgn')))
-      o_metric_col <- o_metric_cols[i]
-
-    ## get gm cnt cols for filtering
-    gm_cnt_col <- gm_cnt_cols[i]
-    o_gm_cnt_col <- o_gm_cnt_cols[i]
+  for (metric_col in metric_cols) {
     
     ## for each min_diff specified 
     for (md in min_diff) {
       
-      ## make prediction
-      # case when higher metric val predicts win
-      if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc', 'j', 'rst')) {
-        pred <- pred_win_higher_val(tm_vals=master_df[[metric_col]], 
-                                    o_vals=master_df[[o_metric_col]], 
-                                    min_diff=md)
-      } 
-      
-      # case when lower metric val predicts win
-      else if (metric %in% c('oeffA', 'FGPA', 'rqPA', 'posA')) {
-        pred <- pred_win_lower_val(tm_vals=master_df[[metric_col]], 
-                                   o_vals=master_df[[o_metric_col]], 
-                                   min_diff=md)
-      } 
-      
-      # case when home-team is predicted to win
-      else if (metric=='site') {
-        pred <- pred_win_by_site(site=master_df$site)
-      }
-      
-      # case when favored team is predicted to win
-      else if (metric=='line') {
-        pred <- pred_win_by_line(line=master_df$line, min_diff=md)
-      }
-      
-      # case when 
-      else if (metric=='mtchmrgn') {
-        pred <- pred_win_by_mtchmrgn(mtchmrgn=master_df$mtchmrgn, min_diff=md)
-      }
-      
-      # error case
-      else {
-        stop(paste('Function unequipped to make predictions for the following metric:', metric))
-      }
-      
       ## for each min_n specified 
       for (mn in min_n) {
         
-        ## nullify predictions that were made with fewer than min_n
-        pred[master_df[[gm_cnt_col]] < mn | master_df[[o_gm_cnt_col]] < mn] <- NA
+        ## make prediction by metric column
+        pred <- pred_win_by_metric_col(master_df, metric_col=metric_col, min_diff=md, min_n=mn)
         
         ## calculate accuracy and number of data points (i.e. number of predictions made)
         cnf_mtx <- table(master_df$won, pred)
         acc <- calc_acc_fr_cnf_mtx(cnf_mtx)
         n_pred <- sum(cnf_mtx)
         # n_pred <- sum(!is.na(pred))
-
+        
         ## add values to vectors
         metric_col_vec <- c(metric_col_vec, metric_col)
         acc_vec <- c(acc_vec, acc)
@@ -262,26 +284,3 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
     return(acc_df)
   stop('Incorrect wpa_df produced; create_win_pred_acc_df() may be buggy.')
 }
-
-
-## this fucntion checks validity of wpa_df under the following premise:
-## given the same metric and min_diff, there must be a fewer number of 
-## predictions made for higher min_n
-is_valid_wpa_df <- function(wpa_df) {
-  
-  ## split wpa_df into a list of dfs using metric and min_diff
-  wpa_df_lst <- split(wpa_df, list(wpa_df$metric, wpa_df$min_diff))
-  
-  ## check validity by checking there exists a lower n_pred for a higher min_n
-  valid_cond_lst <- lapply(wpa_df_lst, function(x) {
-    x <- sortByCol(x, col='min_n')
-    is.sorted(rev(x$n_pred))
-  })
-  
-  ## convert list of validity conditions to vector
-  valid_conds <- unlist(valid_cond_lst)
-  
-  ## return TRUE if all validity conditions are TRUE
-  return(all(valid_conds))
-}
-
