@@ -20,12 +20,3 @@ ddply(und, 'season', function(x) {
 # 105 + (-4.5) > 103
 # 120 + (-4.5) > 103
 
-
-cols <- c('p', 'p2x', 'p3x', 'pPnt', 'pFb', 
-          'stl', 'ast', 'blk', 'dRb', 'oRb', 'rb', 'trnovrFcd', 'flFcd', 'pos',
-          'FGA', 'FGA2x', 'FGA3x', 'FTA',
-          'FGM', 'FGM2x', 'FGM3x', 'FTM', 
-          'p2xShr', 'p3xShr', 'pFtShr', 'pPntShr', 'pFbShr',
-          'FGP', 'FGP2x', 'FGP3x', 'FTP',
-          'oRbShr', 'dRbShr', 'oRbPc', 'dRbPc', 'ODRR', 'ODRSR',
-          'PPP', 'toPcFcd', 'FTA_p_FGA')

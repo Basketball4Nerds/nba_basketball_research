@@ -1,6 +1,11 @@
 
-## subset
+## subset df
 master_df <- subset(master, season==2012)
+
+
+## 
+create_smpl_retro_win_pred_acc_df(master_df)
+
 
 ## create win pred accuracy df with wpc cols
 quantile(master_df$wpc_gen - master_df$o_wpc_gen, na.rm=TRUE)

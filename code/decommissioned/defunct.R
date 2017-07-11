@@ -1431,3 +1431,25 @@ createWinPredAccDf <- function(master_df, params_df, rm.irr.cols=FALSE) {
   return(ret_df)
 }
 
+
+## this function creates a df of win predictions
+createWinPredDf <- function(master_df, params_df) {
+  
+  ## initialize empty list to store vectors of predictions
+  pred_lst <- list()
+  
+  ## make prediction using each metric
+  for (params in params_lst) {
+    pred <- createWinPred(master_df, params)
+    pred_lst <- c(pred_lst, list(pred))
+  }
+  
+  # ## label the list elements
+  # names(pred_lst) <- paste0('w_pred_by_', metrics)
+  
+  ## convert list of predictions to df
+  pred_df <- do.call(cbind.data.frame, pred_lst)
+  
+  ## return
+  return(pred_df)
+}
