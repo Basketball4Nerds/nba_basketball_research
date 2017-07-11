@@ -71,10 +71,10 @@ range(games$date)
 games <- addLatestData(games, 
                        func='getRawGamesDataViaApi',
                        non_date_args=list())
-# spreads <- addLatestData(spreads, 
+# spreads <- addLatestData(spreads,
 #                          func='scrapeDataFrSportsbookReviewByDate',
 #                          non_date_args=list(relTeams=TEAMS, type='point-spread'))
-# totals <- addLatestData(totals, 
+# totals <- addLatestData(totals,
 #                         func='scrapeDataFrSportsbookReviewByDate',
 #                         non_date_args=list(relTeams=TEAMS, type='total-points'))
 

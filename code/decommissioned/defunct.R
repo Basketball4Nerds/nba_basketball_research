@@ -1453,3 +1453,20 @@ createWinPredDf <- function(master_df, params_df) {
   ## return
   return(pred_df)
 }
+
+
+
+## test for calc_moneyline_payout_profit()
+# https://www.gamblingsites.org/sports-betting/beginners-guide/odds/moneyline/
+# wgr_amts <- rep(10, 10)
+# moneyline_odds1 <- c(100, 110, 120, 130, 140, 150, 200, 250, 500, 1000)
+# moneyline_odds2 <- c(-110, -120, -130, -140, -150, -175, -200, -250, -500, -1000)
+# calc_moneyline_payout_profit(wgr_amts, moneyline_odds1)
+# calc_moneyline_payout_profit(wgr_amts, moneyline_odds2)
+
+## test for calc_exp_val()
+# wgr_amt <- c(10, 10, 10, 10)
+# moneyline_odds <- c(-110, -120, -130, -1000)
+# w_prob <- c(0.5, 0.5, 0.5, 0.5)
+# calc_exp_val(wgr_amt, moneyline_odds, w_prob)
+

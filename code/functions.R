@@ -1,10 +1,6 @@
 ############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################
 
 
-
-
-
-
 ## this function takes in a number of vectors (in a list or df) and 
 ## returns a resultant vector by "majority vote" method
 createPredByVote <- function(pred_obj, maj_vote_cnt) {
@@ -78,7 +74,7 @@ createWinPredAccDfByMetCmb <- function(master_df, metric_cmb_lst) {
 
 ## this function create all possible combinations of given metrics
 ## and returns as a list
-createMetricCmbLst <- function(metrics) {
+create_metric_combo_lst <- function(metrics) {
   
   ## initialize empty metric combination list
   metric_cmb_lst <- list()
@@ -91,7 +87,6 @@ createMetricCmbLst <- function(metrics) {
   ## return
   return(metric_cmb_lst)
 }
-
 
 
 

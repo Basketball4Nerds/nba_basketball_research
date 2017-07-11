@@ -126,3 +126,8 @@ plot_wpa(wpc_wpa_df)
 # metric_cmb_lst <- createMetricCmbLst(metrics=c('line', 'wPc', 'j', 'site', 'mtch_mrgn', 'rst'))
 # smplcmb_pred_acc_df <- createWinPredAccDfByMetCmb(master_df, metric_cmb_lst)
 # sortByCol(smplcmb_pred_acc_df, col='acc', asc=FALSE)
+
+
+
+## to-do:
+# - get money line data: https://www.sportsbookreview.com/betting-odds/nba-basketball/money-line/?date=20170509

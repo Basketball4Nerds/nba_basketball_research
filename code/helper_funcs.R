@@ -272,3 +272,58 @@ calc_acc_fr_cnf_mtx <- function(cnf_mtx, rnd_dgt=3) {
 
 ## this function returns TRUE if vector is sorted in increasin order
 is.sorted <- function(x) { return(!is.unsorted(x)) }
+
+
+## this function calculates moneyline payout profit in case of met bet; 
+## does not include the initial amount wagered;
+## https://www.gamblingsites.org/sports-betting/beginners-guide/odds/moneyline/
+calc_moneyline_payout_profit <- function(wgr_amt=100, moneyline_odds) {
+  
+  ## calculate payout profit for bet on underdog
+  # if (moneyline_odds > 0) {
+  #   payout_profit <- wgr_amt * (moneyline_odds / 100)
+  # }
+  # 
+  # ## payout profit for bet on favored  
+  # else {
+  #   payout_profit <- wgr_amt / (abs(moneyline_odds) / 100)
+  # }
+  
+  ## calculate payout profit for bet on underdog
+  ## (superior method as it allows for vectorization with vector inputs)
+  payout_profit <- ifelse(moneyline_odds > 0, 
+                          wgr_amt * (moneyline_odds / 100), 
+                          wgr_amt / (abs(moneyline_odds) / 100))
+  
+  ## round down at 2 decimal places (very miniscule underestimation of payout profit)
+  payout_profit <- floor(payout_profit * 100) / 100
+  
+  ## return
+  return(payout_profit)
+}
+
+
+## this function calculates and returns expected value based on
+## prob of win, payout for win, and money wagered;
+## Sport Bet Expected Value Formula: 
+# Expected Value = 
+# (Probability of Winning) x (Amount Won per Bet) – 
+# (Probability of Losing) x (Amount Lost per Bet)
+calc_exp_val <- function(wgr_amt, moneyline_odds, w_prob) {
+  
+  ## calculate probability of loss
+  l_prob <- 1 - w_prob
+  
+  ## calculate win payout profit (in case of met bet)
+  w_payout <- calc_moneyline_payout_profit(wgr_amt, moneyline_odds)
+  
+  ## calculate expected value
+  exp_val <- (w_payout * w_prob) - (wgr_amt * l_prob)
+  
+  ## round down at 2 decimal places if pos
+  # payout_profit <- floor(payout_profit * 100) / 100
+  
+  ## return
+  return(exp_val)
+}
+
