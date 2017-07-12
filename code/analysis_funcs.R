@@ -80,7 +80,12 @@ plot_wpa <- function(wpa_df) {
 }
 
 
+## implement a function for table shown in the following link:
+# - https://www.teamrankings.com/nba/odds-history/results/
+# - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/trends/league/season.html
 
+## What is power ranking? How is it ranked?
+# - http://www.covers.com/sports/nba/powerrankings
 
-
-# https://www.teamrankings.com/nba/odds-history/results/
+## check out this page later:
+# - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/statistics/2016-2017/statistics_playoffs.html

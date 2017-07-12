@@ -1,29 +1,13 @@
 ############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################
 
 
-## this function takes in a number of vectors (in a list or df) and 
-## returns a resultant vector by "majority vote" method
-createPredByVote <- function(pred_obj, maj_vote_cnt) {
-  
-  ## get number of votes made for each game
-  if (class(pred_obj)=='data.frame') 
-    n <- ncol(pred_obj)
-  else if (class(pred_obj)=='list') 
-    n <- length(pred_obj)
-  
-  ## get a vector of win prediction vote counts
-  w_pred_vote_cnts <- Reduce('+', lapply(pred_obj, is.true))
 
-  ## get a vector of loss prediction vote counts
-  l_pred_vote_cnts <- Reduce('+', lapply(pred_obj, is.false))
+a <- c(T, F, T, T)
+b <- c(T, T, T, T)
+c <- cbind.data.frame(a, b)
+c
+Reduce('+', lapply(c, is.true))
 
-  ## make win prediction by majority vote
-  w_preds <- ifelse(w_pred_vote_cnts >= maj_vote_cnt & w_pred_vote_cnts >= l_pred_vote_cnts, TRUE, 
-                    ifelse(l_pred_vote_cnts >= maj_vote_cnt & l_pred_vote_cnts >= w_pred_vote_cnts, FALSE, NA))
-
-  ## return
-  return(w_preds)
-}
 
 
 

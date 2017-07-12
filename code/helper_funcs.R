@@ -115,7 +115,7 @@ concatenateDatasets <- function(dirPath, exportPath) {
 
 
 ## this function gets season from a given date
-getSeasonFrDate <- function(date) {
+get_season_fr_date <- function(date) {
   date <- as.Date(date)
   month <- as.integer(format(date, '%m'))
   year <- as.integer(format(date, '%Y'))
@@ -130,7 +130,7 @@ getSeasonFrDate <- function(date) {
 
 
 ## this function converts amongst city names, city abbreviations, and team names
-convertTeamLabels <- function(df, 
+convert_team_labels <- function(df, 
                               from=c('city', 'city_abbr', 'team'), 
                               to=c('city', 'city_abbr', 'team'),
                               team_cols=c('team', 'o_team')) {

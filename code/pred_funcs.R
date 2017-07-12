@@ -284,3 +284,35 @@ create_win_pred_acc_df <- function(master_df, metric_cols, min_diff=NULL, min_n=
     return(acc_df)
   stop('Incorrect wpa_df produced; create_win_pred_acc_df() may be buggy.')
 }
+
+
+
+## this function takes in a list/df of prediction vectors and 
+## returns a resultant prediction vector by "majority vote" method
+pred_win_by_maj_vote <- function(pred_obj, maj_vote_cnt=NULL) {
+  
+  ## set majority vote count if not specified
+  if (is.null(maj_vote_cnt)) {
+    
+    ## if pred obj is a list of pred vectors
+    if (is.list(pred_obj))
+      maj_vote_cnt <- ceiling(length(pred_obj) / 2)
+    
+    ## if pred obj is a df of pred vectors
+    else if (is.data.frame(pred_obj))
+      maj_vote_cnt <- ceiling(ncol(pred_obj) / 2)
+  }
+  
+  ## get a vector of win prediction vote counts
+  w_pred_vote_cnts <- Reduce('+', lapply(pred_obj, is.true))
+  
+  ## get a vector of loss prediction vote counts
+  l_pred_vote_cnts <- Reduce('+', lapply(pred_obj, is.false))
+  
+  ## make win prediction by majority vote
+  w_preds <- ifelse(w_pred_vote_cnts >= maj_vote_cnt & w_pred_vote_cnts >= l_pred_vote_cnts, TRUE, 
+                    ifelse(l_pred_vote_cnts >= maj_vote_cnt & l_pred_vote_cnts >= w_pred_vote_cnts, FALSE, NA))
+  
+  ## return
+  return(w_preds)
+}
