@@ -279,12 +279,12 @@ is.sorted <- function(x) { return(!is.unsorted(x)) }
 ## https://www.gamblingsites.org/sports-betting/beginners-guide/odds/moneyline/
 calc_moneyline_payout_profit <- function(wgr_amt=100, moneyline_odds) {
   
-  ## calculate payout profit for bet on underdog
+  # ## payout profit for bet on underdog
   # if (moneyline_odds > 0) {
   #   payout_profit <- wgr_amt * (moneyline_odds / 100)
   # }
   # 
-  # ## payout profit for bet on favored  
+  # ## payout profit for bet on favored
   # else {
   #   payout_profit <- wgr_amt / (abs(moneyline_odds) / 100)
   # }
@@ -292,8 +292,8 @@ calc_moneyline_payout_profit <- function(wgr_amt=100, moneyline_odds) {
   ## calculate payout profit for bet on underdog
   ## (superior method as it allows for vectorization with vector inputs)
   payout_profit <- ifelse(moneyline_odds > 0, 
-                          wgr_amt * (moneyline_odds / 100), 
-                          wgr_amt / (abs(moneyline_odds) / 100))
+                          wgr_amt * (moneyline_odds / 100),  # payout profit for bet met on underdog
+                          wgr_amt / (abs(moneyline_odds) / 100))  # payout profit for bet met on favorite
   
   ## round down at 2 decimal places (very miniscule underestimation of payout profit)
   payout_profit <- floor(payout_profit * 100) / 100
@@ -333,7 +333,7 @@ calc_exp_val <- function(wgr_amt, moneyline_odds, w_prob) {
 ## this function takes in moneyline odds (which carries 
 ## win payout info) and returns win probability required 
 ## to achieve an expected value of 0
-calc_win_prob_for_zero_EV <- function(moneyline_odds) {
+calc_win_prob_for_zero_EV <- function(moneyline_odds, rnd_dgt=5) {
 
   #### formula derivation
   # EV = win_prob * payout_profit - loss_prob * wgr_amt
@@ -359,21 +359,19 @@ calc_win_prob_for_zero_EV <- function(moneyline_odds) {
   # win_prob = 1 / [ 1 / (abs(moneyline_odds) / 100) + 1 ]
   # win_prob = abs(moneyline_odds) / [ 100 + abs(moneyline_odds) ]
 
-  ## for underdogs
-  if (moneyline_odds > 0) {
-    win_prob = 100 / (moneyline_odds + 100)
-  }
-  
-  ## for favorites
-  else {
-    win_prob = abs(moneyline_odds) / (100 + abs(moneyline_odds)) 
-  }
+  ## calculate win prob necessary to achieve expected value of 0
+  win_prob <- ifelse(moneyline_odds > 0,
+                     win_prob <- 100 / (moneyline_odds + 100),  # calculate win prob with underdog moneyline odds
+                     abs(moneyline_odds) / (100 + abs(moneyline_odds)))  # calculate win prob with favorite moneyline odds
+    
+  ## round probability
+  win_prob <- round(win_prob, rnd_dgt)
   
   ## return 
   return(win_prob)
-  
 }
 
+calc_win_prob_for_zero_EV(c(-110, -100))
 
 
 
