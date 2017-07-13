@@ -1,18 +1,6 @@
 ############ FUNCTIONS TO PREDICT AND CALCULATE ACCURACY PERCENTAGES ################
 
 
-
-a <- c(T, F, T, T)
-b <- c(T, T, T, T)
-c <- cbind.data.frame(a, b)
-c
-Reduce('+', lapply(c, is.true))
-
-
-
-
-
-
 ## this function returns df of win prediction accuracies
 ## when predicting wins by various combinations of win metrics
 createWinPredAccDfByMetCmb <- function(master_df, metric_cmb_lst) {
@@ -56,21 +44,6 @@ createWinPredAccDfByMetCmb <- function(master_df, metric_cmb_lst) {
 }
 
 
-## this function create all possible combinations of given metrics
-## and returns as a list
-create_metric_combo_lst <- function(metrics) {
-  
-  ## initialize empty metric combination list
-  metric_cmb_lst <- list()
-  
-  ## create all possible combinations of metrics and add to list
-  for (i in 2:length(metrics)) {
-    metric_cmb_lst <- c(metric_cmb_lst, lapply(apply(combn(metrics, i), 2, as.list), unlist))
-  }
-  
-  ## return
-  return(metric_cmb_lst)
-}
 
 
 

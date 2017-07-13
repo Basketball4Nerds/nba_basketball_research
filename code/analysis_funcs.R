@@ -80,12 +80,42 @@ plot_wpa <- function(wpa_df) {
 }
 
 
-## implement a function for table shown in the following link:
-# - https://www.teamrankings.com/nba/odds-history/results/
-# - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/trends/league/season.html
 
-## What is power ranking? How is it ranked?
-# - http://www.covers.com/sports/nba/powerrankings
 
-## check out this page later:
-# - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/statistics/2016-2017/statistics_playoffs.html
+
+
+## this function 
+
+
+
+
+## this function creates all possible combinations (nCr) of given metrics
+## and returns as a list
+create_metric_combo_lst <- function(metrics, n=NULL) {
+  
+  ## initialize empty metric combination list
+  metric_cmb_lst <- list()
+
+  ## set n if not specified
+  if (is.null(n)) 
+    n <- 2:length(metrics)
+  
+  ## create all possible combinations of metrics and add to list  
+  for (i in n) {
+    metric_cmb_lst <- c(metric_cmb_lst, lapply(apply(combn(metrics, i), 2, as.list), unlist))    
+  }
+  
+  ## return
+  return(metric_cmb_lst)
+}
+
+
+
+
+
+
+
+
+
+
+
