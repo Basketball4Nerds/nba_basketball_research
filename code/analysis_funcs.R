@@ -81,13 +81,7 @@ plot_wpa <- function(wpa_df) {
 
 
 
-
-
-
 ## this function 
-
-
-
 
 ## this function creates all possible combinations (nCr) of given metrics
 ## and returns as a list
@@ -111,7 +105,7 @@ create_metric_combo_lst <- function(metrics, n=NULL) {
 
 
 
-
+## 
 
 
 

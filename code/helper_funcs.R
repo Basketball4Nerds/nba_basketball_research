@@ -327,3 +327,57 @@ calc_exp_val <- function(wgr_amt, moneyline_odds, w_prob) {
   return(exp_val)
 }
 
+
+
+
+## this function takes in moneyline odds (which carries 
+## win payout info) and returns win probability required 
+## to achieve an expected value of 0
+calc_win_prob_for_zero_EV <- function(moneyline_odds) {
+
+  #### formula derivation
+  # EV = win_prob * payout_profit - loss_prob * wgr_amt
+  # 0 = win_prob * payout_profit - loss_prob * wgr_amt
+  # 0 = win_prob * payout_profit - (1 - win_prob) * wgr_amt
+  # 0 = win_prob * payout_profit + win_prob * wgr_amt - wgr_amt
+  # 0 = win_prob * (payout_profit + wgr_amt) - wgr_amt
+  # wgr_amt = win_prob * (payout_profit + wgr_amt)
+  # win_prob = wgr_amt / (payout_profit + wgr_amt)
+  
+  ## for underdogs
+  # payout_profit = wgr_amt * (moneyline_odds / 100)
+  # win_prob = wgr_amt / (payout_profit + wgr_amt)
+  # win_prob = wgr_amt / [ wgr_amt * (moneyline_odds / 100) + wgr_amt ]
+  # win_prob = 1 / [ (moneyline_odds / 100) + 1 ]
+  # win_prob = 100 / (moneyline_odds + 100)
+  
+  ## for favorites
+  # payout_profit <- wgr_amt / (abs(moneyline_odds) / 100)
+  # win_prob = wgr_amt / (payout_profit + wgr_amt)
+  # win_prob = wgr_amt / [ wgr_amt / (abs(moneyline_odds) / 100) + wgr_amt ]
+  # win_prob = 1 / [ 1 / (abs(moneyline_odds) / 100) + 1 ]
+  # win_prob = 1 / [ 1 / (abs(moneyline_odds) / 100) + 1 ]
+  # win_prob = abs(moneyline_odds) / [ 100 + abs(moneyline_odds) ]
+
+  ## for underdogs
+  if (moneyline_odds > 0) {
+    win_prob = 100 / (moneyline_odds + 100)
+  }
+  
+  ## for favorites
+  else {
+    win_prob = abs(moneyline_odds) / (100 + abs(moneyline_odds)) 
+  }
+  
+  ## return 
+  return(win_prob)
+  
+}
+
+
+
+
+
+
+
+

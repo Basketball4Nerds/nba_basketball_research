@@ -18,6 +18,7 @@ wpc_wpa_df <- create_win_pred_acc_df(master_df,
                                      metric_cols=wpc_cols,
                                      min_diff=seq(0, 0.3, 0.05),
                                      min_n=c(5, 10))
+plot_wpa(wpc_wpa_df)
 
 ## create win pred acc df with oeff cumperf cols
 quantile(master_df$oeff_cumperf_gen - master_df$o_oeff_cumperf_gen, na.rm=TRUE)
