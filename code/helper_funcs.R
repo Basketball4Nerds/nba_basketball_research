@@ -279,16 +279,6 @@ is.sorted <- function(x) { return(!is.unsorted(x)) }
 ## https://www.gamblingsites.org/sports-betting/beginners-guide/odds/moneyline/
 calc_moneyline_payout_profit <- function(wgr_amt=100, moneyline_odds) {
   
-  # ## payout profit for bet on underdog
-  # if (moneyline_odds > 0) {
-  #   payout_profit <- wgr_amt * (moneyline_odds / 100)
-  # }
-  # 
-  # ## payout profit for bet on favored
-  # else {
-  #   payout_profit <- wgr_amt / (abs(moneyline_odds) / 100)
-  # }
-  
   ## calculate payout profit for bet on underdog
   ## (superior method as it allows for vectorization with vector inputs)
   payout_profit <- ifelse(moneyline_odds > 0, 
@@ -328,11 +318,8 @@ calc_exp_val <- function(wgr_amt, moneyline_odds, w_prob) {
 }
 
 
-
-
-## this function takes in moneyline odds (which carries 
-## win payout info) and returns win probability required 
-## to achieve an expected value of 0
+## this function takes in moneyline odds (which reflects win payout info) 
+## and returns win probability required to achieve an expected value of 0
 calc_win_prob_for_zero_EV <- function(moneyline_odds, rnd_dgt=5) {
 
   #### formula derivation
@@ -370,12 +357,5 @@ calc_win_prob_for_zero_EV <- function(moneyline_odds, rnd_dgt=5) {
   ## return 
   return(win_prob)
 }
-
-calc_win_prob_for_zero_EV(c(-110, -100))
-
-
-
-
-
 
 

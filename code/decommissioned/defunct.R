@@ -128,37 +128,6 @@ for (i in yLst) {
 
 
 
-#### snippet 6
-# c(1, 1, 1, 1)
-# c('W', 'L', 'W', 'L')
-# 100, -100, 100, -100
-# 
-# c(0.5, 1, 0.5, 1)
-# c('W', 'L', 'W', 'L')
-# 50, -100, 50, -100
-# 
-# c(0.9, 1, 0.9, 1)
-# c('W', 'L', 'W', 'L')
-# 90, -100, 90, -100
-# 
-# 100 / 110
-# x + y = 1
-# wins: 100 * x * 0.90
-# losses: 100 * y * 1 
-# 
-# 100 * x * 1 - 100 * y * 1 >= 0
-# 100 * x * 0.91 - 100 * y * 1 >= 0
-# 100 * x * 0.91 - 100 * (1 - x) * 1 >= 0
-# 91 * x - 100 + 100 * x >= 0
-# 191 * x >= 100
-# 100 / (100 + 100/110*100)
-#
-# 100 / (100 + 100/105*100)
-#
-# 100 / (100 + 100/104*100)
-
-
-
 #### snippet 7
 t <- odds[seq(1, nrow(odds), 2), ]
 v <- odds[seq(2, nrow(odds), 2), ]
@@ -1470,3 +1439,164 @@ createWinPredDf <- function(master_df, params_df) {
 # w_prob <- c(0.5, 0.5, 0.5, 0.5)
 # calc_exp_val(wgr_amt, moneyline_odds, w_prob)
 
+
+
+
+
+# ## get data from Pinnacle source
+# boxInfo <- gmInfo %>%
+#   html_node('div.el-div.eventLine-book') %>%
+#   html_nodes('div.eventLine-book-value > b') %>%
+#   html_text()
+# boxInfo <- gsub('\\xa0', ' ', boxInfo)
+# boxInfo <- gsub('½', '.5', boxInfo)
+# 
+# if ('' %in% boxInfo) {
+#   projTm1 <- payoutTm1 <- ''
+#   projTm2 <- payoutTm2 <- ''
+# } else {
+#   boxInfoTm1 <- strsplit(boxInfo[[1]], ' ')[[1]]
+#   projTm1 <- boxInfoTm1[[1]]
+#   payoutTm1 <- boxInfoTm1[[2]]
+# 
+#   boxInfoTm2 <- strsplit(boxInfo[[2]], ' ')[[1]]
+#   projTm2 <- boxInfoTm2[[1]]
+#   payoutTm2 <- boxInfoTm2[[2]]
+# }
+
+
+
+### FROM INSIDE 
+# if (type=='point-spread') {
+#   
+#   ## name projection column 
+#   name <- 'adjustor'
+#   names(df)[ncol(df)] <- name
+#   
+#   ## replace "PK" with 0s for the line adjustor metric
+#   # http://www.sportsbookreview.com/betting-odds/nba-basketball/?date=20110411
+#   df[[name]] <- gsub('PK', '0', df[[name]])
+# } 
+# 
+# ## name projection column 
+# else if (type=='total-points') {
+#   names(df)[ncol(df)] <- 'total_pts_proj_om'
+# }
+# 
+# ## cast proper data types
+# df$season <- as.integer(as.character(df$season))
+# df$team <- as.character(df$team)
+# df$o_team <- as.character(df$o_team)
+# df$payout <- as.numeric(as.character(df$payout))
+# df[[name]] <- as.numeric(as.character(df[[name]]))
+
+
+
+
+## this function scrapes odds and lines data from Sportsbook Review website 
+## for a given date and either return a df or writes to csv
+#date <- '2006-05-13'  # example of no data (no game that day)
+#date <- '2006-12-13'  # example of missing data
+#date <- '2015-12-11'  # example of complete data
+scrapeDataFrSportsbookReviewByDate <- function(date, relTeams, 
+                                               type=c('point-spread', 'total-points')) {
+  
+  ## determine which kind of data to scrape 
+  type <- type[1]
+  
+  ## get date and season
+  date <- as.Date(date)
+  season <- getSeasonFrDate(date)
+  
+  ## construct request URL and load webpage
+  baseUrl <- 'http://www.sportsbookreview.com/betting-odds/nba-basketball/'
+  if (type=='total-points')
+    baseUrl <- paste0(baseUrl, 'totals/')
+  reqUrl <- paste0(baseUrl, '?date=', strftime(date, '%Y%m%d'))
+  webpage <- html(reqUrl)
+  
+  ## get a list of game info for a given date
+  gmsInfo <- webpage %>% 
+    html_nodes('div.event-holder div.eventLine')
+  if (length(gmsInfo)==0) return()
+  
+  ## initialize empty columns
+  tmCol <- oTmCol <- payoutCol <- projCol <- c()  
+  
+  ## loop through a list of games for that day
+  for (i in 1:length(gmsInfo)) {
+    
+    ## get single game info
+    gmInfo <- gmsInfo[[i]]
+    
+    ## get teams info
+    tmsInfo <- gmInfo %>%
+      html_nodes('a') %>%
+      html_text()
+    tm1 <- tmsInfo[2]
+    tm2 <- tmsInfo[3]
+    
+    ## get data from Pinnacle source
+    boxInfo <- gmInfo %>%
+      html_node('div.el-div.eventLine-book') %>%
+      html_nodes('div.eventLine-book-value > b') %>%
+      html_text()
+    boxInfo <- gsub('\\xa0', ' ', boxInfo)
+    boxInfo <- gsub('½', '.5', boxInfo)
+    
+    if ('' %in% boxInfo) {
+      projTm1 <- payoutTm1 <- ''
+      projTm2 <- payoutTm2 <- ''
+    } else {
+      boxInfoTm1 <- strsplit(boxInfo[[1]], ' ')[[1]]
+      projTm1 <- boxInfoTm1[[1]]
+      payoutTm1 <- boxInfoTm1[[2]]
+      
+      boxInfoTm2 <- strsplit(boxInfo[[2]], ' ')[[1]]
+      projTm2 <- boxInfoTm2[[1]]
+      payoutTm2 <- boxInfoTm2[[2]]
+    }
+    
+    ## append to vectors (which will be used as columns)
+    tmCol <- c(tmCol, tm1, tm2)
+    oTmCol <- c(oTmCol, tm2, tm1)
+    payoutCol <- c(payoutCol, payoutTm1, payoutTm2)
+    projCol <- c(projCol, projTm1, projTm2)
+  }
+  
+  ## construct a df
+  df <- data.frame(season=season, date=date, team=tmCol, o_team=oTmCol, payout=payoutCol, proj_col=projCol)
+  
+  if (type=='point-spread') {
+    ## name projection column 
+    name <- 'adjustor'
+    names(df)[ncol(df)] <- name
+    
+    ## replace "PK" with 0s for the line adjustor metric
+    # http://www.sportsbookreview.com/betting-odds/nba-basketball/?date=20110411
+    df[[name]] <- gsub('PK', '0', df[[name]])
+  } 
+  
+  else if (type=='total-points') {
+    ## name projection column 
+    name <- 'total_pts_proj_om'
+    names(df)[ncol(df)] <- name
+  }
+  
+  ## cast proper data types
+  df$season <- as.integer(as.character(df$season))
+  df$team <- as.character(df$team)
+  df$o_team <- as.character(df$o_team)
+  df$payout <- as.numeric(as.character(df$payout))
+  df[[name]] <- as.numeric(as.character(df[[name]]))
+  
+  ## replace city names with team names
+  #df <- replaceCityNmsToTeamNms(df)
+  df <- convertTeamLabels(df, from='city', to='team')
+  
+  ## select valid data by removing rows for all star games
+  df <- subset(df, team %in% relTeams & o_team %in% relTeams)
+  
+  ## return 
+  return(df)
+}
