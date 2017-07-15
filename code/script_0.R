@@ -32,7 +32,7 @@ source('./code/data_grab_funcs.R')
 source('./code/helper_funcs.R')
 source('./code/preprocess_funcs.R')
 source('./code/rnk_grp_funcs.R')
-source('./code/mov_avg_funcs.R')
+source('./code/mov_cnt_sum_avg_funcs.R')
 source('./code/functions.R')
 source('./code/classes.R')
 
@@ -44,23 +44,23 @@ CITY_ABBR <- as.character(TeamCityConfDf$CityAbbr)
 
 
 
+#### 
+## check the latest data downloaded 
+
+## download new data 
+
+
 #### load data
 
 ## load data already collected
 games <- read.csv('./data/games.csv', stringsAsFactors=FALSE)
-# spreads <- read.csv('./data/spreads.csv', stringsAsFactors=TRUE)
-# totals <- read.csv('./data/totals.csv', stringsAsFactors=TRUE)
+# spreads <- read.csv('./data/spreads.csv', stringsAsFactors=FALSE)
+# totals <- read.csv('./data/totals.csv', stringsAsFactors=FALSE)
 
 ## proper data types for date
 games$date <- as.Date(games$date)
 # spreads$date <- as.Date(spreads$date)
 # totals$date <- as.Date(totals$date)
-
-## other proper data types
-games$site <- as.factor(games$site)
-games$playoffs <- as.factor(games$playoffs)
-games$team <- as.factor(games$team)
-games$o_team <- as.factor(games$o_team)
 
 ## see range of dates by dataset
 range(games$date)
@@ -69,7 +69,7 @@ range(games$date)
 
 ## add latest data to the dfs
 games <- addLatestData(games, 
-                       func='getRawGamesDataViaApi',
+                       func='get_raw_games_data_via_api',
                        non_date_args=list())
 # spreads <- addLatestData(spreads,
 #                          func='scrapeDataFrSportsbookReviewByDate',

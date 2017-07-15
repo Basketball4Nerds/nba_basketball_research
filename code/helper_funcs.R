@@ -90,30 +90,6 @@ capitalizeStr <- function(x) {
 }
 
 
-## this function concatenates datasets and exports into a single CSV
-## by taking input and output paths as arguments
-concatenateDatasets <- function(dirPath, exportPath) {
-  
-  ## get dataset file names
-  rawFileNames <- list.files(dirPath)
-  rawCSVFileNames <- rawFileNames[grepl('\\.csv$', rawFileNames)]
-  rawCSVFilePaths <- file.path(dirPath, rawCSVFileNames)
-  
-  ## function to merge multiple datasets into one
-  combineCSVs <- function(CSVFilePaths) {
-    dataList <- lapply(CSVFilePaths, function(x) {read.csv(file=x, header=T, stringsAsFactors=F)})
-    df <- Reduce(function(x, y) {rbind(x, y)}, dataList)
-    return(df)
-  }
-  
-  ## load regular and post season datasets
-  df <- combineCSVs(rawCSVFilePaths)
-  
-  ## export
-  write.csv(df, exportPath, row.names=FALSE)
-}
-
-
 ## this function gets season from a given date
 get_season_fr_date <- function(date) {
   date <- as.Date(date)

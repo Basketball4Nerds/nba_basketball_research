@@ -157,12 +157,13 @@ get_raw_games_data_via_api <- function(date=NULL, season=NULL, metrics=NULL, def
 
 
 ## this function constructs request URL to scrape data off of SportsbookReview
-get_SBR_req_url <- function(date, type) {
+get_SBR_req_url <- function(date, type=c('spreads', 'totals', 'moneylines')) {
+  type <- type[1]
   date <- as.Date(date)
   base_url <- 'http://www.sportsbookreview.com/betting-odds/nba-basketball/'
   if (type=='totals') 
     base_url <- paste0(base_url, 'totals/')    
-  else if (type=='moneyline') 
+  else if (type=='moneylines') 
     base_url <- paste0(base_url, 'money-line/')
   else if (type != 'spreads')
     stop('Please provide correct odds type.')
@@ -179,7 +180,7 @@ get_SBR_req_url <- function(date, type) {
 scrape_raw_odds_data_fr_SBR_by_date <- function(date, 
                                                 type=c('spreads', 
                                                        'totals', 
-                                                       'moneyline'), 
+                                                       'moneylines'), 
                                                 rel_teams=NULL) {
   
   ## determine which kind of data to scrape 
