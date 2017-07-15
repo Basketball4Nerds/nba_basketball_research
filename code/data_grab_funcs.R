@@ -60,7 +60,7 @@ get_raw_games_data_via_api <- function(date=NULL, season=NULL, metrics=NULL, def
   req_url <- paste0('http://api.sportsdatabase.com/nba/query.json?sdql=', URLencode(SDQL), '&output=json&api_key=', api_key)
   
   ## clean output JSON-like string
-  webpage <- getURL(reqUrl)
+  webpage <- getURL(req_url)
   webpage <- gsub('\t', '', webpage)
   webpage <- gsub('^json_callback\\(', '', webpage)
   webpage <- gsub('\\);\n$', '', webpage)
@@ -181,7 +181,7 @@ scrape_raw_odds_data_fr_SBR_by_date <- function(date,
                                                 type=c('spreads', 
                                                        'totals', 
                                                        'moneylines'), 
-                                                rel_teams=NULL) {
+                                                rel_teams=TEAMS) {
   
   ## determine which kind of data to scrape 
   type <- type[1]
@@ -250,8 +250,7 @@ scrape_raw_odds_data_fr_SBR_by_date <- function(date,
   
   ## select relevant teams 
   ## (used to filter out all star games in which teams have different names, such as East or West)
-  if (!is.null(rel_teams)) 
-    ret_df <- subset(ret_df, team %in% rel_teams & o_team %in% rel_teams)
+  ret_df <- subset(ret_df, team %in% rel_teams & o_team %in% rel_teams)
   
   ## return 
   return(ret_df)
@@ -292,5 +291,54 @@ addLatestData <- function(df, req_wait_t=1, func, non_date_args) {
   
   ## return
   return(df)
+}
+
+
+## this function downloads latest raw odds data into directory
+download_latest_raw_odds_data <- function(type=c('spreads', 'totals', 'moneylines'),
+                                          req_wait_t=1.5, 
+                                          dates=NULL) {
+  
+  ## set type
+  type <- type[1]
+  
+  ## construct file download directory path
+  file_dl_dir_path <- file.path('./data/raw', type)
+  
+  ## if dates for data download are not specified
+  if (is.null(dates)) {
+    
+    ## get list of csv files of downloaded daily datasets
+    raw_file_names <- list.files(file_dl_dir_path)
+    raw_csv_file_names <- raw_file_names[grepl('\\.csv$', raw_file_names)]
+    
+    ## extract latest date of available data 
+    latest_date <- raw_csv_file_names[length(raw_csv_file_names)]
+    latest_date <- gsub("[^0-9]", "", latest_date) 
+    latest_date <- as.Date(latest_date, format='%Y%m%d')
+    
+    ## get vector of dates for data download
+    start_date <- latest_date + 1
+    today_date <- Sys.Date()
+    dates <- seq(start_date, today_date, by=1)
+  }
+  
+  ## convert to character type
+  dates <- as.character(dates)
+  
+  for (date in dates) {
+    
+    ## print message
+    print_msg <- paste0('Scraping ', type, ' data for the following date: ', date)
+    print(print_msg)
+    
+    ## scrape raw odds data
+    data <- scrape_raw_odds_data_fr_SBR_by_date(date=as.Date(date), type=type) 
+    
+    ## write file 
+    file_nm <- paste0(type, '_', format(as.Date(date), '%Y%m%d'), '.csv')
+    file_path <- file.path('./data/raw', type, file_nm)
+    write.csv(data, file_path, row.names=FALSE)
+  }
 }
 

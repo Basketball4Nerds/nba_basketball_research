@@ -11,7 +11,7 @@ dates <- unique(games$date)
 dates <- as.character(dates)
 
 ## for each date
-for (date in x) {
+for (date in dates) {
   
   ## for each type of odds 
   for (type in c('spreads', 'totals', 'moneylines')) {

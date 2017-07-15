@@ -23,19 +23,14 @@ concatenate_dataset_files <- function(dir_path, export_file_path) {
 
 
 
-
-
-
-
-
 ## code execution
 spreads_dir_path <- './data/raw/spreads/'
 totals_dir_path <- './data/raw/totals/'
 moneylines_dir_path <- './data/raw/moneylines/'
 
-spreads_export_file_path <- './data/raw/spreads_fr_2006_to_2017.csv'
-totals_export_file_path <- './data/raw/totals_fr_2006_to_2017.csv'
-moneylines_export_file_path <- './data/raw/moneylines_fr_2006_to_2017.csv'
+spreads_export_file_path <- './data/raw/spreads_2006_to_2017.csv'
+totals_export_file_path <- './data/raw/totals_2006_to_2017.csv'
+moneylines_export_file_path <- './data/raw/moneylines_2006_to_2017.csv'
 
 concatenate_dataset_files(spreads_dir_path, spreads_export_file_path)
 concatenate_dataset_files(totals_dir_path, totals_export_file_path)

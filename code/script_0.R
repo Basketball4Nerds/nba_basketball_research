@@ -53,30 +53,42 @@ CITY_ABBR <- as.character(TeamCityConfDf$CityAbbr)
 #### load data
 
 ## load data already collected
-games <- read.csv('./data/games.csv', stringsAsFactors=FALSE)
-# spreads <- read.csv('./data/spreads.csv', stringsAsFactors=FALSE)
-# totals <- read.csv('./data/totals.csv', stringsAsFactors=FALSE)
+games <- read.csv('./data/raw/games.csv', stringsAsFactors=FALSE)
+# moneylines <- read.csv('./data/raw/moneylines.csv', stringsAsFactors=FALSE)
+# spreads <- read.csv('./data/raw/spreads.csv', stringsAsFactors=FALSE)
+# totals <- read.csv('./data/raw/totals.csv', stringsAsFactors=FALSE)
 
 ## proper data types for date
 games$date <- as.Date(games$date)
+# moneylines$date <- as.Date(moneylines$date)
 # spreads$date <- as.Date(spreads$date)
 # totals$date <- as.Date(totals$date)
 
 ## see range of dates by dataset
-range(games$date)
-# range(spreads$date)
-# range(totals$date)
+base::range(games$date)
+# base::range(moneylines$date)
+# base::range(spreads$date)
+# base::range(totals$date)
 
 ## add latest data to the dfs
-games <- addLatestData(games, 
-                       func='get_raw_games_data_via_api',
-                       non_date_args=list())
-# spreads <- addLatestData(spreads,
+games <- add_latest_data(games, 
+                         func='get_raw_games_data_via_api',
+                         non_date_args=list())
+
+
+
+
+
+
+
+
+
+# spreads <- add_latest_data(spreads,
 #                          func='scrapeDataFrSportsbookReviewByDate',
-#                          non_date_args=list(relTeams=TEAMS, type='point-spread'))
-# totals <- addLatestData(totals,
+#                          non_date_args=list(type='spreads'))
+# totals <- add_latest_data(totals,
 #                         func='scrapeDataFrSportsbookReviewByDate',
-#                         non_date_args=list(relTeams=TEAMS, type='total-points'))
+#                         non_date_args=list(type='totals'))
 
 
 
