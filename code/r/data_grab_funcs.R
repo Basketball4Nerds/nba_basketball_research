@@ -294,6 +294,7 @@ addLatestData <- function(df, req_wait_t=1, func, non_date_args) {
 }
 
 
+
 ## this function downloads latest raw odds data into directory
 download_latest_raw_odds_data <- function(type=c('spreads', 'totals', 'moneylines'),
                                           req_wait_t=1.5, 
@@ -326,8 +327,12 @@ download_latest_raw_odds_data <- function(type=c('spreads', 'totals', 'moneyline
   ## convert to character type
   dates <- as.character(dates)
   
+  ## iterate over the dates and download data
   for (date in dates) {
-    
+
+    ## pause for specified seconds
+    Sys.sleep(req_wait_t)
+        
     ## print message
     print_msg <- paste0('Scraping ', type, ' data for the following date: ', date)
     print(print_msg)
@@ -341,4 +346,5 @@ download_latest_raw_odds_data <- function(type=c('spreads', 'totals', 'moneyline
     write.csv(data, file_path, row.names=FALSE)
   }
 }
+
 
