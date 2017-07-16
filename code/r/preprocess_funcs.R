@@ -240,3 +240,58 @@ addQtrOtPtsCols <- function(df, qtrPtsCols) {
 
 
 
+## this function takes in raw odds df and returns a parsed version of it
+create_parsed_odds_df <- function(odds_df, type=c('spreads', 'totals', 'moneylines')) {
+  
+  ## set type
+  type <- type[1]
+  
+  ## get columns (that contain the odds) to iterate over 
+  odds_cols <- paste0('X', 1:10)
+  
+  ## processing moneylines df
+  if (type=='moneylines') {
+    
+    ## for each col, convert type from character to numeric
+    for (col in cols) {
+      odds_df[[col]] <- as.numeric(odds_df[[col]])
+    }
+    
+    ## return
+    return(odds_df)
+  } 
+  
+  ## processing spreads/totals df
+  else if (type %in% c('spreads', 'totals')) {
+    
+    ## create base df (that contain non-odds info, such as season, date, team, o_team)
+    df <- odds_df[ , c('season', 'date', 'team', 'o_team')]
+    
+    ## for each col, parse data
+    for (col in cols) {
+      
+      ## select col, replace alphabet characters, split data
+      col_vals <- odds_df[[col]] 
+      col_vals <- gsub('^PK', '0 ', col_vals)  # rare PK cases for spreads data
+      col_vals_split <- strsplit(col_vals, ' ')
+      
+      ## extract projections data (totals or lines) and payout data
+      projections <- unlist(lapply(col_vals_split, function(x) x[1]))  # lines in case of spreads df; totals projected in case of totals df
+      payouts <- unlist(lapply(col_vals_split, function(x) x[2]))  # payout moneylines
+      
+      ## create col names to use
+      if (type=='spreads')
+        projection_colnm <- paste0(col, '_line')
+      else if (type=='totals')
+        projection_colnm <- paste0(col, '_totals')
+      payout_colnm <- paste0(col, '_payout')
+      
+      ## add to df 
+      df[[projection_colnm]] <- projections
+      df[[payout_colnm]] <- payouts
+    }
+    
+    ## return
+    return(df)
+  }
+}

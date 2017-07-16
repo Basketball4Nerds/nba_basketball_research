@@ -45,13 +45,8 @@ spreads <- concatenate_dataset_files(dir_path='./data/raw_in_queue/spreads')
 totals <- concatenate_dataset_files(dir_path='./data/raw_in_queue/totals')
 moneylines <- concatenate_dataset_files(dir_path='./data/raw_in_queue/moneylines')
 
-## process and store raw datasets into db
-
-
-
-
-
-
+## parse and process raw odds dfs
+spreads_parsed <- create
 
 
 ## connect to MySQL db
@@ -64,7 +59,10 @@ dbListTables(mydb)
 
 ## store them into db
 
-## move into raw_stored_in_db directory
+
+
+move_files_to_another_dir(from_dir='./test1', to_dir='./test2')
+
 
 
 
