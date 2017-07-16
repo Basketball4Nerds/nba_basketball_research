@@ -1,6 +1,7 @@
-## this function concatenates datasets and exports into a single CSV
-## by taking input and output paths as arguments
-concatenate_dataset_files <- function(dir_path, export_file_path) {
+## this function reads multiple dataset files that resides in a directory
+## and concatenates them into a single dataset;
+## it exports the concatenated dataset as a csv file if export file path is provided;
+concatenate_dataset_files <- function(dir_path, export_file_path=NULL) {
   
   ## get dataset file names
   raw_file_names <- list.files(dir_path)
@@ -17,21 +18,25 @@ concatenate_dataset_files <- function(dir_path, export_file_path) {
   ## load regular and post season datasets
   df <- combine_csv_files(csv_file_paths=raw_csv_file_paths)
   
-  ## export
-  write.csv(df, export_file_path, row.names=FALSE)
+  ## export if file path for exporting is provided
+  if (!is.null(export_file_path))
+    write.csv(df, export_file_path, row.names=FALSE)
+  
+  ## return
+  return(df)
 }
 
 
 
-## code execution
-spreads_dir_path <- './data/raw/spreads/'
-totals_dir_path <- './data/raw/totals/'
-moneylines_dir_path <- './data/raw/moneylines/'
-
-spreads_export_file_path <- './data/raw/spreads_2006_to_2017.csv'
-totals_export_file_path <- './data/raw/totals_2006_to_2017.csv'
-moneylines_export_file_path <- './data/raw/moneylines_2006_to_2017.csv'
-
-concatenate_dataset_files(spreads_dir_path, spreads_export_file_path)
-concatenate_dataset_files(totals_dir_path, totals_export_file_path)
-concatenate_dataset_files(moneylines_dir_path, moneylines_export_file_path)
+# ## code execution
+# spreads_dir_path <- './data/raw/spreads/'
+# totals_dir_path <- './data/raw/totals/'
+# moneylines_dir_path <- './data/raw/moneylines/'
+# 
+# spreads_export_file_path <- './data/raw/spreads_2006_to_2017.csv'
+# totals_export_file_path <- './data/raw/totals_2006_to_2017.csv'
+# moneylines_export_file_path <- './data/raw/moneylines_2006_to_2017.csv'
+# 
+# concatenate_dataset_files(spreads_dir_path, spreads_export_file_path)
+# concatenate_dataset_files(totals_dir_path, totals_export_file_path)
+# concatenate_dataset_files(moneylines_dir_path, moneylines_export_file_path)

@@ -1,4 +1,5 @@
 data/*
+credentials/*
 .RData
 .RHistory
 .Rproj.user

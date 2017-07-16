@@ -295,34 +295,15 @@ addLatestData <- function(df, req_wait_t=1, func, non_date_args) {
 
 
 
+
 ## this function downloads latest raw odds data into directory
-download_latest_raw_odds_data <- function(type=c('spreads', 'totals', 'moneylines'),
-                                          req_wait_t=1.5, 
-                                          dates=NULL) {
+download_raw_odds_data <- function(dates,
+                                   type=c('spreads', 'totals', 'moneylines'),
+                                   file_dl_dir_path,
+                                   req_wait_t=1.5) {
   
   ## set type
   type <- type[1]
-  
-  ## construct file download directory path
-  file_dl_dir_path <- file.path('./data/raw', type)
-  
-  ## if dates for data download are not specified
-  if (is.null(dates)) {
-    
-    ## get list of csv files of downloaded daily datasets
-    raw_file_names <- list.files(file_dl_dir_path)
-    raw_csv_file_names <- raw_file_names[grepl('\\.csv$', raw_file_names)]
-    
-    ## extract latest date of available data 
-    latest_date <- raw_csv_file_names[length(raw_csv_file_names)]
-    latest_date <- gsub("[^0-9]", "", latest_date) 
-    latest_date <- as.Date(latest_date, format='%Y%m%d')
-    
-    ## get vector of dates for data download
-    start_date <- latest_date + 1
-    today_date <- Sys.Date()
-    dates <- seq(start_date, today_date, by=1)
-  }
   
   ## convert to character type
   dates <- as.character(dates)
@@ -342,7 +323,7 @@ download_latest_raw_odds_data <- function(type=c('spreads', 'totals', 'moneyline
     
     ## write file 
     file_nm <- paste0(type, '_', format(as.Date(date), '%Y%m%d'), '.csv')
-    file_path <- file.path('./data/raw', type, file_nm)
+    file_path <- file.path(file_dl_dir_path, file_nm)
     write.csv(data, file_path, row.names=FALSE)
   }
 }

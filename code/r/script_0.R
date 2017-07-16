@@ -1,9 +1,7 @@
-##### set up working directory
+## set up working directory
 rm(list = ls())
 
-
-
-#### load libraries
+## load libraries
 library(shiny)
 library(ggplot2)
 library(corrplot)
@@ -15,7 +13,7 @@ library(rpart.plot)
 library(randomForest)
 library(data.table)
 library(DBI)
-library(RSQLite)
+library(RMySQL)
 library(RCurl)
 library(rjson)
 library(dplyr)
@@ -25,29 +23,56 @@ library(lsr)  # for cohensD()
 library(gridExtra)  # for expand.grid()
 library(reshape2)  # for dcast()
 
+## load functions and classes
+source('./code/r/data_grab_funcs.R')
+source('./code/r/combine_dataset_files.R')
+source('./code/r/helper_funcs.R')
+source('./code/r/preprocess_funcs.R')
+source('./code/r/rnk_grp_funcs.R')
+source('./code/r/mov_cnt_sum_avg_funcs.R')
+source('./code/r/functions.R')
+source('./code/r/classes.R')
 
-
-#### load functions and classes
-source('./code/data_grab_funcs.R')
-source('./code/helper_funcs.R')
-source('./code/preprocess_funcs.R')
-source('./code/rnk_grp_funcs.R')
-source('./code/mov_cnt_sum_avg_funcs.R')
-source('./code/functions.R')
-source('./code/classes.R')
-
-
-#### load keys & mappers
+## load keys & mappers
+source('./credentials/keys.R')
 TeamCityConfDf <- read.csv('./data/teams_cities_conferences.csv', stringsAsFactors=TRUE)
 TEAMS <- as.character(TeamCityConfDf$Team)
 CITY_ABBR <- as.character(TeamCityConfDf$CityAbbr)
 
+## collect datasets to process and store into db
+games <- concatenate_dataset_files(dir_path='./data/raw_in_queue/games')
+spreads <- concatenate_dataset_files(dir_path='./data/raw_in_queue/spreads')
+totals <- concatenate_dataset_files(dir_path='./data/raw_in_queue/totals')
+moneylines <- concatenate_dataset_files(dir_path='./data/raw_in_queue/moneylines')
+
+## process and store raw datasets into db
 
 
-#### load latest games data
+
+
+
+
+
+
+## connect to MySQL db
+mydb = dbConnect(MySQL(), 
+                 user=DB_USER, 
+                 password=DB_PASS, 
+                 dbname=DB_NAME,
+                 host='localhost')
+dbListTables(mydb)
+
+## store them into db
+
+## move into raw_stored_in_db directory
+
+
+
+
+## load latest data
 
 ## load data already collected
-games <- read.csv('./data/raw/games.csv', stringsAsFactors=FALSE)
+games2 <- read.csv('./data/games.csv', stringsAsFactors=FALSE)
 
 ## proper data types for date
 games$date <- as.Date(games$date)
@@ -72,7 +97,7 @@ download_latest_raw_odds_data('moneylines')
 
 
 #### save data feed dfs into csv
-write.csv(games, './data/raw/games.csv', row.names=FALSE)
+write.csv(games, './data/games.csv', row.names=FALSE)
 
 
 
@@ -84,8 +109,8 @@ games <- add_latest_data(games,
                          non_date_args=list())
 
 # moneylines <- read.csv('./data/raw/moneylines.csv', stringsAsFactors=FALSE)
-# spreads <- read.csv('./data/raw/spreads.csv', stringsAsFactors=FALSE)
-# totals <- read.csv('./data/raw/totals.csv', stringsAsFactors=FALSE)
+spreads <- read.csv('./data/raw/spreads.csv', stringsAsFactors=FALSE)
+totals <- read.csv('./data/raw/totals.csv', stringsAsFactors=FALSE)
 
 # moneylines$date <- as.Date(moneylines$date)
 # spreads$date <- as.Date(spreads$date)
