@@ -45,8 +45,6 @@ createWinPredAccDfByMetCmb <- function(master_df, metric_cmb_lst) {
 
 
 
-
-
 ## this function moves all files found in a directory to another
 move_files_to_another_dir <- function(from_dir, to_dir) {
   

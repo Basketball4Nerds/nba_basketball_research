@@ -39,80 +39,72 @@ TeamCityConfDf <- read.csv('./data/teams_cities_conferences.csv', stringsAsFacto
 TEAMS <- as.character(TeamCityConfDf$Team)
 CITY_ABBR <- as.character(TeamCityConfDf$CityAbbr)
 
-## collect datasets to process and store into db
+## collect datasets to parse and store into db
 games <- concatenate_dataset_files(dir_path='./data/raw_in_queue/games')
 spreads <- concatenate_dataset_files(dir_path='./data/raw_in_queue/spreads')
 totals <- concatenate_dataset_files(dir_path='./data/raw_in_queue/totals')
 moneylines <- concatenate_dataset_files(dir_path='./data/raw_in_queue/moneylines')
 
 ## parse and process raw odds dfs
-spreads_parsed <- create
+spreads_parsed <- create_parsed_odds_df(spreads, type='spreads')
+totals_parsed <- create_parsed_odds_df(totals, type='totals')
+moneylines_parsed <- create_parsed_odds_df(moneylines, type='moneylines')
 
 
 ## connect to MySQL db
-mydb = dbConnect(MySQL(), 
-                 user=DB_USER, 
-                 password=DB_PASS, 
-                 dbname=DB_NAME,
-                 host='localhost')
+mydb <- dbConnect(MySQL(), 
+                  user=DB_USER, 
+                  password=DB_PASS, 
+                  dbname=DB_NAME,
+                  host=DB_HOST)
 dbListTables(mydb)
 
+
+
+rs <- dbSendQuery(mydb, 'SELECT * FROM games LIMIT 5;')
+data <- fetch(rs, n=-1)
+
 ## store them into db
+dbWriteTable(mydb, value=games, name="games", append=TRUE, row.names=FALSE)
+dbWriteTable(mydb, value=spreads_parsed, name="spreads", append=TRUE, row.names=FALSE)
+names(spreads_parsed)
+names(spreads_parsed)[1]
+names(x)[1] <- '5dimes'
+names(x)
+head(x[['5dimes']])
+## close connection to db
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
 
 
+## move raw dataset files into different directories (to mark successful data upload to db)
+move_files_to_another_dir(from_dir='./data/raw_in_queue/games', to_dir='./data/raw_stored_in_db/games')
+move_files_to_another_dir(from_dir='./data/raw_in_queue/spreads', to_dir='./data/raw_stored_in_db/spreads')
+move_files_to_another_dir(from_dir='./data/raw_in_queue/totals', to_dir='./data/raw_stored_in_db/totals')
+move_files_to_another_dir(from_dir='./data/raw_in_queue/moneylines', to_dir='./data/raw_stored_in_db/moneylines')
 
-move_files_to_another_dir(from_dir='./test1', to_dir='./test2')
-
-
-
-
-
-## load latest data
-
-## load data already collected
+## load complete data from db
 games2 <- read.csv('./data/games.csv', stringsAsFactors=FALSE)
 
 ## proper data types for date
 games$date <- as.Date(games$date)
+spreads$date <- as.Date(spreads$date)
+totals$date <- as.Date(totals$date)
+moneylines$date <- as.Date(moneylines$date)
 
 ## see range of dates by dataset
 base::range(games$date)
-
-## get latest season data
-last_season <- 2016
-games_apnd <- get_raw_games_data_via_api(season=last_season)
-games <- subset(games, season != last_season)
-games <- rbind.data.frame(games, games_apnd)
-remove(games_apnd)
-
-
-
-#### download latest odds data
-download_latest_raw_odds_data('spreads')
-download_latest_raw_odds_data('totals')
-download_latest_raw_odds_data('moneylines')
-
-
-
-#### save data feed dfs into csv
-write.csv(games, './data/games.csv', row.names=FALSE)
+base::range(spreads$date)
+base::range(totals$date)
+base::range(moneylines$date)
 
 
 
 
 
-## add latest data to the dfs
-games <- add_latest_data(games, 
-                         func='get_raw_games_data_via_api',
-                         non_date_args=list())
 
-# moneylines <- read.csv('./data/raw/moneylines.csv', stringsAsFactors=FALSE)
-spreads <- read.csv('./data/raw/spreads.csv', stringsAsFactors=FALSE)
-totals <- read.csv('./data/raw/totals.csv', stringsAsFactors=FALSE)
 
-# moneylines$date <- as.Date(moneylines$date)
-# spreads$date <- as.Date(spreads$date)
-# totals$date <- as.Date(totals$date)
 
-# write.csv(spreads, './data/spreads.csv', row.names=FALSE)
-# write.csv(totals, './data/totals.csv', row.names=FALSE)
+
+
+
