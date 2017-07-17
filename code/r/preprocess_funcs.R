@@ -249,8 +249,11 @@ create_parsed_odds_df <- function(odds_df, type=c('spreads', 'totals', 'moneylin
   ## get names of original columns (that contain the odds) to iterate over 
   orig_odds_cols <- paste0('X', 1:10)
   
+  ## add game ID (gid)
+  odds_df <- add_gid(odds_df)
+  
   ## base columns
-  base_cols <- c('season', 'date', 'team', 'o_team')
+  base_cols <- c('gid', 'season', 'date', 'team', 'o_team')
   
   ## odds-maker sources
   oddsmakers <- c('pinnacle', 'betonline', 'interlops', 'bookmaker', '5dimes', 
@@ -309,17 +312,15 @@ create_parsed_odds_df <- function(odds_df, type=c('spreads', 'totals', 'moneylin
 
 
 ## this function adds game ID (gid) to df;
-## gid consists of game date without dashes, first 3 characters of home team, 
-## and first 3 characters of away team
-add_gid <- function(master_df) {
-  gid <- rep(NA, nrow(master_df))
-  h_ind <- master_df$site=='H' | master_df$site=='home'
-  gid[h_ind] <- paste0(format(master_df$date, '%Y%m%d'), 
-                       substr(master_df$team, 1, 3), 
-                       substr(master_df$o_team, 1, 3))
-  gid[!h_ind] <- paste0(format(master_df$date, '%Y%m%d'), 
-                        substr(master_df$o_team, 1, 3), 
-                        substr(master_df$team, 1, 3))
-  master_df$gid <- gid
-  return(master_df)
+## gid consists of: 
+## - game date without dashes
+## - first 3 characters of team 1 
+## - first 3 characters of team 2
+## team 1 and team 2 are alphabetically ordered
+add_gid <- function(df) {
+  df$gid <- apply(cbind(format(as.Date(df$date), '%Y%m%d'), 
+                            substr(as.character(df$team), 1, 3),
+                            substr(as.character(df$o_team), 1, 3)), 
+                      1, function(x) paste(sort(x), collapse="")) 
+  return(df)
 }

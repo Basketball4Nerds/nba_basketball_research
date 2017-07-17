@@ -59,7 +59,7 @@ mydb <- dbConnect(MySQL(),
 dbListTables(mydb)
 
 #rs <- dbSendQuery(mydb, 'SELECT * FROM games LIMIT 5;')
-#rs <- dbSendQuery(mydb, 'DELETE FROM games LIMIT 5;')
+rs <- dbSendQuery(mydb, 'DELETE FROM games LIMIT 5;')
 #data <- fetch(rs, n=-1)
 
 ## store them into db
