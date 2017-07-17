@@ -41,26 +41,32 @@
 		<dict>
 			<key>connectionEncoding</key>
 			<string>latin1</string>
+			<key>contentFilter</key>
+			<dict/>
 			<key>contentPageNumber</key>
 			<integer>1</integer>
 			<key>contentSelection</key>
 			<data>
-			YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFy
-			Y2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJX
-			TlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAF
-			gAdUdHlwZVRyb3dzXxAdU2VsZWN0aW9uRGV0YWlsVHlwZU5TSW5k
-			ZXhTZXTSFwsYGVxOU1JhbmdlQ291bnQQAIAG0hscHR5aJGNsYXNz
-			bmFtZVgkY2xhc3Nlc1pOU0luZGV4U2V0oh8gWk5TSW5kZXhTZXRY
-			TlNPYmplY3TSGxwiI1xOU0RpY3Rpb25hcnmiIiBfEA9OU0tleWVk
-			QXJjaGl2ZXLRJidUZGF0YYABAAgAEQAaACMALQAyADcAQABGAE0A
-			VQBgAGcAagBsAG4AcQBzAHUAdwB8AIEAoQCmALMAtQC3ALwAxwDQ
-			ANsA3gDpAPIA9wEEAQcBGQEcASEAAAAAAAACAQAAAAAAAAAoAAAA
-			AAAAAAAAAAAAAAABIw==
+			YnBsaXN0MDDUAQIDBAUGNjdYJHZlcnNpb25YJG9iamVjdHNZJGFy
+			Y2hpdmVyVCR0b3ASAAGGoK0HCBUWFxgZHSQoLDA0VSRudWxs0wkK
+			CwwQFFdOUy5rZXlzWk5TLm9iamVjdHNWJGNsYXNzow0OD4ACgAOA
+			BKMREhOABYAGgAiADFR0eXBlVHJvd3NUa2V5c18QJlNlbGVjdGlv
+			bkRldGFpbFR5cGVQcmltYXJ5S2V5ZWREZXRhaWxz0wkKCxobHKCg
+			gAfSHh8gIVokY2xhc3NuYW1lWCRjbGFzc2VzXxATTlNNdXRhYmxl
+			RGljdGlvbmFyeaMgIiNcTlNEaWN0aW9uYXJ5WE5TT2JqZWN00goL
+			JSehJoAJgAvSCykqK1lOUy5zdHJpbmeAClJpZNIeHy0uXxAPTlNN
+			dXRhYmxlU3RyaW5noy0vI1hOU1N0cmluZ9IeHzEyXk5TTXV0YWJs
+			ZUFycmF5ozEzI1dOU0FycmF50h4fIjWiIiNfEA9OU0tleWVkQXJj
+			aGl2ZXLRODlUZGF0YYABAAgAEQAaACMALQAyADcARQBLAFIAWgBl
+			AGwAcAByAHQAdgB6AHwAfgCAAIIAhwCMAJEAugDBAMIAwwDFAMoA
+			1QDeAPQA+AEFAQ4BEwEVARcBGQEeASgBKgEtATIBRAFIAVEBVgFl
+			AWkBcQF2AXkBiwGOAZMAAAAAAAACAQAAAAAAAAA6AAAAAAAAAAAA
+			AAAAAAABlQ==
 			</data>
 			<key>contentSortColIsAsc</key>
 			<true/>
 			<key>contentViewport</key>
-			<string>{{0, 0}, {694, 450}}</string>
+			<string>{{0, 0}, {748, 475}}</string>
 			<key>isToolbarVisible</key>
 			<true/>
 			<key>queries</key>
@@ -204,6 +210,170 @@ season YEAR NOT NULL,
 date DATE NOT NULL,
 team VARCHAR(20) NOT NULL,
 o_team VARCHAR(20) NOT NULL,
+pinnacle_line DECIMAL(4, 1),
+pinnacle_payout NUMERIC,
+betonline_line DECIMAL(4, 1),
+betonline_payout NUMERIC,
+interlops_line DECIMAL(4, 1),
+interlops_payout NUMERIC,
+bookmaker_line DECIMAL(4, 1),
+bookmaker_payout NUMERIC,
+5dimes_line DECIMAL(4, 1),
+5dimes_payout NUMERIC,
+betdsi_line DECIMAL(4, 1),
+betdsi_payout NUMERIC,
+heritage_line DECIMAL(4, 1),
+heritage_payout NUMERIC,
+bovada_line DECIMAL(4, 1),  
+bovada_payout NUMERIC,
+youwager_line DECIMAL(4, 1), 
+youwager_payout NUMERIC,
+justbet_line DECIMAL(4, 1), 
+justbet_payout NUMERIC,
+PRIMARY KEY (id)
+);
+
+
+
+</string>
+			<key>table</key>
+			<string>spreads</string>
+			<key>view</key>
+			<string>SP_VIEW_CUSTOMQUERY</string>
+			<key>windowVerticalDividerPosition</key>
+			<real>200</real>
+		</dict>
+	</dict>
+	<key>encrypted</key>
+	<false/>
+	<key>format</key>
+	<string>connection</string>
+	<key>queryFavorites</key>
+	<array/>
+	<key>queryHistory</key>
+	<array>
+		<string>CREATE TABLE games (
+id INT NOT NULL AUTO_INCREMENT,
+gid VARCHAR(20) NOT NULL,
+season YEAR NOT NULL,  
+date DATE NOT NULL,
+site VARCHAR(5) NOT NULL,
+playoffs BOOLEAN NOT NULL,
+
+team VARCHAR(20) NOT NULL,
+pts TINYINT NOT NULL,
+wins TINYINT NOT NULL,
+losses TINYINT NOT NULL,
+rest TINYINT,
+steals TINYINT,
+assists TINYINT,
+blocks TINYINT,  
+defensive_rebounds TINYINT,
+offensive_rebounds TINYINT,
+rebounds TINYINT,
+turnovers TINYINT,
+fouls TINYINT,
+field_goals_attempted TINYINT,
+field_goals_made TINYINT,
+three_pointers_attempted TINYINT,
+three_pointers_made TINYINT,
+free_throws_attempted TINYINT,
+free_throws_made TINYINT,
+pts_in_paint TINYINT,
+fast_break_pts TINYINT,
+quarter_scores TINYINT,
+biggest_lead TINYINT,
+
+o_team VARCHAR(20) NOT NULL,
+o_pts TINYINT NOT NULL,
+o_wins TINYINT NOT NULL,
+o_losses TINYINT NOT NULL,
+o_rest TINYINT,
+o_steals TINYINT,
+o_assists TINYINT,
+o_blocks TINYINT,
+o_defensive_rebounds TINYINT,
+o_offensive_rebounds TINYINT,
+o_rebounds TINYINT,
+o_turnovers TINYINT,
+o_fouls TINYINT,
+o_field_goals_attempted TINYINT,
+o_field_goals_made TINYINT,
+o_three_pointers_attempted TINYINT,
+o_three_pointers_made TINYINT,
+o_free_throws_attempted TINYINT,
+o_free_throws_made TINYINT,
+o_pts_in_paint TINYINT,
+o_fast_break_pts TINYINT,
+o_quarter_scores TINYINT,
+o_biggest_lead TINYINT,
+
+matchup_wins TINYINT,
+matchup_losses TINYINT,
+lead_changes TINYINT,
+margin_after_first TINYINT,
+margin_at_half TINYINT,
+margin_after_third TINYINT,
+
+total DECIMAL(4, 1),
+line DECIMAL(4, 1),
+PRIMARY KEY (id)
+);
+CREATE TABLE moneylines (
+id INT NOT NULL AUTO_INCREMENT,
+gid VARCHAR(20) NOT NULL,
+season YEAR NOT NULL,
+date DATE NOT NULL,
+team VARCHAR(20) NOT NULL,
+o_team VARCHAR(20) NOT NULL,
+pinnacle_ml DECIMAL(4, 1),
+betonline_ml DECIMAL(4, 1),
+interlops_ml DECIMAL(4, 1), 
+bookmaker_ml DECIMAL(4, 1),
+5dimes_ml DECIMAL(4, 1),  
+betdsi_ml DECIMAL(4, 1),  
+heritage_ml DECIMAL(4, 1),  
+bovada_ml DECIMAL(4, 1),  
+youwager_ml DECIMAL(4, 1),  
+justbet_ml DECIMAL(4, 1), 
+PRIMARY KEY (id)
+);
+CREATE TABLE totals (
+id INT NOT NULL AUTO_INCREMENT,
+gid VARCHAR(20) NOT NULL,
+season YEAR NOT NULL,
+date DATE NOT NULL,
+team VARCHAR(20) NOT NULL,
+o_team VARCHAR(20) NOT NULL,
+pinnacle_total DECIMAL(4, 1),
+pinnacle_payout NUMERIC,
+betonline_total DECIMAL(4, 1),
+betonline_payout NUMERIC,
+interlops_total DECIMAL(4, 1),
+interlops_payout NUMERIC,
+bookmaker_total DECIMAL(4, 1),
+bookmaker_payout NUMERIC,
+5dimes_total DECIMAL(4, 1),
+5dimes_payout NUMERIC,
+betdsi_total DECIMAL(4, 1),
+betdsi_payout NUMERIC,
+heritage_total DECIMAL(4, 1),
+heritage_payout NUMERIC,
+bovada_total DECIMAL(4, 1),  
+bovada_payout NUMERIC,
+youwager_total DECIMAL(4, 1), 
+youwager_payout NUMERIC,
+justbet_total DECIMAL(4, 1), 
+justbet_payout NUMERIC,
+PRIMARY KEY (id)
+);
+CREATE TABLE spreads (
+id INT NOT NULL AUTO_INCREMENT,
+gid VARCHAR(20) NOT NULL,
+season YEAR NOT NULL,
+date DATE NOT NULL,
+team VARCHAR(20) NOT NULL,
+o_team VARCHAR(20) NOT NULL,
 pinnacle_spreads DECIMAL(4, 1),
 pinnacle_payout NUMERIC,
 betonline_spreads DECIMAL(4, 1),
@@ -225,25 +395,7 @@ youwager_payout NUMERIC,
 justbet_spreads DECIMAL(4, 1), 
 justbet_payout NUMERIC,
 PRIMARY KEY (id)
-);
-
-
-
-</string>
-			<key>view</key>
-			<string>SP_VIEW_CUSTOMQUERY</string>
-			<key>windowVerticalDividerPosition</key>
-			<real>200</real>
-		</dict>
-	</dict>
-	<key>encrypted</key>
-	<false/>
-	<key>format</key>
-	<string>connection</string>
-	<key>queryFavorites</key>
-	<array/>
-	<key>queryHistory</key>
-	<array>
+)</string>
 		<string>CREATE TABLE games (
 id INT NOT NULL AUTO_INCREMENT,
 gid VARCHAR(20) NOT NULL,

@@ -50,7 +50,6 @@ spreads_parsed <- create_parsed_odds_df(spreads, type='spreads')
 totals_parsed <- create_parsed_odds_df(totals, type='totals')
 moneylines_parsed <- create_parsed_odds_df(moneylines, type='moneylines')
 
-
 ## connect to MySQL db
 mydb <- dbConnect(MySQL(), 
                   user=DB_USER, 
@@ -60,18 +59,16 @@ mydb <- dbConnect(MySQL(),
 dbListTables(mydb)
 
 
-
-rs <- dbSendQuery(mydb, 'SELECT * FROM games LIMIT 5;')
-data <- fetch(rs, n=-1)
+#rs <- dbSendQuery(mydb, 'SELECT * FROM games LIMIT 5;')
+#rs <- dbSendQuery(mydb, 'DELETE FROM games LIMIT 5;')
+#data <- fetch(rs, n=-1)
 
 ## store them into db
 dbWriteTable(mydb, value=games, name="games", append=TRUE, row.names=FALSE)
-dbWriteTable(mydb, value=spreads_parsed, name="spreads", append=TRUE, row.names=FALSE)
-names(spreads_parsed)
-names(spreads_parsed)[1]
-names(x)[1] <- '5dimes'
-names(x)
-head(x[['5dimes']])
+# dbWriteTable(mydb, value=spreads_parsed, name="spreads", append=TRUE, row.names=FALSE)
+# dbWriteTable(mydb, value=totals_parsed, name="totals", append=TRUE, row.names=FALSE)
+# dbWriteTable(mydb, value=moneylines_parsed, name="moneylines", append=TRUE, row.names=FALSE)
+
 ## close connection to db
 all_cons <- dbListConnections(MySQL())
 for(con in all_cons) dbDisconnect(con)
