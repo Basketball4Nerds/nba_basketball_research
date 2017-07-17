@@ -249,11 +249,8 @@ create_parsed_odds_df <- function(odds_df, type=c('spreads', 'totals', 'moneylin
   ## get names of original columns (that contain the odds) to iterate over 
   orig_odds_cols <- paste0('X', 1:10)
   
-  ## add game ID (gid)
-  odds_df <- add_gid(odds_df)
-  
   ## base columns
-  base_cols <- c('gid', 'season', 'date', 'team', 'o_team')
+  base_cols <- c('season', 'date', 'team', 'o_team')
   
   ## odds-maker sources
   oddsmakers <- c('pinnacle', 'betonline', 'interlops', 'bookmaker', '5dimes', 
