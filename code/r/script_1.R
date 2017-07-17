@@ -266,4 +266,4 @@ master <- add_cum_perf_cols(master,
 write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
-
+names(x)

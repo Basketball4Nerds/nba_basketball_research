@@ -58,7 +58,6 @@ mydb <- dbConnect(MySQL(),
                   host=DB_HOST)
 dbListTables(mydb)
 
-
 #rs <- dbSendQuery(mydb, 'SELECT * FROM games LIMIT 5;')
 #rs <- dbSendQuery(mydb, 'DELETE FROM games LIMIT 5;')
 #data <- fetch(rs, n=-1)
@@ -94,8 +93,6 @@ base::range(games$date)
 base::range(spreads$date)
 base::range(totals$date)
 base::range(moneylines$date)
-
-
 
 
 

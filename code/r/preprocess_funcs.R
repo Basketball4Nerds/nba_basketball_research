@@ -306,3 +306,20 @@ create_parsed_odds_df <- function(odds_df, type=c('spreads', 'totals', 'moneylin
     return(ret_df)
   }
 }
+
+
+## this function adds game ID (gid) to df;
+## gid consists of game date without dashes, first 3 characters of home team, 
+## and first 3 characters of away team
+add_gid <- function(master_df) {
+  gid <- rep(NA, nrow(master_df))
+  h_ind <- master_df$site=='H' | master_df$site=='home'
+  gid[h_ind] <- paste0(format(master_df$date, '%Y%m%d'), 
+                       substr(master_df$team, 1, 3), 
+                       substr(master_df$o_team, 1, 3))
+  gid[!h_ind] <- paste0(format(master_df$date, '%Y%m%d'), 
+                        substr(master_df$o_team, 1, 3), 
+                        substr(master_df$team, 1, 3))
+  master_df$gid <- gid
+  return(master_df)
+}
