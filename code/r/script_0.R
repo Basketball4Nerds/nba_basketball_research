@@ -51,6 +51,7 @@ moneylines <- concatenate_dataset_files(dir_path='./data/raw_in_queue/moneylines
 
 
 ## parse and process raw odds dfs
+games$lead_changes <- NULL  # error in 2015-2016 data from source
 spreads_parsed <- create_parsed_odds_df(spreads, type='spreads')
 totals_parsed <- create_parsed_odds_df(totals, type='totals')
 moneylines_parsed <- create_parsed_odds_df(moneylines, type='moneylines')
@@ -94,15 +95,10 @@ remove('games', 'spreads', 'totals', 'moneylines',
        'spreads_parsed', 'totals_parsed', 'moneylines_parsed')
 
 ## load complete data from db
-games_query <- 'SELECT * FROM games;'
-spreads_query <- 'SELECT * FROM spreads;'
-totals_query <- 'SELECT * FROM totals;'
-moneylines_query <- 'SELECT * FROM moneylines;'
-
-games <- suppressWarnings(fetch(dbSendQuery(mydb, games_query), n=-1))
-spreads <- suppressWarnings(fetch(dbSendQuery(mydb, spreads_query), n=-1))
-totals <- suppressWarnings(fetch(dbSendQuery(mydb, totals_query), n=-1))
-moneylines <- suppressWarnings(fetch(dbSendQuery(mydb, moneylines_query), n=-1))
+games <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM games;'), n=-1))
+spreads <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM spreads;'), n=-1))
+totals <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM totals;'), n=-1))
+moneylines <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM moneylines;'), n=-1))
 
 
 ## close connection to db

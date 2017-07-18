@@ -1,5 +1,11 @@
 ############ GENERAL/HELPER/MISCELLANEOUS FUNCTIONS ################
 
+## this function returns names of empty columns
+list_empty_cols <- function(df) {
+  return(names(df)[sapply(df, function(x) all(is.na(x)))])
+}
+
+
 ## this function takes in df and "fills in" the selected metrics
 ## for opponent by join method
 fill_in_opp_cols <- function(df, cols) {

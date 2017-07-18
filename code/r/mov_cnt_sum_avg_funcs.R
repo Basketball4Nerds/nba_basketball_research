@@ -362,7 +362,6 @@ add_cum_sum_cols <- function(master_df,
   return(master_df)
 }
 
-
 ## this function adds cumulative performance columns
 add_cum_perf_cols <- function(master_df, 
                               metric=c('oeff', 'oeffA', 

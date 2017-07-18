@@ -4,10 +4,9 @@
 master <- games
 
 ## exclude playoff games (for now since playoff data is not available for 1995 - 2001)
-ddply(master, 'season', function(x) {table(x$playoffs)})
 master <- subset(master, playoffs==0)  # flaw in data; does not filter out all playoff games
-master <- subset(master, n < 82)
-ddply(master, c('team', 'season'), nrow)
+x <- ddply(master, c('team', 'season'), nrow)
+unique(x$V1)
 
 ## change home/away to H/A for site variable
 master$site <- ifelse(master$site=='home', 'H', 'A')
@@ -26,7 +25,7 @@ master <- master[!is.na(master$pts), ]
 
 ## set to correct data types
 # master$season <- as.factor(master$season)
-master$playoffs <- as.factor(master$playoffs)
+# master$playoffs <- as.factor(master$playoffs)
 
 ## shorten column names
 names(master) <- gsub('pts', 'p', names(master))
@@ -49,7 +48,7 @@ names(master) <- gsub('free_throws_attempted', 'FTA', names(master))
 names(master) <- gsub('free_throws_made', 'FTM', names(master))
 names(master) <- gsub('p(ts)?_in_paint', 'pPnt', names(master))
 names(master) <- gsub('fast_break_p(ts)?', 'pFb', names(master))
-names(master) <- gsub('quarter_scores', 'pQtr', names(master))
+names(master) <- gsub('quarter_scores', 'qtrpts', names(master))
 names(master) <- gsub('biggest_lead', 'bgstLd', names(master))
 names(master) <- gsub('matchup', 'mtch', names(master))
 names(master) <- gsub('lead_changes', 'ldChng', names(master))
@@ -58,7 +57,7 @@ names(master) <- gsub('margin_at_half', 'pMrgnHlf', names(master))
 names(master) <- gsub('margin_after_third', 'pMrgn3q', names(master))
 
 ## change column names (essential for data processing step later)
-names(master)[names(master)=='total'] <- 'om_proj_total'
+# names(master)[names(master)=='total'] <- 'om_proj_total'
 names(master)[names(master)=='o_p'] <- 'pA'  # opponent points allowed
 names(master)[names(master)=='o_stl'] <- 'stlA' # opponent steals allowed
 names(master)[names(master)=='o_ast'] <- 'astA' # opponent assists allowed
@@ -76,7 +75,7 @@ names(master)[names(master)=='o_FTA'] <- 'FTAA' # opponent free throws attempts 
 names(master)[names(master)=='o_FTM'] <- 'FTMA' # opponent free throws made allowed
 names(master)[names(master)=='o_pPnt'] <- 'pPntA' # opponent points allowed in paint
 names(master)[names(master)=='o_pFb'] <- 'pFbA' # opponent fast-break points allowed
-names(master)[names(master)=='o_pQtr'] <- 'pQtrA' # opponent quarter points allowed
+names(master)[names(master)=='o_qtrpts'] <- 'qtrptsA' # opponent quarter points allowed
 names(master)[names(master)=='o_bgstLd'] <- 'bgstLdA' # opponent biggest lead allowed
 
 ## add game number cols
@@ -266,4 +265,3 @@ master <- add_cum_perf_cols(master,
 write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
-names(x)

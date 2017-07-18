@@ -1,10 +1,12 @@
 
-## subset df
-master_df <- subset(master, season==2012)
 
 
-## 
+
+
+
+## create and view a simple retro win prediction accuracy df
 create_smpl_retro_win_pred_acc_df(master_df)
+
 
 
 ## create win pred accuracy df with wpc cols

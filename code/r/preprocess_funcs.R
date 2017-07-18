@@ -227,6 +227,8 @@ createQtrOtPtsDf <- function(df, qtrPtsCol) {
 }
 
 
+
+#head(master$qtrpts)
 ## this function adds pts columns for each quarter and overtime
 addQtrOtPtsCols <- function(df, qtrPtsCols) {
   qtrPtsCols <- sort(qtrPtsCols)
