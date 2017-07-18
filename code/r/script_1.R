@@ -51,7 +51,6 @@ names(master) <- gsub('fast_break_p(ts)?', 'pFb', names(master))
 names(master) <- gsub('quarter_scores', 'qtrpts', names(master))
 names(master) <- gsub('biggest_lead', 'bgstLd', names(master))
 names(master) <- gsub('matchup', 'mtch', names(master))
-names(master) <- gsub('lead_changes', 'ldChng', names(master))
 names(master) <- gsub('margin_after_first', 'pMrgn1q', names(master))
 names(master) <- gsub('margin_at_half', 'pMrgnHlf', names(master))
 names(master) <- gsub('margin_after_third', 'pMrgn3q', names(master))
@@ -86,14 +85,16 @@ master$o_n_gen <- master$o_w + master$o_l
 master$cnf <- TeamCityConfDf$Conference[match(master$team, TeamCityConfDf$Team)]
 master$o_cnf <- TeamCityConfDf$Conference[match(master$o_team, TeamCityConfDf$Team)]
 
-## remove lead change column (no information in the column due to error in API)
-master$ldChng <- NULL
-
 ## combined points of both teams
 master$pTotal <- master$p + master$pA
 
 ## add pts columns for each quarter/overtime and a column for number of overtimes
-master <- addQtrOtPtsCols(master, qtrPtsCols=c('pQtr', 'pQtrA'))
+master <- addQtrOtPtsCols(master, qtrPtsCols=c('qtrpts', 'qtrptsA'))
+
+## add column for regular quarter points scored and allowed 
+## (need these columns to calculate more realistic SMAs for P and PA)
+master$rqP <- master$pQ1 + master$pQ2 + master$pQ3 + master$pQ4
+master$rqPA <- master$pQ1A + master$pQ2A + master$pQ3A + master$pQ4A
 
 ## re-do point margin by quarter (due to possible presence of missing data)
 master$pMrgn1q <- master$pQ1 - master$pQ1A
@@ -102,11 +103,6 @@ master$pMrgn3q <- (master$pQ1 + master$pQ2 + master$pQ3) - (master$pQ1A + master
 
 ## point margin after game
 master$pMrgn <- master$p - master$pA
-
-## add column for regular quarter points scored and allowed 
-## (need these columns to calculate more realistic SMAs for P and PA)
-master$rqP <- master$pQ1 + master$pQ2 + master$pQ3 + master$pQ4
-master$rqPA <- master$pQ1A + master$pQ2A + master$pQ3A + master$pQ4A
 
 ## matchup w-l differential
 # master$mtch_mrgn <- master$mtch_w - master$mtch_l

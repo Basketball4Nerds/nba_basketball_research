@@ -127,4 +127,3 @@ base::range(moneylines$date)
 
 ## remove id columns
 games$id <- spreads$id <- totals$id <- moneylines$id <- NULL
-

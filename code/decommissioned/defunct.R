@@ -1600,3 +1600,7 @@ scrapeDataFrSportsbookReviewByDate <- function(date, relTeams,
   ## return 
   return(df)
 }
+
+
+master_df[master_df$gid=='20130417HeaMag', c('team', 'o_team', 'j5', 'o_j5'), drop=FALSE]
+predictive_df[predictive_df$gid=='20130417HeaMag', c('team', 'o_team', 'j5'), drop=FALSE]
