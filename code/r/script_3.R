@@ -127,6 +127,9 @@ plot_wpa(wpc_wpa_df)
 
 
 
+
+
+
 ## implement a function for table shown in the following link:
 # - https://www.teamrankings.com/nba/odds-history/results/
 # - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/trends/league/season.html
@@ -136,12 +139,3 @@ plot_wpa(wpc_wpa_df)
 
 ## check out this page later:
 # - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/statistics/2016-2017/statistics_playoffs.html
-
-
-
-## to-do:
-# - get money line data: https://www.sportsbookreview.com/betting-odds/nba-basketball/money-line/?date=20170509
-
-
-
-
