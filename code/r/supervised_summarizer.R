@@ -94,8 +94,8 @@ plot_smry_stats_spread <- function(df_0, df_1, predictor_var, normalize=TRUE, ab
 }
 
 
-## this function d
-create_varimp_df <- function(df_0, df_1, predictor_vars, normalize=FALSE, rnd_dgt=3, abs=TRUE) {
+## this function creates variable importance df
+create_varimp_df <- function(df_0, df_1, predictor_vars, normalize=TRUE, rnd_dgt=3, abs=TRUE) {
 
   ## initialize empty vector to store spread 
   spread_vec <- c()
@@ -115,16 +115,20 @@ create_varimp_df <- function(df_0, df_1, predictor_vars, normalize=FALSE, rnd_dg
   }
   
   ## create variable importance df
-  varimp_df <- data.frame(var=predictor_vars, spread=abs(spread_vec))
+  varimp_df <- data.frame(var=predictor_vars, spread=abs(spread_vec), stringsAsFactors=FALSE)
 
   ## return
   return(varimp_df)
 }
 
 
+## this function takes in variable importance df and creates plots
+## variable importance 
 plot_varimp <- function(varimp_df) {
-  
+  p <- ggplot(varimp_df) + 
+    geom_bar(aes(x=reorder(var, spread), y=spread), stat='identity') + 
+    xlab('Variable') + 
+    coord_flip() 
+  return(p)
 }
-
-
 
