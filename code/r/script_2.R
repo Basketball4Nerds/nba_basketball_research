@@ -1,57 +1,106 @@
-## subset df
-master_df <- subset(master, season==2012)
+# ## master df derivative that contains only the following:
+# ## - base columns
+# ## - previous cumulative count columns
+# ## - previous cumulative sum columns 
+# base_cols <- c('season', 'date', 'site', 'playoffs', 'team', 'o_team', 'cnf', 'o_cnf', 'gid',
+#                'n_cumcnt_gen', 'w_cumcnt_gen', 'l_cumcnt_gen',
+#                'o_n_cumcnt_gen', 'o_w_cumcnt_gen', 'o_l_cumcnt_gen',
+#                'rst', 'o_rst', 'mtchmrgn', 'line', 'won')
+# master2 <- master[ , base_cols]
 
 
-## create and view a simple retro win prediction accuracy df
-create_smpl_retro_win_pred_acc_df(master_df)
+## add juice propagation columns (j and o_j)
+master <- addJCols(master, init_j=100, dist_wgts=c(0.05, 0.1, 0.15))
 
 
-## create prediction df
-predictive_df <- create_predictive_df(master_df)
-predictive_df <- sortByCol(predictive_df, c('season', 'date'))
+## round digits to 3 decimal places
+master <- round_df(master, 3)
 
 
-## 
-won_df <- subset(predictive_df, won)
-lost_df <- subset(predictive_df, !won)
+## create backup
+write.csv(master, './data/master_backup2.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
 
 
-
-varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=cumperf_cols, normalize=TRUE)
-varimp_df <- sortByCol(varimp_df, 'spread')
-varimp_df
-plot_varimp(varimp_df)
+## temporary subsetting (for faster code execution during testing)
+# master <- subset(master, season==2012)
+# master <- master[ , 1:140]
 
 
+## set metrics to calculate their cumulative sums
+cols_to_cumsum <- c('p', 'pA', 'pos', 'posA', 'FGM', 'FGMA', 'FGA', 'FGAA', 'rqP', 'rqPA')
 
 
-## CONTINUE HERE!!!!!
-
-library(corrplot)
-wpc_cols <- names(predictive_df)[grepl('^wpc_', names(predictive_df))]
-cumperf_cols <- names(predictive_df)[grepl('_cumperf_', names(predictive_df))]
-oeff_cumperf_cols <- names(predictive_df)[grepl("^oeff_cumperf_", names(predictive_df), perl = TRUE)]
-oeffA_cumperf_cols <- names(predictive_df)[grepl("^oeffA_cumperf_", names(predictive_df), perl = TRUE)]
-FGP_cumperf_cols <- names(predictive_df)[grepl("^FGP_cumperf_", names(predictive_df), perl = TRUE)]
-FGPA_cumperf_cols <- names(predictive_df)[grepl("^FGPA_cumperf_", names(predictive_df), perl = TRUE)]
-rqP_cumperf_cols <- names(predictive_df)[grepl("^rqP_cumperf_", names(predictive_df), perl = TRUE)]
-rqPA_cumperf_cols <- names(predictive_df)[grepl("^rqPA_cumperf_", names(predictive_df), perl = TRUE)]
-pos_cumperf_cols <- names(predictive_df)[grepl("^pos_cumperf_", names(predictive_df), perl = TRUE)]
-posA_cumperf_cols <- names(predictive_df)[grepl("^posA_cumperf_", names(predictive_df), perl = TRUE)]
-j_cols <- names(predictive_df)[grepl("^j", names(predictive_df), perl = TRUE)]
+## add various general cumsum columns
+master <- add_cumsum_cols(master, 
+                          cols=cols_to_cumsum,
+                          vary_by=NULL,
+                          add_opp_cols=FALSE)
 
 
+## add various general cumulative performance columns
+master <- add_cumperf_cols(master, add_opp_cols=TRUE)
 
-## correlation plot
-# https://stackoverflow.com/a/19115003
-cor_mtx <- round(cor(predictive_df[cumperf_cols], use='pairwise.complete.obs'), 3)
-corrplot(cor_mtx, method='ellipse', type='lower')
 
-names(predictive_df)
-gen_cols <- names(predictive_df)[grepl('_gen', names(predictive_df))]
-gen_cols <- setdiff(gen_cols, c('n_gen', 'o_n_gen'))
-cor_mtx <- round(cor(predictive_df[gen_cols], use='pairwise.complete.obs'), 3)
-corrplot(cor_mtx, method='ellipse', type='lower')
+## add columns for offensive and defensive rankings
+master <- add_rnk_cols(master,
+                       metric=c('oeff_cumperf_gen', 'oeffA_cumperf_gen'),
+                       higher_num_bttr_perf=c(TRUE, FALSE),
+                       method='qntl',
+                       add_opp_cols=TRUE)
+
+
+## set vary-by variable for variable-specific counts, sums, and performances
+vary_by <- c('site', 'o_cnf', 'o_oeff_qntl_rnk', 'o_oeffA_qntl_rnk')
+
+
+## add variable-specific win cumcnt
+master <- add_cumcnt_cols(master, 
+                          cols=c('w', 'n'), 
+                          vary_by=vary_by, 
+                          add_opp_cols=FALSE)
+
+
+## make a backup
+write.csv(master, './data/master_backup3.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
+
+
+## add variable-specific cumsum cols 
+master <- add_cumsum_cols(master, 
+                          cols=cols_to_cumsum,
+                          vary_by=vary_by,
+                          add_opp_cols=FALSE)
+
+## make a backup
+write.csv(master, './data/master_backup4.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup4.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
+
+
+## add variable-specific performance
+master <- add_cumperf_cols(master, add_opp_cols=TRUE)
+
+
+## add win percentages (both general and variable-specific)
+master <- add_wpc_cols(master, add_opp_cols=TRUE)
+
+
+## list completely empty columns
+list_empty_cols(master)
+
+
+## list cols that contain Inf or NaN vals
+list_cols_w_inf_or_nan(master)
+
+
+## make a backup
+write.csv(master, './data/master_backup5.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup5.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
+
 
 
 

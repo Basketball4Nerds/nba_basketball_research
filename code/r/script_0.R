@@ -26,15 +26,18 @@ library(reshape2)  # for dcast()
 
 
 ## load functions and classes
-source('./code/r/data_grab_funcs.R')
+source('./code/r/analysis_funcs.R')
+source('./code/r/classes.R')
 source('./code/r/combine_dataset_files.R')
+source('./code/r/data_grab_funcs.R')
+source('./code/r/functions.R')
 source('./code/r/helper_funcs.R')
+source('./code/r/mov_cnt_sum_avg_funcs.R')
+source('./code/r/pred_funcs.R')
 source('./code/r/preprocess_funcs.R')
 source('./code/r/rnk_grp_funcs.R')
-source('./code/r/mov_cnt_sum_avg_funcs.R')
-source('./code/r/functions.R')
-source('./code/r/classes.R')
-
+source('./code/r/supervised_summarizer.R')
+source('./code/r/rm_high_vif_cols.R')
 
 ## load keys & mappers
 source('./credentials/keys.R')
@@ -127,4 +130,5 @@ base::range(moneylines$date)
 
 ## remove id columns
 games$id <- spreads$id <- totals$id <- moneylines$id <- NULL
+
 

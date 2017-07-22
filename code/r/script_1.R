@@ -1,3 +1,8 @@
+## read games data cache
+# games <- read.csv('./data/games.csv', stringsAsFactors=FALSE)
+# games$date <- as.Date(games$date)
+
+
 #### feature addition to master df
 
 ## copy games df to master
@@ -29,8 +34,8 @@ master <- master[!is.na(master$pts), ]
 
 ## shorten column names
 names(master) <- gsub('pts', 'p', names(master))
-names(master) <- gsub('wins', 'w', names(master))
-names(master) <- gsub('losses', 'l', names(master))
+names(master) <- gsub('wins', 'w_cumcnt_gen', names(master))
+names(master) <- gsub('losses', 'l_cumcnt_gen', names(master))
 names(master) <- gsub('rest', 'rst', names(master))
 names(master) <- gsub('steals', 'stl', names(master))
 names(master) <- gsub('assists', 'ast', names(master))
@@ -78,8 +83,8 @@ names(master)[names(master)=='o_qtrpts'] <- 'qtrptsA' # opponent quarter points 
 names(master)[names(master)=='o_bgstLd'] <- 'bgstLdA' # opponent biggest lead allowed
 
 ## add game number cols
-master$n_gen <- master$w + master$l
-master$o_n_gen <- master$o_w + master$o_l
+master$n_cumcnt_gen <- master$w_cumcnt_gen + master$l_cumcnt_gen
+master$o_n_cumcnt_gen <- master$o_w_cumcnt_gen + master$o_l_cumcnt_gen
 
 ## add conference information
 master$cnf <- TeamCityConfDf$Conference[match(master$team, TeamCityConfDf$Team)]
@@ -107,9 +112,6 @@ master$pMrgn <- master$p - master$pA
 ## matchup w-l differential
 # master$mtch_mrgn <- master$mtch_w - master$mtch_l
 master$mtchmrgn <- master$mtch_w - master$mtch_l
-
-## conditional whether games was won
-master$won <- master$p > master$pA
 
 ## points made from 3-pointers
 master$p3x <- master$FGM3x * 3
@@ -202,63 +204,12 @@ master$toPcFcd <- master$trnovrFcd / master$posA
 master$FTA_p_FGA <- master$FTA / master$FGA
 master$FTAA_p_FGAA <- master$FTAA / master$FGAA
 
-## add juice propagation columns (j and o_j)
-master <- addJCols(master, init_j=100, dist_wgts=c(0.05, 0.1, 0.15))
+## conditional whether games was won
+master$won <- master$p > master$pA
 
-## round digits to 3 decimal places
-master <- round_df(master, 3)
 
 ## create backup
 write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
-# master$date <- as.Date(master$date)
-
-## add various general cumulative performance columns
-master <- add_cum_perf_cols(master,
-                            metric=c('oeff', 'oeffA',
-                                     'FGP', 'FGPA',
-                                     'rqP', 'rqPA',
-                                     'pos', 'posA'),
-                            vary_by=NULL,
-                            add_opp_cols=TRUE)
-
-## add columns for offensive and defensive rankings
-master <- add_rnk_cols(master,
-                       metric=c('oeff_cumperf_gen', 'oeffA_cumperf_gen'),
-                       higher_num_bttr_perf=c(TRUE, FALSE),
-                       method='qntl',
-                       add_opp_cols=TRUE)
-
-## add general win percentage
-master <- add_wpc_cols(master, 
-                       vary_by=NULL, 
-                       rm_w_cnt_cols=TRUE,
-                       rm_n_cnt_cols=FALSE,
-                       add_opp_cols=TRUE)
-
-## add variable-specific (e.g. site-specific) win percentage
-master <- add_wpc_cols(master,
-                       vary_by=c('site', 
-                                 'o_cnf',
-                                 'o_oeff_qntl_rnk',
-                                 'o_oeffA_qntl_rnk'),
-                       rm_w_cnt_cols=TRUE,
-                       rm_n_cnt_cols=FALSE,
-                       add_opp_cols=TRUE)
-
-## add variable-specific (e.g. conference-specific) performance
-master <- add_cum_perf_cols(master,
-                            metric=c('oeff', 'oeffA', 
-                                     'FGP', 'FGPA', 
-                                     'rqP', 'rqPA',
-                                     'pos', 'posA'),
-                            vary_by=c('site', 'o_cnf', 
-                                      'o_oeff_qntl_rnk', 
-                                      'o_oeffA_qntl_rnk'),
-                            add_opp_cols=TRUE)
-
-## make a backup
-write.csv(master, './data/master_backup2.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 

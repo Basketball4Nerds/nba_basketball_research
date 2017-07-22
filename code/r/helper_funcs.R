@@ -5,6 +5,11 @@ list_empty_cols <- function(df) {
   return(names(df)[sapply(df, function(x) all(is.na(x)))])
 }
 
+## this function returns names of columns that contain Inf or NaN
+list_cols_w_inf_or_nan <- function(df) {
+  return(names(df)[sapply(df, function(x) { any(is.infinite(x) || is.nan(x)) })])
+}
+
 
 ## this function takes in df and "fills in" the selected metrics
 ## for opponent by join method
@@ -192,13 +197,8 @@ create_new_cum_colnm <- function(col,
   ## (e.g. p_cumsum_oeffQntlRnk, not p_cumsum_oeff_qntl_rnk)
   new_colnm_apnd_str <- camelCase(new_colnm_apnd_str)
   
-  ## case for cum count
-  if (type=='cumcnt') {
-    new_colnm <- paste0(col, '_', new_colnm_apnd_str)
-  } 
-  
   ## case for cum sum or cum mean
-  else if (type %in% c('cumsum', 'cummean', 'cumperf')) {
+  if (type %in% c('cumcnt', 'cumsum', 'cummean', 'cumperf')) {
     new_colnm <- paste0(col, '_', type, '_', new_colnm_apnd_str) 
   } 
   

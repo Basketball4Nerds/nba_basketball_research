@@ -2,33 +2,19 @@
 
 ## this function adds win percentage columns to master df
 ## this function adds varied-by-variable win percentage columns to master df
-add_wpc_cols <- function(master_df, 
-                         vary_by=NULL, 
-                         new_colnm_apnd_str=NULL,
-                         rnd_dgt=3, 
-                         add_opp_cols=FALSE,
-                         rm_w_cnt_cols=FALSE,
-                         rm_n_cnt_cols=FALSE) {
+add_wpc_cols <- function(master_df, rnd_dgt=3, add_opp_cols=FALSE) {
   
   ## get original column names
   orig_cols <- names(master_df)
   
-  ## add varied-by-variable cumulative win count (w) and game count (n)
-  ## (do not add opponent cols)
-  master_df <- add_cum_cnt_cols(master_df, 
-                                cols=c('w', 'n'),
-                                vary_by=vary_by,
-                                add_opp_cols=FALSE)
-
-  
   ## get a vector of win count column names
-  win_cnt_cols <- colnames(master_df)[grepl('^w_', colnames(master_df))]
+  win_cnt_cols <- sort(colnames(master_df)[grepl('^w_cumcnt_', colnames(master_df))])
   
   ## get a vector of game count column names
-  gm_cnt_cols <- colnames(master_df)[grepl('^n_', colnames(master_df))]
+  gm_cnt_cols <- sort(colnames(master_df)[grepl('^n_cumcnt_', colnames(master_df))])
   
   ## create a vector win percent column names
-  win_pc_cols <- gsub('^w', 'wpc', win_cnt_cols)
+  win_pc_cols <- gsub('^w_cumcnt', 'wpc', win_cnt_cols)
   
   ## for each pair of w-and-n column names
   for (i in 1:length(win_cnt_cols)) {
@@ -42,14 +28,6 @@ add_wpc_cols <- function(master_df,
   
   ## replace NaN w/ NA
   master_df[is.nan.data.frame(master_df)] <- NA
-
-  ## remove win count columns if specified
-  if (rm_w_cnt_cols)
-    master_df <- master_df[ , !(grepl('^(o_)?w_', names(master_df)))]
-  
-  ## remove n-game count columns if specified
-  if (rm_n_cnt_cols) 
-    master_df <- master_df[ , !(grepl('^(o_)?n_', names(master_df)))]
   
   ## fill in opponent columns
   if (add_opp_cols) {
