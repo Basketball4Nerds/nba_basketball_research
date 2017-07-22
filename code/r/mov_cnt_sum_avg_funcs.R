@@ -98,8 +98,8 @@ add_movavg_cols <- function(master_df,
     ## add moving average columns for each team-season df
     df_lst <- lapply(df_lst, function(df) {
       
-      ## get original column names
-      orig_cols <- names(master_df)
+      ## initialize vector to store new cols
+      new_cols <- c()
       
       ## set type
       type <- type[1]
@@ -125,6 +125,9 @@ add_movavg_cols <- function(master_df,
           ## create new column name
           new_colnm <- create_new_cum_colnm(col, new_colnm_apnd_str, type)
           
+          ## add to new cols vector
+          new_cols <- c(new_cols, new_colnm)
+          
           ## add MA vals to df as column
           df[[new_colnm]] <- run_vals
         }
@@ -147,6 +150,9 @@ add_movavg_cols <- function(master_df,
             ## create new column name
             new_colnm <- create_new_cum_colnm(col, new_colnm_apnd_str, type, i)
             
+            ## add to new cols vector
+            new_cols <- c(new_cols, new_colnm)
+            
             ## add MA vals to df as column
             df[[new_colnm]] <- run_vals
           }
@@ -154,14 +160,7 @@ add_movavg_cols <- function(master_df,
       }
       
       ## add opponent columns
-      if (add_opp_cols) {
-        
-        ## get new columns created
-        new_cols <- setdiff(colnames(df), orig_cols)
-        
-        ## create win percentage columns for opponent
-        df <- fill_in_opp_cols(df, cols=new_cols)
-      }
+      if (add_opp_cols) { df <- fill_in_opp_cols(df, cols=new_cols) }
       
       ## store to list
       df
@@ -216,8 +215,8 @@ add_cumcnt_cols <- function(master_df,
     ## add cumulative count columns for each team-season df
     df_lst <- lapply(df_lst, function(df) {
       
-      ## get original column names
-      orig_cols <- names(df)
+      ## initialize vector to store new cols
+      new_cols <- c()
       
       ## order the base subsets
       df <- df[order(df$date), ]
@@ -239,20 +238,16 @@ add_cumcnt_cols <- function(master_df,
         ## create new col name
         new_colnm <- create_new_cum_colnm(col, new_colnm_apnd_str, type='cumcnt')
         
+        ## add to new cols vector
+        new_cols <- c(new_cols, new_colnm)
+
         ## add run count as a column
         df[[new_colnm]] <- run_cnts
       }
       
       ## add opponent columns
-      if (add_opp_cols) {
-        
-        ## get new columns created
-        new_cols <- setdiff(colnames(df), orig_cols)
-        
-        ## create win percentage columns for opponent
-        df <- fill_in_opp_cols(df, cols=new_cols)
-      } 
-      
+      if (add_opp_cols) { df <- fill_in_opp_cols(df, cols=new_cols) } 
+
       ## add to list
       df
     })
@@ -272,7 +267,7 @@ add_cumcnt_cols <- function(master_df,
 
     ## add cumulative count cols
     master_df <- ddply(master_df, assure_correct_varyby_vars(var), function(x) {
-      add_cumcnt_cols(x, cols=cols, vary_by=NULL, new_colnm_apnd_str=var)
+      add_cumcnt_cols(x, cols=cols, vary_by=NULL, new_colnm_apnd_str=var, add_opp_cols=add_opp_cols)
     })
   }
   
@@ -301,8 +296,8 @@ add_cumsum_cols <- function(master_df,
     ## add moving average columns for each team-season df
     df_lst <- lapply(df_lst, function(df) {
       
-      ## get original column names
-      orig_cols <- names(df)
+      ## initialize vector to store new cols
+      new_cols <- c()
       
       ## order the base subsets
       df <- df[order(df$date), ]
@@ -322,19 +317,15 @@ add_cumsum_cols <- function(master_df,
         ## create new column name
         new_colnm <- create_new_cum_colnm(col, new_colnm_apnd_str, type='cumsum')
         
+        ## add to new cols vector
+        new_cols <- c(new_cols, new_colnm)
+        
         ## add MA vals to df as column
         df[[new_colnm]] <- run_vals
       }
       
       ## add opponent columns
-      if (add_opp_cols) {
-        
-        ## get new columns created
-        new_cols <- setdiff(colnames(df), orig_cols)
-        
-        ## create win percentage columns for opponent
-        df <- fill_in_opp_cols(df, cols=new_cols)
-      }
+      if (add_opp_cols) { df <- fill_in_opp_cols(df, cols=new_cols) }
       
       ## return
       return(df)
@@ -373,8 +364,8 @@ add_cumsum_cols <- function(master_df,
 ## this function adds cumulative performance columns
 add_cumperf_cols <- function(master_df, rnd_dgt=3, add_opp_cols=FALSE) {
   
-  ## get original column names
-  orig_cols <- names(master_df)
+  ## initialize vector to store new cols
+  new_cols <- c()
   
   ## get cumsum columns required for oeff calculations
   p_cumsum_cols <- sort(colnames(master_df)[grepl('^p_cumsum_', colnames(master_df))])
@@ -403,60 +394,57 @@ add_cumperf_cols <- function(master_df, rnd_dgt=3, add_opp_cols=FALSE) {
   
   ## offensive efficiency: points per possesion x100
   for (i in 1:length(oeff_cumperf_cols)) {
+    new_cols <- c(new_cols, oeff_cumperf_cols[i])
     master_df[[oeff_cumperf_cols[i]]] <- round((master_df[[p_cumsum_cols[i]]] / master_df[[pos_cumsum_cols[i]]]) * 100, rnd_dgt)
   }
 
   ## opponent offensive efficiency: points per possession x100
   for (i in 1:length(oeffA_cumperf_cols)) {
+    new_cols <- c(new_cols, oeffA_cumperf_cols[i])
     master_df[[oeffA_cumperf_cols[i]]] <- round((master_df[[pA_cumsum_cols[i]]] / master_df[[posA_cumsum_cols[i]]]) * 100, rnd_dgt)
   }
   
   ## field goal percentage
   for (i in 1:length(FGP_cumperf_cols)) {
+    new_cols <- c(new_cols, FGP_cumperf_cols[i])
     master_df[[FGP_cumperf_cols[i]]] <- round(master_df[[FGM_cumsum_cols[i]]] / master_df[[FGA_cumsum_cols[i]]], rnd_dgt)
   }
   
   ## field goal percentage allowed
   for (i in 1:length(FGPA_cumperf_cols)) {
+    new_cols <- c(new_cols, FGPA_cumperf_cols[i])
     master_df[[FGPA_cumperf_cols[i]]] <- round(master_df[[FGMA_cumsum_cols[i]]] / master_df[[FGAA_cumsum_cols[i]]], rnd_dgt)
   }
   
   ## regular quarter points
   for (i in 1:length(rqP_cumperf_cols)) {
+    new_cols <- c(new_cols, rqP_cumperf_cols[i])
     master_df[[rqP_cumperf_cols[i]]] <- round(master_df[[rqP_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
   }
   
   ## regular quarter points allowed
   for (i in 1:length(rqPA_cumperf_cols)) {
+    new_cols <- c(new_cols, rqPA_cumperf_cols[i])
     master_df[[rqPA_cumperf_cols[i]]] <- round(master_df[[rqPA_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
   }
   
   ## possessions
   for (i in 1:length(pos_cumperf_cols)) {
+    new_cols <- c(new_cols, pos_cumperf_cols[i])
     master_df[[pos_cumperf_cols[i]]] <- round(master_df[[pos_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
   }
   
   ## possessions allowed
   for (i in 1:length(posA_cumperf_cols)) {
+    new_cols <- c(new_cols, posA_cumperf_cols[i])
     master_df[[posA_cumperf_cols[i]]] <- round(master_df[[posA_cumsum_cols[i]]] / master_df[[gm_cnt_cols[i]]], rnd_dgt)
   }
-  
-  # ## remove intermediary columns (remove cumcnt and cumsum columns)
-  # cumperf_cols <- colnames(master_df)[grepl('_cumperf_', colnames(master_df))]
-  # master_df <- master_df[ , unique(c(orig_cols, cumperf_cols))]
   
   ## round digits
   master_df <- round_df(master_df, rnd_dgt)
   
   ## fill in opponent columns
-  if (add_opp_cols) {
-    
-    ## get new columns created
-    new_cols <- setdiff(colnames(master_df), orig_cols)
-    
-    ## create win percentage columns for opponent
-    master_df <- fill_in_opp_cols(master_df, cols=new_cols)
-  }
+  if (add_opp_cols) { master_df <- fill_in_opp_cols(master_df, cols=new_cols) }
   
   ## return
   return(master_df)

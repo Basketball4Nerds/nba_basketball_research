@@ -1,13 +1,3 @@
-# ## master df derivative that contains only the following:
-# ## - base columns
-# ## - previous cumulative count columns
-# ## - previous cumulative sum columns 
-# base_cols <- c('season', 'date', 'site', 'playoffs', 'team', 'o_team', 'cnf', 'o_cnf', 'gid',
-#                'n_cumcnt_gen', 'w_cumcnt_gen', 'l_cumcnt_gen',
-#                'o_n_cumcnt_gen', 'o_w_cumcnt_gen', 'o_l_cumcnt_gen',
-#                'rst', 'o_rst', 'mtchmrgn', 'line', 'won')
-# master2 <- master[ , base_cols]
-
 
 ## add juice propagation columns (j and o_j)
 master <- addJCols(master, init_j=100, dist_wgts=c(0.05, 0.1, 0.15))
@@ -23,23 +13,22 @@ write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master$date <- as.Date(master$date)
 
 
-## temporary subsetting (for faster code execution during testing)
-# master <- subset(master, season==2012)
-# master <- master[ , 1:140]
+## create and view a simple retro win prediction accuracy df
+create_smpl_retro_win_pred_acc_df(master_df)
 
 
 ## set metrics to calculate their cumulative sums
 cols_to_cumsum <- c('p', 'pA', 'pos', 'posA', 'FGM', 'FGMA', 'FGA', 'FGAA', 'rqP', 'rqPA')
 
 
-## add various general cumsum columns
+## add general cumsum columns
 master <- add_cumsum_cols(master, 
                           cols=cols_to_cumsum,
                           vary_by=NULL,
                           add_opp_cols=FALSE)
 
 
-## add various general cumulative performance columns
+## add general cumulative performance columns
 master <- add_cumperf_cols(master, add_opp_cols=TRUE)
 
 
@@ -51,6 +40,12 @@ master <- add_rnk_cols(master,
                        add_opp_cols=TRUE)
 
 
+## make a backup
+write.csv(master, './data/master_backup3.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
+# master$date <- as.Date(master$date)
+
+
 ## set vary-by variable for variable-specific counts, sums, and performances
 vary_by <- c('site', 'o_cnf', 'o_oeff_qntl_rnk', 'o_oeffA_qntl_rnk')
 
@@ -59,12 +54,12 @@ vary_by <- c('site', 'o_cnf', 'o_oeff_qntl_rnk', 'o_oeffA_qntl_rnk')
 master <- add_cumcnt_cols(master, 
                           cols=c('w', 'n'), 
                           vary_by=vary_by, 
-                          add_opp_cols=FALSE)
+                          add_opp_cols=TRUE)
 
 
 ## make a backup
-write.csv(master, './data/master_backup3.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup3.csv', stringsAsFactors=FALSE)
+write.csv(master, './data/master_backup4.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup4.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
 
@@ -74,9 +69,10 @@ master <- add_cumsum_cols(master,
                           vary_by=vary_by,
                           add_opp_cols=FALSE)
 
+
 ## make a backup
-write.csv(master, './data/master_backup4.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup4.csv', stringsAsFactors=FALSE)
+write.csv(master, './data/master_backup5.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup5.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
 
@@ -97,11 +93,9 @@ list_cols_w_inf_or_nan(master)
 
 
 ## make a backup
-write.csv(master, './data/master_backup5.csv', row.names=FALSE)
-# master <- read.csv('./data/master_backup5.csv', stringsAsFactors=FALSE)
+write.csv(master, './data/master_backup6.csv', row.names=FALSE)
+# master <- read.csv('./data/master_backup6.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
-
-
 
 
 

@@ -61,14 +61,14 @@ calc_smry_stats_spread <- function(smry_stats_0, smry_stats_1, normalize=TRUE, r
 
 ## this function takes summary stats df (consists of two summary stats vectors)
 ## and plots the spread
-plot_smry_stats_spread <- function(df_0, df_1, predictor_var, normalize=TRUE, abs=TRUE) {
+plot_smry_stats_spread <- function(df_0, df_1, predictor_var, normalize=TRUE) {
 
   ## get summary stats vectors
   smry_stats_0 <- c(summary(df_0[, predictor_var]))[c(1:3, 5:6)]
   smry_stats_1 <- c(summary(df_1[, predictor_var]))[c(1:3, 5:6)]
 
   ## calculate spread
-  spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, normalize=normalize, rnd_dgt=rnd_dgt, abs=abs)
+  spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, normalize=normalize)
   
   ## create summary stats df
   smry_stats_df <- data.frame(ind=1:5, 
@@ -117,6 +117,9 @@ create_varimp_df <- function(df_0, df_1, predictor_vars, normalize=TRUE, rnd_dgt
   ## create variable importance df
   varimp_df <- data.frame(var=predictor_vars, spread=abs(spread_vec), stringsAsFactors=FALSE)
 
+  ## sort by spread strength
+  varimp_df <- sortByCol(varimp_df, 'spread')
+  
   ## return
   return(varimp_df)
 }
