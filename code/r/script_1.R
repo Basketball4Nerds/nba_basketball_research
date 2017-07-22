@@ -233,7 +233,7 @@ master <- add_rnk_cols(master,
 master <- add_wpc_cols(master, 
                        vary_by=NULL, 
                        rm_w_cnt_cols=TRUE,
-                       rm_n_cnt_cols=TRUE,
+                       rm_n_cnt_cols=FALSE,
                        add_opp_cols=TRUE)
 
 ## add variable-specific (e.g. site-specific) win percentage
@@ -261,3 +261,4 @@ master <- add_cum_perf_cols(master,
 write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup2.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
+

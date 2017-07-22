@@ -1,3 +1,37 @@
+## implement a function for table shown in the following link:
+# - https://www.teamrankings.com/nba/odds-history/results/
+# - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/trends/league/season.html
+
+## What is power ranking? How is it ranked?
+# - http://www.covers.com/sports/nba/powerrankings
+
+## check out this page later:
+# - http://www.covers.com/pageLoader/pageLoader.aspx?page=/data/nba/statistics/2016-2017/statistics_playoffs.html
+
+
+## see how 
+
+fav <- subset(master, line < 0)
+und <- subset(master, line > 0)
+
+table(fav$p + fav$line > fav$pA)
+ddply(fav, 'season', function(x) {
+  table(x$p + x$line > x$pA)
+})
+
+table(und$p + und$line > und$pA)
+ddply(und, 'season', function(x) {
+  table(x$p + x$line > x$pA)
+})
+
+# 100 + (+4.5) > 103
+# 120 + (+4.5) > 103
+# 100 + (-4.5) > 103
+# 105 + (-4.5) > 103
+# 120 + (-4.5) > 103
+
+
+
 
 #### analysis
 

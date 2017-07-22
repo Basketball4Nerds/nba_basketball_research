@@ -45,11 +45,11 @@ add_wpc_cols <- function(master_df,
 
   ## remove win count columns if specified
   if (rm_w_cnt_cols)
-    master_df <- master_df[ , !(grepl('^w_', names(master_df)))]
+    master_df <- master_df[ , !(grepl('^(o_)?w_', names(master_df)))]
   
   ## remove n-game count columns if specified
   if (rm_n_cnt_cols) 
-    master_df <- master_df[ , !(grepl('^n_', names(master_df)))]
+    master_df <- master_df[ , !(grepl('^(o_)?n_', names(master_df)))]
   
   ## fill in opponent columns
   if (add_opp_cols) {

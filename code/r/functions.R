@@ -97,7 +97,7 @@ create_predictive_df <- function(master_df) {
   o_cols <- c(o_j_cols, o_wpc_cols, o_cumperf_cols, 'o_rst')
   
   ## initialize return df
-  ret_df <- master_df[ , c(base_cols, dep_col, 'line')]
+  ret_df <- master_df[ , c(base_cols, dep_col, cnt_cols, o_cnt_cols, 'line')]
   
   ## for each pair of team and opponent metric  
   for (i in 1:length(tm_cols)) {
