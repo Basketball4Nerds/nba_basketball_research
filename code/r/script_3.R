@@ -11,6 +11,11 @@ predictive_df <- create_predictive_df(master_df)
 predictive_df <- sortByCol(predictive_df, c('season', 'date'))
 
 
+## split predictive df by outcome
+won_df <- subset(predictive_df, won)
+lost_df <- subset(predictive_df, !won)
+
+
 ## get various predictor cols
 wpc_cols <- names(predictive_df)[grepl('^wpc_', names(predictive_df))]
 cumperf_cols <- names(predictive_df)[grepl('_cumperf_', names(predictive_df))]
@@ -18,36 +23,30 @@ j_cols <- names(predictive_df)[grepl("^j", names(predictive_df), perl = TRUE)]
 misc_predictor_cols <- c('line', 'rst', 'home', 'mtchmrgn')
 
 
-
-
-## get various predictor cols by vary-by type
-gen_predictor_cols <- names(predictive_df)[grepl('(wpc_|cumperf_)gen', names(predictive_df))]
-# site_predictor_cols <- names(predictive_df)[grepl('(wpc_|cumperf_)site', names(predictive_df))]
-# cnf_predictor_cols <- names(predictive_df)[grepl('(wpc_|cumperf_)cnf', names(predictive_df))]
-# oeffQntlRnk_predictor_cols <- names(predictive_df)[grepl('(wpc_|cumperf_)oeffQntlRnk', names(predictive_df))]
-# oeffaQntlRnk_predictor_cols <- names(predictive_df)[grepl('(wpc_|cumperf_)oeffaQntlRnk', names(predictive_df))]
-
-
 ## all predictor variables
 predictor_vars <- c(wpc_cols, cumperf_cols, j_cols, misc_predictor_cols)
 
 
-## split predictive df by outcome
-won_df <- subset(predictive_df, won)
-lost_df <- subset(predictive_df, !won)
+## plot variable importance determined by spread -- all predictor variables
+varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=predictor_vars, normalize=TRUE)
+varimp_df
+plot_varimp(varimp_df)
 
 
-## plot variable importance determined by spread
-varimp_df1 <- create_varimp_df(won_df, lost_df, predictor_vars=predictor_vars, normalize=TRUE)
-varimp_df1
-plot_varimp(varimp_df1)
+## plot variable importance determined by spread -- wpc predictor variables
+varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=wpc_cols, normalize=TRUE)
+varimp_df
+plot_varimp(varimp_df)
 
 
-## first determine which metrics produce strong spreads by outcome
+## plot variable importance determined by spread -- cumperf predictor variables
+varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=cumperf_cols, normalize=TRUE)
+varimp_df
+plot_varimp(varimp_df)
 
-## then determine which variable specification produce strong spreads by outcome
 
-
-
-
+## plot variable importance determined by spread -- J predictor variables
+varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=j_cols, normalize=TRUE)
+varimp_df
+plot_varimp(varimp_df)
 

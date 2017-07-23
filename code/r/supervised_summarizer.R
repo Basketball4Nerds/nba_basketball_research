@@ -141,3 +141,30 @@ plot_varimp <- function(varimp_df) {
   return(p)
 }
 
+
+## this function takes in a list of predictor variables and 
+## plots multiple variable importance plots
+multiplot_varimp <- function(df_0, df_1, predictor_vars_lst) {
+  
+  ## initialize empty plot list
+  plot_lst <- vector(length=length(predictor_vars_lst), mode='list')
+  
+  ## for each set of predictor variables
+  for (i in 1:length(predictor_vars_lst)) {
+    
+    ## get predictor variables set
+    predictor_vars <- predictor_vars_lst[[i]]
+    
+    ## create variable importance df
+    varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=predictor_vars)
+    
+    ## create variable importance plot
+    p <- plot_varimp(varimp_df)
+    
+    ## add plot to plot list
+    plot_lst[[i]] <- p
+  }
+  
+  ## plot multiple plots
+  multiplot(plotlist=plot_lst)
+}
