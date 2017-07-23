@@ -179,10 +179,13 @@ get_rnk_population_lst <- function(rnkd_vec_lst) {
   ## initialize an empty rank placement list
   rnk_population_lst <- vector(mode='list', length=length(rnkd_vec_lst[[1]]))  
   
-  ## loop through list of ranked obj
+  ## loop through list of ranked vector
   for (rnkd_vec in rnkd_vec_lst) {
     
-    ## for each ranked obj, record its placement 
+    ## un-factor ranked vector 
+    rnkd_vec <- as.character(rnkd_vec)
+    
+    ## for each ranked vector, record its placement 
     for (i in 1:length(rnkd_vec)) {
       rnk_population_lst[[i]] <- c(rnk_population_lst[[i]], rnkd_vec[i])
     }

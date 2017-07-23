@@ -1,6 +1,6 @@
 
 ## subset df
-master_df <- subset(master, season==2012)
+master_df <- subset(master, season %in% 2012)
 
 
 ## create predictive df;
