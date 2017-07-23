@@ -165,3 +165,29 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
+
+
+
+## this function takes a list of ranked vectors (ordered by some sort of ranking method)
+## and returns a list of rank placements for each of the rank position; 
+## > rank_placement[[1]]  # first rank populated by the following values
+## 'a', 'b', 'a', 'a', 'b', 'c', 'd'
+## > rank_placement[[2]]  # second rank populated by the following values
+## 'c', 'a', 'b', 'b', 'a', 'd', 'a'
+get_rnk_population_lst <- function(rnkd_vec_lst) {
+  
+  ## initialize an empty rank placement list
+  rnk_population_lst <- vector(mode='list', length=length(rnkd_vec_lst[[1]]))  
+  
+  ## loop through list of ranked obj
+  for (rnkd_vec in rnkd_vec_lst) {
+    
+    ## for each ranked obj, record its placement 
+    for (i in 1:length(rnkd_vec)) {
+      rnk_population_lst[[i]] <- c(rnk_population_lst[[i]], rnkd_vec[i])
+    }
+  }
+  
+  ## return
+  return(rnk_population_lst)
+}
