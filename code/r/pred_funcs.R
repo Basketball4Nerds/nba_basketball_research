@@ -111,26 +111,26 @@ pred_win_by_site <- function(site) {
 }
 
 
-## this fucntion checks validity of wpa_df under the following premise:
-## given the same metric and min_diff, there must be a fewer number of 
-## predictions made for higher min_n
-is_valid_wpa_df <- function(wpa_df) {
-  
-  ## split wpa_df into a list of dfs using metric and min_diff
-  wpa_df_lst <- split(wpa_df, list(wpa_df$metric, wpa_df$min_diff))
-  
-  ## check validity by checking there exists a lower n_pred for a higher min_n
-  valid_cond_lst <- lapply(wpa_df_lst, function(x) {
-    x <- sortByCol(x, col='min_n')
-    is.sorted(rev(x$n_pred))
-  })
-  
-  ## convert list of validity conditions to vector
-  valid_conds <- unlist(valid_cond_lst)
-  
-  ## return TRUE if all validity conditions are TRUE
-  return(all(valid_conds))
-}
+# ## this fucntion checks validity of wpa_df under the following premise:
+# ## given the same metric and min_diff, there must be a fewer number of 
+# ## predictions made for higher min_n
+# is_valid_wpa_df <- function(wpa_df) {
+#   
+#   ## split wpa_df into a list of dfs using metric and min_diff
+#   wpa_df_lst <- split(wpa_df, list(wpa_df$metric, wpa_df$min_diff))
+#   
+#   ## check validity by checking there exists a lower n_pred for a higher min_n
+#   valid_cond_lst <- lapply(wpa_df_lst, function(x) {
+#     x <- sortByCol(x, col='min_n')
+#     is.sorted(rev(x$n_pred))
+#   })
+#   
+#   ## convert list of validity conditions to vector
+#   valid_conds <- unlist(valid_cond_lst)
+#   
+#   ## return TRUE if all validity conditions are TRUE
+#   return(all(valid_conds))
+# }
 
 
 ## this function makes win prediction based on a given metric column and predictive_df;

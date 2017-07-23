@@ -85,7 +85,8 @@ pos_wpa_df <- create_win_pred_acc_df(predictive_df,
                                      metric_cols=pos_cumperf_cols, 
                                      min_diff=c(1.5, 2, 2.5), 
                                      min_n=c(5, 10))
-plot_wpa(pos_wpa_df)
+plot_wpa(pos_wpa_df)  
+# this plot suggests that I exclude pos metric from possible set of predictors
 
 
 ## create win pred acc df with posA cumperf cols
@@ -94,7 +95,8 @@ posA_wpa_df <- create_win_pred_acc_df(predictive_df,
                                       metric_cols=posA_cumperf_cols, 
                                       min_diff=c(1.5, 2, 2.5), 
                                       min_n=c(5, 10))
-plot_wpa(posA_wpa_df)
+plot_wpa(posA_wpa_df)  
+# this plot suggests that I exclude pos metric from possible set of predictors
 
 
 ## create win pred acc df with J cols

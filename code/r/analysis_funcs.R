@@ -81,10 +81,6 @@ plot_wpa <- function(wpa_df) {
 
 
 
-## this function 
-
-
-
 
 ## this function creates all possible combinations (nCr) of given metrics
 ## and returns as a list
@@ -108,11 +104,214 @@ create_metric_combo_lst <- function(metrics, n=NULL) {
 
 
 
-## 
 
 
 
 
+## this function takes master_df as input and creates "predictive df" 
+## that contains predictor variables and is used to make predictions 
+create_predictive_df <- function(master_df) {
+  
+  ## define prediction column (dependent variable)
+  dep_col <- 'won'
+  
+  ## set base columns
+  base_cols <- c('gid', 'season', 'date', 'site', 'playoffs', 'team', 'o_team')
+  
+  ## get general and variable-specific count cols
+  cnt_cols <- names(master_df)[grepl('^n_', names(master_df))]
+  o_cnt_cols <- names(master_df)[grepl('^o_n_', names(master_df))]
+  
+  ## get J, wpc, and cumperf cols for team
+  j_cols <- names(master_df)[grepl('^j[0-9]+$', names(master_df))]
+  wpc_cols <- names(master_df)[grepl('^wpc_', names(master_df))]
+  cumperf_cols <- names(master_df)[grepl("^(?!o_).*cumperf_", names(master_df), perl = TRUE)]
+  
+  ## get J, wpc, and cumperf cols for opponent
+  o_j_cols <- names(master_df)[grepl('^o_j[0-9]+$', names(master_df))]
+  o_wpc_cols <- names(master_df)[grepl('^o_wpc_', names(master_df))]
+  o_cumperf_cols <- names(master_df)[grepl("^o_.*cumperf_", names(master_df), perl = TRUE)]
+  
+  ## save cols to compare into variables
+  tm_cols <- c(j_cols, wpc_cols, cumperf_cols, 'rst')
+  o_cols <- c(o_j_cols, o_wpc_cols, o_cumperf_cols, 'o_rst')
+  
+  ## initialize return df
+  ret_df <- master_df[ , c(base_cols, dep_col, cnt_cols, o_cnt_cols, 'line')]
+  
+  ## for each pair of team and opponent metric  
+  for (i in 1:length(tm_cols)) {
+    tm_col <- tm_cols[i]
+    o_col <- o_cols[i]
+    
+    ## calculate the diff and add to ret_df
+    ret_df[ , tm_col] <- master_df[ , tm_col] - master_df[ , o_col]
+  }
+  
+  ## convert site info as predictor variable
+  ret_df$home <- ifelse(master_df$site=='H', 1, 0)
+  
+  ## store match margin info as predictor variable
+  ret_df$mtchmrgn <- master_df$mtch_w - master_df$mtch_l
+  
+  ## return
+  return(ret_df)
+}
 
+
+## http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+
+
+## this function takes a list of ranked vectors (ordered by some sort of ranking method)
+## and returns a list of rank placements for each of the rank position; 
+## > rank_placement[[1]]  # first rank populated by the following values
+## 'a', 'b', 'a', 'a', 'b', 'c', 'd'
+## > rank_placement[[2]]  # second rank populated by the following values
+## 'c', 'a', 'b', 'b', 'a', 'd', 'a'
+get_rnk_population_lst <- function(rnkd_vec_lst) {
+  
+  ## initialize an empty rank placement list
+  max_length <- max(unlist(lapply(rnkd_vec_lst, length)))
+  rnk_population_lst <- vector(mode='list', length=max_length)  
+  
+  ## remove empty ranked vectors from the list
+  rnkd_vec_lst <- rnkd_vec_lst[lapply(rnkd_vec_lst, length) > 0]
+  
+  ## loop through list of ranked vector
+  for (rnkd_vec in rnkd_vec_lst) {
+    
+    ## un-factor ranked vector 
+    rnkd_vec <- as.character(rnkd_vec)
+    
+    ## for each ranked vector, record its placement 
+    for (i in 1:length(rnkd_vec)) {
+      rnk_population_lst[[i]] <- c(rnk_population_lst[[i]], rnkd_vec[i])
+    }
+  }
+  
+  ## return
+  return(rnk_population_lst)
+}
+
+
+## this function takes in a list of vectors and returns
+get_pred_perf_rnk_plcmnt_lst <- function(predictive_df, predictor_vars, rank_method, ...) {
+  
+  ## get list of ranked metrics
+  rnkd_metrics_lst <- get_rnk_metrics_lst(predictive_df, rank_method)
+  
+  ## remove empty ranked vectors from the list
+  rnkd_metrics_lst <- rnkd_metrics_lst[lapply(rnkd_metrics_lst, length) > 0]
+
+  ## get rank population list
+  rnk_population_lst <- get_rnk_population_lst(rnkd_metrics_lst)
+  
+  ## return
+  return(rnk_population_lst)
+}
+
+
+## this function creates a list of ranked metrics, which is 
+## used to create prediction performance rank placement
+get_rnkd_metrics_lst <- function(predictive_df, 
+                                 rank_method=c('pred_acc', 'smry_stat_sprd'), 
+                                 ...) {
+  
+  ## set rank method
+  rank_method <- rank_method[1]
+  
+  ## split predictive df by season
+  df_lst <- split(predictive_df, predictive_df$season)
+  
+  ## remove empty df from the list
+  df_lst <- df_lst[lapply(df_lst, nrow) > 0]
+  
+  if (rank_method=='pred_acc') {
+    
+    ## create list of ranked metrics 
+    rnkd_metrics_lst <- lapply(df_lst, function(x) {
+      
+      ## create sorted win pred acc df
+      wpa_df <- create_win_pred_acc_df(predictive_df=x, metric_cols=predictor_vars, ...)
+      wpa_df <- sortByCol(wpa_df, col='acc', asc=FALSE)
+      wpa_df <- subset(wpa_df, acc > 0.5)
+      
+      ## store ranked metrics as an element to the list
+      as.character(wpa_df$metric)
+    })
+  }
+  
+  else if (rank_method=='smry_stat_sprd') {
+    
+    ## create list of ranked metrics 
+    rnkd_metrics_lst <- lapply(df_lst, function(x) {
+
+      ## split data by outcome
+      won_df <- subset(x, won); lost_df <- subset(x, !won)
+      
+      ## create sorted variable importance df (measured by summary stats spread)
+      varimp_df <- create_varimp_df(lost_df, won_df, 
+                                    predictor_vars=predictor_vars, 
+                                    normalize=TRUE)
+      varimp_df <- sortByCol(varimp_df, col='spread', asc=FALSE)
+
+      ## store ranked metrics as an element to the list
+      as.character(varimp_df$var)
+    })
+  }
+  
+  else {
+    stop('Please provide a valid ranking method to evaluate the metrics.')
+  }
+
+  ## return
+  return(rnkd_metrics_lst)
+}
 
 
