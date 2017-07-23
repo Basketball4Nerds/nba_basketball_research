@@ -1,3 +1,13 @@
+## get various cumperf predictor cols by metric type
+oeff_cumperf_cols <- names(predictive_df)[grepl("^oeff_cumperf_", names(predictive_df), perl = TRUE)]
+oeffA_cumperf_cols <- names(predictive_df)[grepl("^oeffA_cumperf_", names(predictive_df), perl = TRUE)]
+FGP_cumperf_cols <- names(predictive_df)[grepl("^FGP_cumperf_", names(predictive_df), perl = TRUE)]
+FGPA_cumperf_cols <- names(predictive_df)[grepl("^FGPA_cumperf_", names(predictive_df), perl = TRUE)]
+rqP_cumperf_cols <- names(predictive_df)[grepl("^rqP_cumperf_", names(predictive_df), perl = TRUE)]
+rqPA_cumperf_cols <- names(predictive_df)[grepl("^rqPA_cumperf_", names(predictive_df), perl = TRUE)]
+pos_cumperf_cols <- names(predictive_df)[grepl("^pos_cumperf_", names(predictive_df), perl = TRUE)]
+posA_cumperf_cols <- names(predictive_df)[grepl("^posA_cumperf_", names(predictive_df), perl = TRUE)]
+
 
 ## create win pred accuracy df with wpc cols
 quantile(predictive_df$wpc_gen, na.rm=TRUE)
@@ -17,7 +27,7 @@ oeff_wpa_df <- create_win_pred_acc_df(predictive_df,
 
 
 ## create win pred acc df with oeffA cumperf cols
-quantile(predictive_df$oeffA_cumperf_gen - predictive_df$o_oeffA_cumperf_gen, na.rm=TRUE)
+quantile(predictive_df$oeffA_cumperf_gen, na.rm=TRUE)
 oeffA_wpa_df <- create_win_pred_acc_df(predictive_df, 
                                        metric_cols=oeffA_cumperf_cols, 
                                        min_diff=c(1.5, 3, 4.5), 

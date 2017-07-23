@@ -14,7 +14,7 @@ get_nrm_smry_stats_lst <- function(smry_stats_0, smry_stats_1, rnd_dgt=3) {
   min <- min(smry_stats_0['min'], smry_stats_1['min'])
   nrm_smry_stats_0 <- smry_stats_0 - min
   nrm_smry_stats_1 <- smry_stats_1 - min
-
+  
   ## make sure max caps at 1
   max <- max(nrm_smry_stats_0['max'], nrm_smry_stats_1['max'])
   nrm_smry_stats_0 <- round(nrm_smry_stats_0 / max, rnd_dgt)
@@ -35,11 +35,11 @@ calc_smry_stats_spread <- function(smry_stats_0, smry_stats_1, normalize=TRUE, r
   
   ## normalize summary stats vectors if specified
   if (normalize) {
-    nrm_smry_stats_lst <- get_nrm_smry_stats_lst(smry_stats_0, smry_stats_1, rnd_dgt=rnd_dgt)
+    nrm_smry_stats_lst <- get_nrm_smry_stats_lst(smry_stats_0, smry_stats_1, rnd_dgt)
     smry_stats_0 <- nrm_smry_stats_lst[[1]]
     smry_stats_1 <- nrm_smry_stats_lst[[2]]
   }
-
+  
   ## calculate spread from summary stats vectors
   spread <- 
     (smry_stats_1[[1]] - smry_stats_0[[1]]) + 
@@ -61,20 +61,26 @@ calc_smry_stats_spread <- function(smry_stats_0, smry_stats_1, normalize=TRUE, r
 
 ## this function takes summary stats df (consists of two summary stats vectors)
 ## and plots the spread
-plot_smry_stats_spread <- function(df_0, df_1, predictor_var, normalize=TRUE) {
-
+plot_smry_stats_spread <- function(df_0, df_1, predictor_var, ...) {
+  
+  ## get argument names
+  argnames <- names(list(...)) 
+  
+  ## fill in logical value for normalize
+  if(!('normalize' %in% argnames)) { normalize <- TRUE }
+  
   ## get summary stats vectors
   smry_stats_0 <- c(summary(df_0[, predictor_var]))[c(1:3, 5:6)]
   smry_stats_1 <- c(summary(df_1[, predictor_var]))[c(1:3, 5:6)]
-
+  
   ## calculate spread
-  spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, normalize=normalize)
+  spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, normalize=normalize, ...)
   
   ## create summary stats df
   smry_stats_df <- data.frame(ind=1:5, 
                               smry_stats_0=smry_stats_0, 
                               smry_stats_1=smry_stats_1)
-
+  
   ## create proper x-label
   xlab <- ifelse(normalize, 
                  paste('Normalized spread', spread), 
@@ -88,18 +94,18 @@ plot_smry_stats_spread <- function(df_0, df_1, predictor_var, normalize=TRUE) {
                      labels=c("min", "1q", "median", "3q", "max")) +
     xlab(xlab) + 
     ylab(predictor_var) 
-
+  
   ## return
   return(p)
 }
 
 
 ## this function creates variable importance df
-create_varimp_df <- function(df_0, df_1, predictor_vars, normalize=TRUE, rnd_dgt=3, abs=TRUE) {
-
+create_varimp_df <- function(df_0, df_1, predictor_vars, ...) {
+  
   ## initialize empty vector to store spread 
   spread_vec <- c()
-
+  
   ## for each predictor variable
   for (predictor_var in predictor_vars) {
     
@@ -108,7 +114,7 @@ create_varimp_df <- function(df_0, df_1, predictor_vars, normalize=TRUE, rnd_dgt
     smry_stats_1 <- c(summary(df_1[, predictor_var]))[c(1:3, 5:6)]
     
     ## calculate spread
-    spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, normalize=normalize, rnd_dgt=rnd_dgt, abs=abs)
+    spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, ...)
     
     ## add to vector
     spread_vec <-  c(spread_vec, spread)
@@ -116,7 +122,7 @@ create_varimp_df <- function(df_0, df_1, predictor_vars, normalize=TRUE, rnd_dgt
   
   ## create variable importance df
   varimp_df <- data.frame(var=predictor_vars, spread=abs(spread_vec), stringsAsFactors=FALSE)
-
+  
   ## sort by spread strength
   varimp_df <- sortByCol(varimp_df, 'spread')
   
