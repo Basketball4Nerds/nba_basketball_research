@@ -103,8 +103,8 @@ tuneGrid <- expand.grid(.cp = seq(0.002, 0.1, by=0.002))
 
 
 z <- train[complete.cases(train), ]
-head(train)
 
-y <- train(trk1_formula, data=, method='rpart', trControl=fitControl, tuneGrid=tuneGrid)
+
+y <- train(trk1_formula, data=train, method='rpart', trControl=fitControl, tuneGrid=tuneGrid)
 x <- rpart(trk1_formula, data=train)
 

@@ -1,13 +1,3 @@
-## get various cumperf predictor cols by metric type
-oeff_cumperf_cols <- names(train)[grepl("^oeff_cumperf_", names(train), perl = TRUE)]
-oeffA_cumperf_cols <- names(train)[grepl("^oeffA_cumperf_", names(train), perl = TRUE)]
-FGP_cumperf_cols <- names(train)[grepl("^FGP_cumperf_", names(train), perl = TRUE)]
-FGPA_cumperf_cols <- names(train)[grepl("^FGPA_cumperf_", names(train), perl = TRUE)]
-rqP_cumperf_cols <- names(train)[grepl("^rqP_cumperf_", names(train), perl = TRUE)]
-rqPA_cumperf_cols <- names(train)[grepl("^rqPA_cumperf_", names(train), perl = TRUE)]
-pos_cumperf_cols <- names(train)[grepl("^pos_cumperf_", names(train), perl = TRUE)]
-posA_cumperf_cols <- names(train)[grepl("^posA_cumperf_", names(train), perl = TRUE)]
-
 
 # ## get various predictor cols by vary-by type
 # gen_predictor_cols <- names(train)[grepl('(wpc_|cumperf_)gen', names(train))]

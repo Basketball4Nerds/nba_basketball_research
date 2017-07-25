@@ -14,7 +14,7 @@ write.csv(master, './data/master_backup2.csv', row.names=FALSE)
 
 
 ## create and view a simple retro win prediction accuracy df
-create_smpl_retro_win_pred_acc_df(master_df)
+create_smpl_retro_win_pred_acc_df(master)
 
 
 ## set metrics to calculate their cumulative sums

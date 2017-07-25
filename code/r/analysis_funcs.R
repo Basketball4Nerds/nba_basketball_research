@@ -104,13 +104,9 @@ create_metric_combo_lst <- function(metrics, n=NULL) {
 
 
 
-
-
-
-
 ## this function takes master_df as input and creates "predictive df" 
 ## that contains predictor variables and is used to make predictions 
-create_predictive_df <- function(master_df) {
+create_predictive_df <- function(master_df, include_cnt_cols=TRUE) {
   
   ## define prediction column (dependent variable)
   dep_col <- 'won'
@@ -137,8 +133,12 @@ create_predictive_df <- function(master_df) {
   o_cols <- c(o_j_cols, o_wpc_cols, o_cumperf_cols, 'o_rst')
   
   ## initialize return df
-  ret_df <- master_df[ , c(base_cols, dep_col, cnt_cols, o_cnt_cols, 'line')]
-  
+  if (include_cnt_cols) {
+    ret_df <- master_df[ , c(base_cols, dep_col, cnt_cols, o_cnt_cols, 'line')]    
+  } else {
+    ret_df <- master_df[ , c(base_cols, dep_col, 'line')]
+  }
+
   ## for each pair of team and opponent metric  
   for (i in 1:length(tm_cols)) {
     tm_col <- tm_cols[i]
