@@ -1,5 +1,13 @@
 ############ GENERAL/HELPER/MISCELLANEOUS FUNCTIONS ################
 
+## this function takes in a vector of predictor variables and prediction variable
+## and creates a formula to be used to create models
+create_model_formula <- function(predictor_vars, prediction_var) {
+  formula <- as.formula(paste0(prediction_var, ' ~ ', paste(predictor_vars, collapse=' + ')))
+  return(formula)
+}
+
+
 ## this function moves all files found in a directory to another
 move_files_to_another_dir <- function(from_dir, to_dir) {
   
@@ -22,6 +30,12 @@ move_files_to_another_dir <- function(from_dir, to_dir) {
 }
 
 
+## this function removes empty columns
+remove_empty_cols <- function(df) {
+  empty_cols <- list_empty_cols(df)
+  return(df[ , setdiff(names(df), empty_cols)])
+}
+
 ## this function returns names of empty columns
 list_empty_cols <- function(df) {
   return(names(df)[sapply(df, function(x) all(is.na(x)))])
@@ -40,14 +54,14 @@ fill_in_opp_cols <- function(df, cols) {
   
   ## make a partial copy of df
   df_pc <- df[ , c('date', 'team', cols)]
-  
+
   ## add o_ prefix to all column names except the date
   names(df_pc) <- paste0('o_', names(df_pc))
   names(df_pc)[names(df_pc)=='o_date'] <- 'date'
-  
+
   ## make a left join
   df <- left_join(df, df_pc, by=c('date', 'o_team'))
-  
+
   ## return 
   return(df)
 }

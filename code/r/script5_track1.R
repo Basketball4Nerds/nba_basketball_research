@@ -84,13 +84,27 @@ trk1_predictor_vars <- c('wpc_site',
                             'FGP_cumperf_site', 'FGPA_cumperf_site', 
                             'rqP_cumperf_gen', 'rqPA_cumperf_gen', 'j5')
 
-x <- train[ , c()]
-base_cols
+## base cols
+base_cols <- c('season', 'date', 'site', 'playoffs', 'team', 'o_team', 
+               'cnf', 'o_cnf', 'gid', 'won')
+
+
+
+
+
 
 # set.seed(2)
-# library(caret)
-# fitControl <- trainControl(method = 'cv', number = 10)
-# cartGrid <- expand.grid(.cp = seq(0.002, 0.1, by=0.002))
-# train(over50k ~ ., data = train, method = 'rpart', trControl = fitControl, tuneGrid = cartGrid)
+library(caret)
+head(predictive_df)
 
+trk1_formula <- create_model_formula(trk1_predictor_vars, 'won')
+trControl <- trainControl(method = 'cv', number = 10)
+tuneGrid <- expand.grid(.cp = seq(0.002, 0.1, by=0.002))
+
+
+z <- train[complete.cases(train), ]
+head(train)
+
+y <- train(trk1_formula, data=, method='rpart', trControl=fitControl, tuneGrid=tuneGrid)
+x <- rpart(trk1_formula, data=train)
 
