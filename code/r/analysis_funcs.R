@@ -241,10 +241,13 @@ get_rnk_population_lst <- function(rnkd_vec_lst) {
 
 
 ## this function takes in a list of vectors and returns
-get_pred_perf_rnk_plcmnt_lst <- function(predictive_df, predictor_vars, rank_method, ...) {
+get_pred_perf_rnk_plcmnt_lst <- function(predictive_df, 
+                                         predictor_vars, 
+                                         rank_method=c('pred_acc', 'smry_stat_sprd'), 
+                                         ...) {
   
   ## get list of ranked metrics
-  rnkd_metrics_lst <- get_rnk_metrics_lst(predictive_df, rank_method)
+  rnkd_metrics_lst <- get_rnkd_metrics_lst(predictive_df, predictor_vars, rank_method[1])
   
   ## remove empty ranked vectors from the list
   rnkd_metrics_lst <- rnkd_metrics_lst[lapply(rnkd_metrics_lst, length) > 0]
@@ -260,6 +263,7 @@ get_pred_perf_rnk_plcmnt_lst <- function(predictive_df, predictor_vars, rank_met
 ## this function creates a list of ranked metrics, which is 
 ## used to create prediction performance rank placement
 get_rnkd_metrics_lst <- function(predictive_df, 
+                                 predictor_vars,
                                  rank_method=c('pred_acc', 'smry_stat_sprd'), 
                                  ...) {
   

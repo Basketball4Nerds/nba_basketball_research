@@ -39,9 +39,14 @@ get_gm_cnt_cols_fr_metric_cols <- function(metric_cols) {
     }
     
     ## if metric cannot be variable-specific
-    else if (metric %in% c('j', 'line', 'site', 'mtchmrgn', 'rst')) {
+    else if (metric %in% c('j', 'line', 'site', 'mtchmrgn', 'rst', 'home')) {
       gm_cnt_col <- 'n_cumcnt_gen'
     } 
+    
+    ## stop if 
+    else {
+      stop(paste0("Unable to find relevant gm cnt col the following metric: ", metric))
+    }
     
     ## append gm cnt col nm to vector
     gm_cnt_cols <- c(gm_cnt_cols, gm_cnt_col)

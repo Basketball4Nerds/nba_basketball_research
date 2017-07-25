@@ -1,25 +1,34 @@
 
-## subset df
-master_df <- subset(master, season %in% 2012)
-
-
 ## create predictive df;
 ## (takes the difference between tm metric columns and 
 ## opp metric columns in the master df and saves the difference
 ## as columns in predictive df)
-predictive_df <- create_predictive_df(master_df)
+predictive_df <- create_predictive_df(master)
 predictive_df <- sortByCol(predictive_df, c('season', 'date'))
 
 
+## backup predictive df
+write.csv(predictive_df, './data/predictive_df.csv', row.names=FALSE)
+# predictive_df <- read.csv('./data/predictive_df.csv', stringsAsFactors=FALSE)
+# predictive_df$date <- as.Date(predictive_df$date)
+
+
+## split data into train and final test data
+unique(predictive_df$season)
+length(unique(predictive_df$season))
+train <- subset(predictive_df, season %in% 1995:2014)
+final_test <- subset(predictive_df, season %in% 2015:2016)
+
+
 ## split predictive df by outcome
-won_df <- subset(predictive_df, won)
-lost_df <- subset(predictive_df, !won)
+won_df <- subset(train, won)
+lost_df <- subset(train, !won)
 
 
 ## get various predictor cols
-wpc_cols <- names(predictive_df)[grepl('^wpc_', names(predictive_df))]
-cumperf_cols <- names(predictive_df)[grepl('_cumperf_', names(predictive_df))]
-j_cols <- names(predictive_df)[grepl("^j", names(predictive_df), perl = TRUE)]
+wpc_cols <- names(train)[grepl('^wpc_', names(train))]
+cumperf_cols <- names(train)[grepl('_cumperf_', names(train))]
+j_cols <- names(train)[grepl("^j", names(train), perl = TRUE)]
 misc_predictor_cols <- c('line', 'rst', 'home', 'mtchmrgn')
 
 
