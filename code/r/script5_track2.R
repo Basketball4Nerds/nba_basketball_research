@@ -1,7 +1,11 @@
-## In this code track, we will remove collinear variables by measuring 
-## each variable's VIF and removing the ones with the highest VIF iteratively.
-## We will then use cross validation to compare models (logistic regression, 
-## decision tree, n-nearest neighbor) and pick the best one.
+## In this code track, we will throw in all predictor variables into the 
+## high-VIF removal function (without handling any variables first)
+## and remove collinear variables. We will then use cross validation to compare
+## different model peroformances and pick the best one.
 
-## https://www.kaggle.com/robertoruiz/dealing-with-multicollinearity
-## https://beckmw.wordpress.com/2013/02/05/collinearity-and-stepwise-vif-selection/
+
+
+
+## remove highly correlated variables via VIF calc
+trk2_predictor_vars <- vif_func(in_frame=train_trk1[ , ], 
+                                  thresh=5, trace=TRUE)

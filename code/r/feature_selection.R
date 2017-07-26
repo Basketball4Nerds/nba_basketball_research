@@ -4,6 +4,8 @@
 ## removes the biggest value and calculate again. It repeates this 
 ## operation until all the variables have the accepted VIF.
 ## https://www.kaggle.com/robertoruiz/dealing-with-multicollinearity
+## https://beckmw.wordpress.com/2013/02/05/collinearity-and-stepwise-vif-selection/
+
 vif_func<-function(in_frame,thresh=10,trace=T,...){
   
   require(fmsb)

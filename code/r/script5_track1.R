@@ -1,9 +1,8 @@
 ## In this code track, we will select predictor variables to include in our models
-## by hand-picking variables that have demonstrated exceptional predictive power year over year.
-## We will then remove collinear variables by measuring each variable's VIF
-## and removing the ones with the highest VIF iteratively. We will then use cross validation to 
-## compare models (logistic regression, decision tree, n-nearest neighbor) and
-## pick the best one.
+## by hand-picking variables that have demonstrated exceptional predictive power 
+## year over year in each category. We will then remove collinear variables
+## by measuring each variable's VIF and removing the ones with the highest VIF iteratively. 
+## We will then use cross validation to compare model performances and pick the best one.
 
 
 ## https://www.kaggle.com/robertoruiz/dealing-with-multicollinearity
@@ -94,13 +93,13 @@ cor_mtx <- round(cor(train_trk1[trk1_predictor_vars], use='pairwise.complete.obs
 corrplot(cor_mtx, method='ellipse', type='lower')
 
 
-x <- vif_func(in_frame=train_trk1[ , c(predictor_vars, prediction_var)], 
-              thresh=5, trace=T)
-
+## remove highly correlated variables via VIF calc
+trk1_predictor_vars_2 <- vif_func(in_frame=train_trk1[ , trk1_predictor_vars], 
+                                  thresh=5, trace=TRUE)
 
 
 ## set parameters
-trk1_formula <- create_model_formula(trk1_predictor_vars, 'won')
+trk1_formula <- create_model_formula(trk1_predictor_vars_2, 'won')
 trControl <- trainControl(method='cv', number=10)
 #tuneGrid <- expand.grid(.cp = seq(0.002, 0.1, by=0.002))
 
@@ -109,8 +108,13 @@ trControl <- trainControl(method='cv', number=10)
 train_trk1 <- train_trk1[complete.cases(train_trk1), ]  # use only complete cases
 train_trk1$won <- as.factor(train_trk1$won)  # factorize prediction var
 
+
 ## get list of model candidates
 names(getModelInfo())
+
+
+## set seed
+set.seed(123)
 
 
 ## create various models for performance comparison:
@@ -130,7 +134,6 @@ trk1_rf_model <- train(trk1_formula, data=train_trk1, method='rf', trControl=trC
 trk1_gbm_model <- train(trk1_formula, data=train_trk1, method='gbm', trControl=trControl)
 
 
-
 ## save R model objects (since they are very time-consuming to recreate)
 saveRDS(trk1_glm_model, "./data/RDS/trk1_glm_model.rds")
 saveRDS(trk1_rpart_model, "./data/RDS/trk1_rpart_model.rds")
@@ -145,10 +148,10 @@ saveRDS(trk1_gbm_model, "./data/RDS/trk1_gbm_model.rds")
 print(trk1_glm_model)
 print(trk1_rpart_model)
 print(trk1_svm_model)
-print(trk1_glm_model)
-print(trk1_glm_model)
-print(trk1_glm_model)
-print(trk1_glm_model)
+print(trk1_nb_model)
+print(trk1_knn_model)
+print(trk1_rf_model)
+print(trk1_gbm_model)
 
 trk1_glm_model$results$Accuracy
 trk1_rpart_model$results$Accuracy
