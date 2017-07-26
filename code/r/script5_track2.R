@@ -3,3 +3,5 @@
 ## We will then use cross validation to compare models (logistic regression, 
 ## decision tree, n-nearest neighbor) and pick the best one.
 
+## https://www.kaggle.com/robertoruiz/dealing-with-multicollinearity
+## https://beckmw.wordpress.com/2013/02/05/collinearity-and-stepwise-vif-selection/

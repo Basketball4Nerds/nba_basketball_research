@@ -65,3 +65,25 @@ vif_func<-function(in_frame,thresh=10,trace=T,...){
     return(names(in_dat))
   }
 }
+
+
+
+## this function ranks variable importance with mRMR package
+## http://home.penglab.com/proj/mRMR/
+## http://amunategui.github.io/variable-importance-shuffler/index.html
+create_mRMR_varimp_df <- function(df, 
+                                  predictor_vars, prediction_var, 
+                                  rnd_dgt=3, feature_cnt=10) {
+  
+  df <- df[ , c(predictor_vars, prediction_var)]
+  df <- as.data.frame(sapply(df, as.numeric))
+  dd <- mRMR.data(data=df)
+  feats <- mRMR.classic(data=dd, target_indices=ncol(df), feature_count=feature_cnt)
+  var_imp_df <- round(data.frame('importance'=feats@mi_matrix[nrow(feats@mi_matrix), ]), rnd_dgt)
+  var_imp_df$feature <- rownames(var_imp_df)
+  row.names(var_imp_df) <- NULL
+  var_imp_df <- na.omit(var_imp_df)
+  var_imp_df <- sortByCol(var_imp_df, col='importance')
+  return(var_imp_df)
+}
+

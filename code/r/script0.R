@@ -23,7 +23,13 @@ library(car)  # for leveneTest()
 library(lsr)  # for cohensD()
 library(gridExtra)  # for expand.grid()
 library(reshape2)  # for dcast()
-
+library(caret)
+library(e1071)
+library(randomForest)
+library(gbm)
+library(corrplot)
+library(mRMRe)
+library(fmsb)  # for VIF calculation
 
 ## load functions and classes
 source('./code/r/analysis_funcs.R')

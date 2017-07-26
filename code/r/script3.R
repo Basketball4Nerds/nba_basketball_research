@@ -1,4 +1,9 @@
 
+## save vector base cols as variable
+base_cols <- c('gid', 'season', 'date', 'site', 'playoffs', 
+               'team', 'o_team', 'cnf', 'o_cnf', 'won')
+
+
 ## create predictive df;
 ## (takes the difference between tm metric columns and 
 ## opp metric columns in the master df and saves the difference
@@ -49,9 +54,9 @@ j_cols <- names(train)[grepl("^j", names(train), perl = TRUE)]
 misc_predictor_cols <- c('line', 'rst', 'home', 'mtchmrgn')
 
 
-## all predictor variables
+## all predictor variables and prediction variable
 predictor_vars <- c(wpc_cols, cumperf_cols, j_cols, misc_predictor_cols)
-
+prediction_var <- 'won'
 
 ## plot variable importance determined by spread -- all predictor variables
 varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=predictor_vars, normalize=TRUE)
@@ -119,3 +124,7 @@ j_varimp_df
 plot_varimp(j_varimp_df)
 
 
+
+## ranking variable importance using mRMR package
+mRMR_varimp_df <- create_mRMR_varimp_df(train, predictor_vars, prediction_var='won')
+mRMR_varimp_df
