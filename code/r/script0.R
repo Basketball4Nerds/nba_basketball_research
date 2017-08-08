@@ -30,6 +30,9 @@ library(gbm)
 library(corrplot)
 library(mRMRe)
 library(fmsb)  # for VIF calculation
+library(e1071)  # for svm
+library(kernlab)  # for svm
+
 
 ## load functions and classes
 source('./code/r/analysis_funcs.R')

@@ -149,4 +149,8 @@ write.csv(train, './data/train.csv', row.names=FALSE)
 
 
 
+## df with complete cases (required for modeling)
+train_complete <- train[complete.cases(train), ]  
+
+
 

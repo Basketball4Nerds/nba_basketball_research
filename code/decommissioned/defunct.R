@@ -1843,3 +1843,82 @@ add_cumperf_cols <- function(master_df,
 
 
 
+
+
+######### SCRIPT 5 TRACK 1 Cross Validation
+
+## set parameters
+trk1_formula <- create_model_formula(trk1_predictor_vars_2, 'won')
+trControl <- trainControl(method='cv', number=10)
+#tuneGrid <- expand.grid(.cp = seq(0.002, 0.1, by=0.002))
+
+
+## factorize prediction var (required by caret)
+# train$won <- as.factor(train$won)  
+train_complete$won <- as.factor(train_complete$won)
+
+## get list of model candidates
+names(getModelInfo())
+
+
+
+## create various models for performance comparison:
+# logistic regression
+set.seed(123)
+trk1_glm_model <- train(trk1_formula, data=train_complete, method='glm', trControl=trControl)
+
+# decision tree
+set.seed(123)
+trk1_rpart_model <- train(trk1_formula, data=train_complete, method='rpart', trControl=trControl)
+
+# support vector machine
+set.seed(123)
+trk1_svm_model <- train(trk1_formula, data=train_complete, method='svmLinear', trControl=trControl)
+
+# naive bayes
+set.seed(123)
+# trk1_nb_model <- train(trk1_formula, data=train_complete, method='nb', trControl=trControl)
+
+# k-nearest neighbor
+set.seed(123)
+trk1_knn_model <- train(trk1_formula, data=train_complete, method='knn', trControl=trControl)
+
+# random forest
+# set.seed(123)
+# trk1_rf_model <- train(trk1_formula, data=train_complete, method='rf', trControl=trControl)
+
+# generalized boosted regression
+# set.seed(123)
+# trk1_gbm_model <- train(trk1_formula, data=train_complete, method='gbm', trControl=trControl)
+
+
+## save R model objects (since they are very time-consuming to recreate)
+saveRDS(trk1_glm_model, "./data/RDS/trk1_glm_model.rds")
+saveRDS(trk1_rpart_model, "./data/RDS/trk1_rpart_model.rds")
+saveRDS(trk1_svm_model, "./data/RDS/trk1_svm_model.rds")
+#saveRDS(trk1_nb_model, "./data/RDS/trk1_nb_model.rds")
+saveRDS(trk1_knn_model, "./data/RDS/trk1_knn_model.rds")
+#saveRDS(trk1_rf_model, "./data/RDS/trk1_rf_model.rds")
+#saveRDS(trk1_gbm_model, "./data/RDS/trk1_gbm_model.rds")
+
+
+## check model performances
+print(trk1_glm_model)
+print(trk1_rpart_model)
+print(trk1_svm_model)
+#print(trk1_nb_model)
+print(trk1_knn_model)
+#print(trk1_rf_model)
+#print(trk1_gbm_model)
+
+trk1_glm_model$results$Accuracy
+trk1_rpart_model$results$Accuracy
+trk1_svm_model$results$Accuracy
+#trk1_nb_model$results$Accuracy
+trk1_knn_model$results$Accuracy
+#trk1_rf_model$results$Accuracy
+#trk1_gbm_model$results$Accuracy
+
+######### SCRIPT 5 TRACK 1 Cross Validation
+
+

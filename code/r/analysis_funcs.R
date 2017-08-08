@@ -219,7 +219,7 @@ get_rnk_population_lst <- function(rnkd_vec_lst) {
   ## initialize an empty rank placement list
   max_length <- max(unlist(lapply(rnkd_vec_lst, length)))
   rnk_population_lst <- vector(mode='list', length=max_length)  
-  
+
   ## remove empty ranked vectors from the list
   rnkd_vec_lst <- rnkd_vec_lst[lapply(rnkd_vec_lst, length) > 0]
   

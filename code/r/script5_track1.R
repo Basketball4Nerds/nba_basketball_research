@@ -5,16 +5,8 @@
 ## We will then use cross validation to compare model performances and pick the best one.
 
 
-## https://www.kaggle.com/robertoruiz/dealing-with-multicollinearity
-## https://beckmw.wordpress.com/2013/02/05/collinearity-and-stepwise-vif-selection/
-
-
-## train dataset for track 1
-train_trk1 <- train
-
-
 ## to pick the best win perc metric
-a <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+a <- get_pred_perf_rnk_plcmnt_lst(train, 
                                    predictor_vars=wpc_cols, 
                                    rank_method='pred_acc', min_n=5)
 lapply(a, table)[[1]]
@@ -22,7 +14,7 @@ lapply(a, table)[[1]]
 
 
 ## to pick the best oeff cumperf metric
-b <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+b <- get_pred_perf_rnk_plcmnt_lst(train, 
                                   predictor_vars=oeff_cumperf_cols,
                                   rank_method='pred_acc', min_n=5)
 lapply(b, table)[[1]]
@@ -30,7 +22,7 @@ lapply(b, table)[[1]]
 
 
 ## to pick the best oeffA cumperf metric
-c <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+c <- get_pred_perf_rnk_plcmnt_lst(train, 
                                   predictor_vars=oeffA_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(c, table)[[1]]
@@ -38,7 +30,7 @@ lapply(c, table)[[1]]
 
 
 ## to pick the best FGP cumperf metric
-d <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+d <- get_pred_perf_rnk_plcmnt_lst(train, 
                                   predictor_vars=FGP_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(d, table)[[1]]
@@ -46,7 +38,7 @@ lapply(d, table)[[1]]
 
 
 ## to pick the best FGPA cumperf metric
-e <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+e <- get_pred_perf_rnk_plcmnt_lst(train, 
                                   predictor_vars=FGPA_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(e, table)[[1]]
@@ -54,7 +46,7 @@ lapply(e, table)[[1]]
 
 
 ## to pick the best rqP cumperf metric
-f <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+f <- get_pred_perf_rnk_plcmnt_lst(train, 
                                   predictor_vars=rqP_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(f, table)[[1]]
@@ -62,7 +54,7 @@ lapply(f, table)[[1]]
 
 
 ## to pick the best rqPA cumperf metric
-g <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+g <- get_pred_perf_rnk_plcmnt_lst(train, 
                                   predictor_vars=rqPA_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(g, table)[[1]]
@@ -70,7 +62,7 @@ lapply(g, table)[[1]]
 
 
 ## to pick the best J metric
-h <- get_pred_perf_rnk_plcmnt_lst(train_trk1, 
+h <- get_pred_perf_rnk_plcmnt_lst(train, 
                                   predictor_vars=j_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(h, table)[[1]]
@@ -86,78 +78,95 @@ trk1_predictor_vars <- c('wpc_site',
                          'line', 'home', 'mtchmrgn')
 
 
-
 ## correlation plot
 # https://stackoverflow.com/a/19115003
-cor_mtx <- round(cor(train_trk1[trk1_predictor_vars], use='pairwise.complete.obs'), 3)
+cor_mtx <- round(cor(train[trk1_predictor_vars], use='pairwise.complete.obs'), 3)
 corrplot(cor_mtx, method='ellipse', type='lower')
 
 
 ## remove highly correlated variables via VIF calc
-trk1_predictor_vars_2 <- vif_func(in_frame=train_trk1[ , trk1_predictor_vars], 
+trk1_predictor_vars_2 <- vif_func(in_frame=train[ , trk1_predictor_vars], 
                                   thresh=5, trace=TRUE)
+trk1_predictor_vars_2
 
 
-## set parameters
-trk1_formula <- create_model_formula(trk1_predictor_vars_2, 'won')
-trControl <- trainControl(method='cv', number=10)
-#tuneGrid <- expand.grid(.cp = seq(0.002, 0.1, by=0.002))
+## create track 1 parent formula
+trk1_formula_orig <- create_model_formula(trk1_predictor_vars_2, 'won')
 
 
-## prepare train dataset for modeling
-train_trk1 <- train_trk1[complete.cases(train_trk1), ]  # use only complete cases
-train_trk1$won <- as.factor(train_trk1$won)  # factorize prediction var
+
+#### logistic regression track ####
+
+## first logistic regression
+trk1_glm_model0 <- glm(trk1_formula_orig, data=train_complete, family='binomial')
+print(trk1_glm_model0)
+summary(trk1_glm_model0)
 
 
-## get list of model candidates
-names(getModelInfo())
+## filter out predictors again by selecting variabales deemed stat. sig. by GLM
+glm_statsig_predictors <- summary(trk1_glm_model0)$coefficients[ , 4] < 0.05
+glm_statsig_predictors <- names(glm_statsig_predictors[glm_statsig_predictors])
+glm_statsig_predictors <- setdiff(glm_statsig_predictors, '(Intercept)')
+glm_statsig_predictors
 
 
-## set seed
-set.seed(123)
+## create child formula for GLM
+trk1_formula_glm1 <- create_model_formula(glm_statsig_predictors, 'won')
 
 
-## create various models for performance comparison:
-# logistic regression
-# decision tree
-# support vector machine
-# naive bayes
-# k-nearest neighbor
-# random forest
-# generalized boosted regression
-trk1_glm_model <- train(trk1_formula, data=train_trk1, method='glm', trControl=trControl)
-trk1_rpart_model <- train(trk1_formula, data=train_trk1, method='rpart', trControl=trControl)
-trk1_svm_model <- train(trk1_formula, data=train_trk1, method='svmLinear', trControl=trControl)
-trk1_nb_model <- train(trk1_formula, data=train_trk1, method='nb', trControl=trControl)
-trk1_knn_model <- train(trk1_formula, data=train_trk1, method='knn', trControl=trControl)
-trk1_rf_model <- train(trk1_formula, data=train_trk1, method='rf', trControl=trControl)
-trk1_gbm_model <- train(trk1_formula, data=train_trk1, method='gbm', trControl=trControl)
+## second logistic regression using child formula
+trk1_glm_model1 <- glm(trk1_formula_glm1, data=train_complete, family='binomial')
+print(trk1_glm_model1)
+summary(trk1_glm_model1)
+
+## 
+pred <- predict(trk1_glm_model1, type='response') > 0.5
+
+##
 
 
-## save R model objects (since they are very time-consuming to recreate)
-saveRDS(trk1_glm_model, "./data/RDS/trk1_glm_model.rds")
-saveRDS(trk1_rpart_model, "./data/RDS/trk1_rpart_model.rds")
-saveRDS(trk1_svm_model, "./data/RDS/trk1_svm_model.rds")
-saveRDS(trk1_nb_model, "./data/RDS/trk1_nb_model.rds")
-saveRDS(trk1_knn_model, "./data/RDS/trk1_knn_model.rds")
-saveRDS(trk1_rf_model, "./data/RDS/trk1_rf_model.rds")
-saveRDS(trk1_gbm_model, "./data/RDS/trk1_gbm_model.rds")
 
 
-## check model performances
-print(trk1_glm_model)
-print(trk1_rpart_model)
-print(trk1_svm_model)
-print(trk1_nb_model)
-print(trk1_knn_model)
-print(trk1_rf_model)
-print(trk1_gbm_model)
 
-trk1_glm_model$results$Accuracy
-trk1_rpart_model$results$Accuracy
-trk1_svm_model$results$Accuracy
-trk1_nb_model$results$Accuracy
-trk1_knn_model$results$Accuracy
-trk1_rf_model$results$Accuracy
-trk1_gbm_model$results$Accuracy
+
+
+xxx
+
+
+
+
+
+
+
+
+
+
+
+# #### decision tree track ####
+# 
+# ## decision tree
+# set.seed(123)
+# trk1_rpart_model0 <- rpart(trk1_formula_orig, data=train_complete)
+# 
+# 
+# 
+# 
+# 
+# #### support vector machine track ####
+# trk1_svm_model0 <- svm(trk1_formula_orig, data=train_complete)
+# 
+# 
+# 
+# 
+# 
+# #### naive bayes track ####
+# trk1_nb_model <- nb(trk1_formula, data=train_complete)
+# 
+# 
+# 
+# 
+# 
+# #### k-nearest neighbor track ####
+# # trk1_knn_model <- knn(trk1_formula, data=train_complete, method='knn', trControl=trControl)
+
 
