@@ -25,7 +25,8 @@ library(mRMRe)  # for redundant feature reduction
 library(fmsb)  # for VIF calculation
 library(rpart)  # for decision tree
 library(caret)  
-library(e1071)  # for svm
+library(klaR)  # for naive bayes
+library(e1071)  # for svm, naive bayes
 library(kernlab)  # for svm
 library(class)  # for knn
 library(randomForest)

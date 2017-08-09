@@ -115,6 +115,17 @@ trk1_formula_glm1 <- create_model_formula(glm_statsig_predictors, 'won')
 
 
 ## second logistic regression using child formula
+## cross validation result for glm
+glm_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_formula_glm1)
+
+
+
+
+
+range(cv_pred_df$prob)
+hist(cv_pred_df$prob)
+
+
 trk1_glm_model1 <- glm(trk1_formula_glm1, data=train_complete, family='binomial')
 print(trk1_glm_model1)
 summary(trk1_glm_model1)

@@ -1,5 +1,17 @@
 ############ GENERAL/HELPER/MISCELLANEOUS FUNCTIONS ################
 
+## this function returns predictor variables from formula
+get_predictors_fr_formula <- function (formula) {
+  return(all.vars(formula[[3]]))
+}
+
+
+## this function returns prediction variable from formula
+get_prediction_var_fr_formula <- function(formula) {
+  return(all.vars(formula[[2]]))
+}
+
+
 ## this function takes in a vector of predictor variables and prediction variable
 ## and creates a formula to be used to create models
 create_model_formula <- function(predictor_vars, prediction_var) {
