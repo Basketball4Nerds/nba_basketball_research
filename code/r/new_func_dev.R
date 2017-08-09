@@ -1,4 +1,23 @@
 
+## get list of model candidates
+names(getModelInfo())
+
+
+## this function returns vector of prediction probabilities on test dataset
+create_pred_probs_glm(train_df, test_df, formula) {
+  
+  ## create model using data from k-1 folds 
+  model <- glm(formula, data=, family='binomial')      
+  
+  ## get prediction probability on the cv test set
+  pred_probs <- predict(model, newdata=, type='response')
+  
+  ## return
+  return(pred_probs)
+}
+
+
+
 ## this function takes data, performs leave-one-season-out
 ## cross validation, and returns df that contains model results
 ## by season
@@ -6,7 +25,8 @@ create_byssn_cv_pred_df <- function(data_df, formula) {
 
   ## extract prediction variable from formula
   prediction_var <- all.vars(formula[[2]])
-  
+  predictor_vars <- all.vars(formula[[3]])
+
   
   ## get number of CV partititions based on season
   seasons <- unique(data_df$season)
@@ -35,11 +55,22 @@ create_byssn_cv_pred_df <- function(data_df, formula) {
     cv_train_data_df <- subset(data_df, season!=test_season)
     cv_test_data_df <- subset(data_df, season==test_season)
     
-    ## create model using data from k-1 folds 
-    model <- glm(formula, data=cv_train_data_df, family='binomial')
+    ## create model here and create prediction probs here
+    cv_train_data_df
+    cv_test_data_df
+    if (method=='glm') {
+      create_pred_probs_glm()
+    }
+    else if (method=='rpart') {
+      create_pred_probs_rpart()
+    }
     
-    ## get prediction probability on the cv test set
-    pred_probs <- predict(model, newdata=cv_test_data_df, type='response')
+    else if (method=='svm_linear') {
+      create_pred_probs_svmlinear()
+    }
+    
+    
+    
     
     ## save results by appending to vectors
     pred_probs_vec <- c(pred_probs_vec, pred_probs)
@@ -79,6 +110,80 @@ range(cv_pred_df$prob)
 hist(cv_pred_df$prob)
 
 
+
+
+## for naive bayes
+class(x$won)
+head(x$won)
+head(y$won)
+sapply(x, class)
+
+
+create_pred_probs_nb <- function() {
+  
+  naive
+  e1071::naiveBayes
+  ?klaR::NaiveBayes
+  
+  model <- NaiveBayes(trk1_formula_orig, data=x)
+  pred <- predict(model, newdata=y, type='class')  
+}
+
+## for knn
+create_pred_knn <- function() {
+  
+  predictor_vars <- XXXX
+  
+  # need for normalization??
+  x$won <- as.logical(x$won)
+  pred <- knn(train=x[ , predictor_vars], test=y[ , predictor_vars], cl=x[ , prediction_var], k=10)
+  
+  ## return 
+  return(pred)
+}
+
+create_pred_probs_rf <- function(train_df, test_df, formula, seed=123) {
+  
+  ## for random forest (must set seed)
+  set.seed(seed)
+  
+  x$won <- as.factor(x$won)
+  model <- randomForest(trk1_formula_orig, data=x)
+  pred <- predict(model, newdata=y, type='prob')[ , 2]
+
+  ## return
+  return(pred_probs)
+}
+
+
+
+## for neural network
+create_pred_prob_nnet(train_df, test_df, formula, n_hid_nds=NULL, seed=123) {
+
+  ## set seed
+  set.seed(seed)
+  
+  x$won <- as.factor(x$won)
+  ## get number of hidden nodes to use
+  # https://stats.stackexchange.com/a/180052
+  if (is.null(n_hid_nds)) {
+    n_hid_nds <- round(length(predictor_vars) * 2/3 + 1)    
+  }
+
+  
+  model <- nnet(trk1_formula_orig, data=x, size=n_hid_nds, decay=0.001, maxit=500, trace=FALSE)
+  pred_probs <- predict(model, newdata=y, type='raw')[ , 1]
+  
+  ## return
+  return(pred_probs)
+}
+
+
+
+
+
+
+
 model_prediction_cols <- paste0('pred_thres', seq(0.5, 0.9, by=0.1))
 # for (col %in% model_prediction_cols) {
 #   cnf_mtx
@@ -87,36 +192,27 @@ cnf_mtx <- table(cv_pred_df$actual, cv_pred_df$pred_thres.6)
 calc_acc_fr_cnf_mtx(cnf_mtx)
 
 
-## testing
-x <- subset(train_complete, season %in% 1995)
-y <- subset(train_complete, season %in% 1996)
-
-## for rpart (need the prediction variable to be a factor)
-model <- rpart(trk1_formula_orig, data=x)
-prp(model)
-pred <- predict(model, newdata=y, type='prob')[ , 2]
-cnf_mtx <- table(pred, y$won)
-calc_acc_fr_cnf_mtx(cnf_mtx)
-
-## for svm 
-
-## for naive bayes
-
-## for knn
-
-#trk1_rf_model$results$Accuracy
-#trk1_gbm_model$results$Accuracy
-
-## 
 
 
 
 
-x <- subset(train_complete, season %in% 1995)
-y <- subset(train_complete, season %in% 1996)
-model <- rpart(as.factor(won) ~ line, data=x)
-trk1_formula_orig
-prp(model)
+create_pred_probs_rpart(train_df, test_df, formula) {
+  
+  ## for rpart (need the prediction variable to be a factor)
+  x$won <- as.factor(x$won)
+  model <- rpart(trk1_formula_orig, data=x)
+  pred <- predict(model, newdata=y, type='prob')[ , 2]
+  
+}
+
+create_pred_probs_svmlinear() {
+  ## for svm  (need numeric dependent variable for regression)
+  x$won <- as.numeric(x$won)
+  model <- svm(trk1_formula_orig, data=x)
+  pred <- predict(model, newdata=y)
+  
+}
+
 
 
 

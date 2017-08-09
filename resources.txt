@@ -1,0 +1,20 @@
+## resources
+
+## choosing number of hidden layer nodes
+# https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
+
+## visualizing neural networks from the nnet package
+# https://beckmw.wordpress.com/2013/03/04/visualizing-neural-networks-from-the-nnet-package/
+
+## neural network example using the neuralnet package
+# https://datascienceplus.com/fitting-neural-network-in-r/
+
+## neural network example using the nnet package
+# http://scg.sdsu.edu/ann_r/
+
+## data type for prediction variable to use nnet() function
+# https://stackoverflow.com/questions/21788817/r-nnet-with-a-simple-example-of-2-classes-with-2-variables
+
+## knn example
+# https://www.analyticsvidhya.com/blog/2015/08/learning-concept-knn-algorithms-programming/
+

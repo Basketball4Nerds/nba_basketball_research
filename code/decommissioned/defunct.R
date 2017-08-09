@@ -1844,7 +1844,6 @@ add_cumperf_cols <- function(master_df,
 
 
 
-
 ######### SCRIPT 5 TRACK 1 Cross Validation
 
 ## set parameters
@@ -1922,3 +1921,15 @@ trk1_knn_model$results$Accuracy
 ######### SCRIPT 5 TRACK 1 Cross Validation
 
 
+
+
+##########
+x <- subset(train_complete, season %in% 1995)
+y <- subset(train_complete, season %in% 1996)
+model <- rpart(as.factor(won) ~ line, data=x)
+trk1_formula_orig
+prp(model)
+
+## consider using gbm
+
+##########

@@ -9,9 +9,7 @@ library(corrplot)
 library(TTR)
 library(plyr)
 library(BBmisc)
-library(rpart)
 library(rpart.plot)
-library(randomForest)
 library(data.table)
 library(DBI)
 library(RMySQL)
@@ -23,15 +21,17 @@ library(car)  # for leveneTest()
 library(lsr)  # for cohensD()
 library(gridExtra)  # for expand.grid()
 library(reshape2)  # for dcast()
-library(caret)
-library(e1071)
-library(randomForest)
-library(gbm)
-library(corrplot)
-library(mRMRe)
+library(mRMRe)  # for redundant feature reduction
 library(fmsb)  # for VIF calculation
+library(rpart)  # for decision tree
+library(caret)  
 library(e1071)  # for svm
 library(kernlab)  # for svm
+library(class)  # for knn
+library(randomForest)
+library(gbm)  # gbm modeling
+library(nnet)  # for neural network
+library(neuralnet)  # for neural network
 
 
 ## load functions and classes

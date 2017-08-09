@@ -147,6 +147,8 @@ xxx
 # ## decision tree
 # set.seed(123)
 # trk1_rpart_model0 <- rpart(trk1_formula_orig, data=train_complete)
+# fit.rp <- rpart(as.factor(y) ~ ., train.data, control=rpart.control(cp=.001))
+# fit.rp2 <- rpart(as.factor(y) ~ ., train.data, control=(cp=.005))
 # 
 # 
 # 

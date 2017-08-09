@@ -153,4 +153,8 @@ write.csv(train, './data/train.csv', row.names=FALSE)
 train_complete <- train[complete.cases(train), ]  
 
 
+## get list of model candidates
+names(getModelInfo())
+
+
 
