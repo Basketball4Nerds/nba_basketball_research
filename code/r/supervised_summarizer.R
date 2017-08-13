@@ -61,7 +61,7 @@ calc_smry_stats_spread <- function(smry_stats_0, smry_stats_1, normalize=TRUE, r
 
 ## this function takes summary stats df (consists of two summary stats vectors)
 ## and plots the spread
-plot_smry_stats_spread <- function(df_0, df_1, predictor_var, ...) {
+plot_smry_stats_spread <- function(df_0, df_1, predictor, ...) {
   
   ## get argument names
   argnames <- names(list(...)) 
@@ -70,8 +70,8 @@ plot_smry_stats_spread <- function(df_0, df_1, predictor_var, ...) {
   if(!('normalize' %in% argnames)) { normalize <- TRUE }
   
   ## get summary stats vectors
-  smry_stats_0 <- c(summary(df_0[, predictor_var]))[c(1:3, 5:6)]
-  smry_stats_1 <- c(summary(df_1[, predictor_var]))[c(1:3, 5:6)]
+  smry_stats_0 <- c(summary(df_0[, predictor]))[c(1:3, 5:6)]
+  smry_stats_1 <- c(summary(df_1[, predictor]))[c(1:3, 5:6)]
   
   ## calculate spread
   spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, normalize=normalize, ...)
@@ -93,7 +93,7 @@ plot_smry_stats_spread <- function(df_0, df_1, predictor_var, ...) {
     scale_x_discrete(limits=1:5,
                      labels=c("min", "1q", "median", "3q", "max")) +
     xlab(xlab) + 
-    ylab(predictor_var) 
+    ylab(predictor) 
   
   ## return
   return(p)
@@ -101,17 +101,17 @@ plot_smry_stats_spread <- function(df_0, df_1, predictor_var, ...) {
 
 
 ## this function creates variable importance df
-create_varimp_df <- function(df_0, df_1, predictor_vars, ...) {
+create_varimp_df <- function(df_0, df_1, predictors, ...) {
   
   ## initialize empty vector to store spread 
   spread_vec <- c()
   
   ## for each predictor variable
-  for (predictor_var in predictor_vars) {
+  for (predictor in predictors) {
     
     ## get summary stats vectors
-    smry_stats_0 <- c(summary(df_0[, predictor_var]))[c(1:3, 5:6)]
-    smry_stats_1 <- c(summary(df_1[, predictor_var]))[c(1:3, 5:6)]
+    smry_stats_0 <- c(summary(df_0[, predictor]))[c(1:3, 5:6)]
+    smry_stats_1 <- c(summary(df_1[, predictor]))[c(1:3, 5:6)]
     
     ## calculate spread
     spread <- calc_smry_stats_spread(smry_stats_0, smry_stats_1, ...)
@@ -121,7 +121,7 @@ create_varimp_df <- function(df_0, df_1, predictor_vars, ...) {
   }
   
   ## create variable importance df
-  varimp_df <- data.frame(var=predictor_vars, spread=abs(spread_vec), stringsAsFactors=FALSE)
+  varimp_df <- data.frame(var=predictors, spread=abs(spread_vec), stringsAsFactors=FALSE)
   
   ## sort by spread strength
   varimp_df <- sortByCol(varimp_df, 'spread')
@@ -144,19 +144,19 @@ plot_varimp <- function(varimp_df) {
 
 ## this function takes in a list of predictor variables and 
 ## plots multiple variable importance plots
-multiplot_varimp <- function(df_0, df_1, predictor_vars_lst) {
+multiplot_varimp <- function(df_0, df_1, predictors_lst) {
   
   ## initialize empty plot list
-  plot_lst <- vector(length=length(predictor_vars_lst), mode='list')
+  plot_lst <- vector(length=length(predictors_lst), mode='list')
   
   ## for each set of predictor variables
-  for (i in 1:length(predictor_vars_lst)) {
+  for (i in 1:length(predictors_lst)) {
     
     ## get predictor variables set
-    predictor_vars <- predictor_vars_lst[[i]]
+    predictors <- predictors_lst[[i]]
     
     ## create variable importance df
-    varimp_df <- create_varimp_df(won_df, lost_df, predictor_vars=predictor_vars)
+    varimp_df <- create_varimp_df(won_df, lost_df, predictors=predictors)
     
     ## create variable importance plot
     p <- plot_varimp(varimp_df)

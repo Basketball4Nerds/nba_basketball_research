@@ -7,15 +7,15 @@
 
 ## to pick the best win perc metric
 a <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                   predictor_vars=wpc_cols, 
-                                   rank_method='pred_acc', min_n=5)
+                                  predictors=wpc_cols, 
+                                  rank_method='pred_acc', min_n=5)
 lapply(a, table)[[1]]
 # wpc_site picked
 
 
 ## to pick the best oeff cumperf metric
 b <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                  predictor_vars=oeff_cumperf_cols,
+                                  predictors=oeff_cumperf_cols,
                                   rank_method='pred_acc', min_n=5)
 lapply(b, table)[[1]]
 # oeff_cumperf_site picked
@@ -23,7 +23,7 @@ lapply(b, table)[[1]]
 
 ## to pick the best oeffA cumperf metric
 c <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                  predictor_vars=oeffA_cumperf_cols, 
+                                  predictors=oeffA_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(c, table)[[1]]
 # oeffA_cumperf_site picked
@@ -31,7 +31,7 @@ lapply(c, table)[[1]]
 
 ## to pick the best FGP cumperf metric
 d <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                  predictor_vars=FGP_cumperf_cols, 
+                                  predictors=FGP_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(d, table)[[1]]
 # FGP_cumperf_site picked
@@ -39,7 +39,7 @@ lapply(d, table)[[1]]
 
 ## to pick the best FGPA cumperf metric
 e <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                  predictor_vars=FGPA_cumperf_cols, 
+                                  predictors=FGPA_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(e, table)[[1]]
 # FGPA_cumperf_site picked
@@ -47,7 +47,7 @@ lapply(e, table)[[1]]
 
 ## to pick the best rqP cumperf metric
 f <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                  predictor_vars=rqP_cumperf_cols, 
+                                  predictors=rqP_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(f, table)[[1]]
 # rqP_cumperf_site picked
@@ -55,7 +55,7 @@ lapply(f, table)[[1]]
 
 ## to pick the best rqPA cumperf metric
 g <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                  predictor_vars=rqPA_cumperf_cols, 
+                                  predictors=rqPA_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(g, table)[[1]]
 # rqPA_cumperf_oeffQntlRnk picked
@@ -63,7 +63,7 @@ lapply(g, table)[[1]]
 
 ## to pick the best J metric
 h <- get_pred_perf_rnk_plcmnt_lst(train, 
-                                  predictor_vars=j_cols, 
+                                  predictors=j_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(h, table)[[1]]
 # j5 picked
@@ -71,7 +71,7 @@ lapply(h, table)[[1]]
 
 
 ## track 1 predictor variables
-trk1_predictor_vars <- c('wpc_site', 
+trk1_predictors <- c('wpc_site', 
                          'oeff_cumperf_site', 'oeffA_cumperf_site', 
                          'FGP_cumperf_site', 'FGPA_cumperf_site', 
                          'rqP_cumperf_site', 'rqPA_cumperf_oeffQntlRnk', 'j5', 
@@ -80,106 +80,140 @@ trk1_predictor_vars <- c('wpc_site',
 
 ## correlation plot
 # https://stackoverflow.com/a/19115003
-cor_mtx <- round(cor(train[trk1_predictor_vars], use='pairwise.complete.obs'), 3)
+cor_mtx <- round(cor(train[trk1_predictors], use='pairwise.complete.obs'), 3)
 corrplot(cor_mtx, method='ellipse', type='lower')
 
 
 ## remove highly correlated variables via VIF calc
-trk1_predictor_vars_2 <- vif_func(in_frame=train[ , trk1_predictor_vars], 
+trk1_trimmed_predictors <- vif_func(in_frame=train[ , trk1_predictors], 
                                   thresh=5, trace=TRUE)
-trk1_predictor_vars_2
+trk1_trimmed_predictors
 
 
-## create track 1 parent formula
-trk1_formula_orig <- create_model_formula(trk1_predictor_vars_2, 'won')
+## create track 1 original formula
+trk1_orig_formula <- create_model_formula(trk1_trimmed_predictors, 'won')
 
 
 
 #### logistic regression track ####
 
-## first logistic regression
-trk1_glm_model0 <- glm(trk1_formula_orig, data=train_complete, family='binomial')
-print(trk1_glm_model0)
-summary(trk1_glm_model0)
-
-
-## filter out predictors again by selecting variabales deemed stat. sig. by GLM
-glm_statsig_predictors <- summary(trk1_glm_model0)$coefficients[ , 4] < 0.05
-glm_statsig_predictors <- names(glm_statsig_predictors[glm_statsig_predictors])
-glm_statsig_predictors <- setdiff(glm_statsig_predictors, '(Intercept)')
+## create formula by selecting only stat. sig. variables
+trk1_glm_model <- glm(trk1_orig_formula, data=train_complete, family='binomial')
+glm_statsig_predictors <- get_statsig_predictors_fr_lm(trk1_glm_model, p_val=0.05)
 glm_statsig_predictors
+trk1_glm_formula <- create_model_formula(glm_statsig_predictors, 'won')
 
+## get cross validation result 
+glm1_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='glm')  # cv using original predictors
+glm2_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_glm_formula, method='glm')  # cv using stat. sig. predictors
 
-## create child formula for GLM
-trk1_formula_glm1 <- create_model_formula(glm_statsig_predictors, 'won')
-
-
-## second logistic regression using child formula
-## cross validation result for glm
-glm_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_formula_glm1)
-
-
-
-
-
-range(cv_pred_df$prob)
-hist(cv_pred_df$prob)
-
-
-trk1_glm_model1 <- glm(trk1_formula_glm1, data=train_complete, family='binomial')
-print(trk1_glm_model1)
-summary(trk1_glm_model1)
-
-## 
-pred <- predict(trk1_glm_model1, type='response') > 0.5
-
-##
+## evaludate average model performance by threshold
+glm1_perf_by_thres_df <- create_bythres_cv_perf_agg_df(glm1_cv_pred_df)
+glm2_perf_by_thres_df <- create_bythres_cv_perf_agg_df(glm2_cv_pred_df)
+glm1_perf_by_thres_df
+glm2_perf_by_thres_df
 
 
 
+#### decision tree track ####
+
+## get cross validation result
+rpart1_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='rpart')
+rpart2_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='rpart', control=rpart.control(cp=0.001))
+rpart3_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='rpart', control=rpart.control(cp=0.005))
+
+## evaludate average model performance by threshold
+rpart1_perf_by_thres_df <- create_bythres_cv_perf_agg_df(rpart1_cv_pred_df)
+rpart2_perf_by_thres_df <- create_bythres_cv_perf_agg_df(rpart2_cv_pred_df)
+rpart3_perf_by_thres_df <- create_bythres_cv_perf_agg_df(rpart3_cv_pred_df)
+rpart1_perf_by_thres_df 
+rpart2_perf_by_thres_df 
+rpart3_perf_by_thres_df 
 
 
 
+#### support vector machine track ####
 
-xxx
+## takes too long; approach abandoned
 
-
-
-
-
-
-
-
-
-
-
-# #### decision tree track ####
+# ## get cross validation result
+# svm_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='svmlinear')
 # 
-# ## decision tree
-# set.seed(123)
-# trk1_rpart_model0 <- rpart(trk1_formula_orig, data=train_complete)
-# fit.rp <- rpart(as.factor(y) ~ ., train.data, control=rpart.control(cp=.001))
-# fit.rp2 <- rpart(as.factor(y) ~ ., train.data, control=(cp=.005))
-# 
-# 
-# 
-# 
-# 
-# #### support vector machine track ####
-# trk1_svm_model0 <- svm(trk1_formula_orig, data=train_complete)
-# 
-# 
-# 
-# 
-# 
-# #### naive bayes track ####
-# trk1_nb_model <- nb(trk1_formula, data=train_complete)
-# 
-# 
-# 
-# 
-# 
-# #### k-nearest neighbor track ####
-# # trk1_knn_model <- knn(trk1_formula, data=train_complete, method='knn', trControl=trControl)
+# ## evaludate average model performance by threshold
+# svm_perf_by_thres_df <- create_bythres_cv_perf_agg_df(svm_cv_pred_df)
+# svm_perf_by_thres_df
 
 
+
+#### naive bayes track ####
+
+## get cross validation result
+nb_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='nb')
+
+## evaludate average model performance by threshold
+nb_perf_by_thres_df <- create_bythres_cv_perf_agg_df(nb_cv_pred_df)
+nb_perf_by_thres_df 
+
+
+
+
+#### k-nearest neighbor track ####
+
+## get cross validation result
+knn5_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='knn', k=5)
+knn10_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='knn', k=10)
+knn20_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='knn', k=20)
+
+## evaludate average model performance by threshold
+knn5_perf_by_thres_df <- create_bythres_cv_perf_agg_df(knn5_cv_pred_df)
+knn10_perf_by_thres_df <- create_bythres_cv_perf_agg_df(knn10_cv_pred_df)
+knn20_perf_by_thres_df <- create_bythres_cv_perf_agg_df(knn20_cv_pred_df)
+knn5_perf_by_thres_df 
+knn10_perf_by_thres_df 
+knn20_perf_by_thres_df 
+
+x <- subset(train_complete, season==2012)
+y <- subset(train_complete, season==2013)
+
+pred <- knn(train=scale(x[ , trk1_predictors]), test=scale(y[ , trk1_predictors]),
+             cl=x$won, k=5, prob=TRUE)
+pred_probs <- attr(pred, 'prob')
+
+
+
+#### random forest track ####
+
+## get cross validation result
+rf_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='rf',
+                                         seed=123)
+rf_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='rf',
+                                         seed=123)
+rf_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='rf',
+                                         seed=123)
+
+## evaludate average model performance by threshold
+rf_perf_by_thres_df <- create_bythres_cv_perf_agg_df(rf_cv_pred_df)
+rf_perf_by_thres_df 
+
+
+
+#### neural net track ####
+
+## get cross validation result
+nnet_cv_pred_df <- create_byssn_cv_pred_df(data_df=train_complete, formula=trk1_orig_formula, method='nnet',
+                                           decay=0.001, maxit=500, trace=FALSE, seed=123)
+
+## evaludate average model performance by threshold
+nnet_perf_by_thres_df <- create_bythres_cv_perf_agg_df(nnet_cv_pred_df)
+nnet_perf_by_thres_df 
+
+
+
+#### ridge logistic regression ####
+
+
+#### lasso logistic regression ####
+
+
+
+#### elastic net logistic regression ####

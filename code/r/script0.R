@@ -32,8 +32,8 @@ library(class)  # for knn
 library(randomForest)
 library(gbm)  # gbm modeling
 library(nnet)  # for neural network
-library(neuralnet)  # for neural network
-
+#library(neuralnet)  # for neural network
+library(glmnet)  # for lasso and ridge regression
 
 ## load functions and classes
 source('./code/r/analysis_funcs.R')
@@ -44,10 +44,11 @@ source('./code/r/functions.R')
 source('./code/r/helper_funcs.R')
 source('./code/r/mov_cnt_sum_avg_funcs.R')
 source('./code/r/pred_funcs.R')
+source('./code/r/pred_funcs2.R')
 source('./code/r/preprocess_funcs.R')
 source('./code/r/rnk_grp_funcs.R')
 source('./code/r/supervised_summarizer.R')
-source('./code/r/rm_high_vif_cols.R')
+source('./code/r/feature_selection.R')
 
 ## load keys & mappers
 source('./credentials/keys.R')

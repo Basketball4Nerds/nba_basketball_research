@@ -74,10 +74,10 @@ vif_func<-function(in_frame,thresh=10,trace=T,...){
 ## http://home.penglab.com/proj/mRMR/
 ## http://amunategui.github.io/variable-importance-shuffler/index.html
 create_mRMR_varimp_df <- function(df, 
-                                  predictor_vars, prediction_var, 
+                                  predictors, prediction_var, 
                                   rnd_dgt=3, feature_cnt=10) {
   
-  df <- df[ , c(predictor_vars, prediction_var)]
+  df <- df[ , c(predictors, prediction_var)]
   df <- as.data.frame(sapply(df, as.numeric))
   dd <- mRMR.data(data=df)
   feats <- mRMR.classic(data=dd, target_indices=ncol(df), feature_count=feature_cnt)

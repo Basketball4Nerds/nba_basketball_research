@@ -242,12 +242,12 @@ get_rnk_population_lst <- function(rnkd_vec_lst) {
 
 ## this function takes in a list of vectors and returns
 get_pred_perf_rnk_plcmnt_lst <- function(predictive_df, 
-                                         predictor_vars, 
+                                         predictors, 
                                          rank_method=c('pred_acc', 'smry_stat_sprd'), 
                                          ...) {
   
   ## get list of ranked metrics
-  rnkd_metrics_lst <- get_rnkd_metrics_lst(predictive_df, predictor_vars, rank_method[1])
+  rnkd_metrics_lst <- get_rnkd_metrics_lst(predictive_df, predictors, rank_method[1])
   
   ## remove empty ranked vectors from the list
   rnkd_metrics_lst <- rnkd_metrics_lst[lapply(rnkd_metrics_lst, length) > 0]
@@ -263,7 +263,7 @@ get_pred_perf_rnk_plcmnt_lst <- function(predictive_df,
 ## this function creates a list of ranked metrics, which is 
 ## used to create prediction performance rank placement
 get_rnkd_metrics_lst <- function(predictive_df, 
-                                 predictor_vars,
+                                 predictors,
                                  rank_method=c('pred_acc', 'smry_stat_sprd'), 
                                  ...) {
   
@@ -282,7 +282,7 @@ get_rnkd_metrics_lst <- function(predictive_df,
     rnkd_metrics_lst <- lapply(df_lst, function(x) {
       
       ## create sorted win pred acc df
-      wpa_df <- create_win_pred_acc_df(predictive_df=x, metric_cols=predictor_vars, ...)
+      wpa_df <- create_win_pred_acc_df(predictive_df=x, metric_cols=predictors, ...)
       wpa_df <- sortByCol(wpa_df, col='acc', asc=FALSE)
       wpa_df <- subset(wpa_df, acc > 0.5)
       
@@ -301,7 +301,7 @@ get_rnkd_metrics_lst <- function(predictive_df,
       
       ## create sorted variable importance df (measured by summary stats spread)
       varimp_df <- create_varimp_df(lost_df, won_df, 
-                                    predictor_vars=predictor_vars, 
+                                    predictors=predictors, 
                                     normalize=TRUE)
       varimp_df <- sortByCol(varimp_df, col='spread', asc=FALSE)
 
