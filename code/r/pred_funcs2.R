@@ -38,8 +38,8 @@ create_pred_probs_knn <- function(train_df, test_df, formula, k) {
   train_df[[prediction_var]] <- as.factor(train_df[[prediction_var]])
   preds <- knn(train=scale(train_df[ , predictors]), test=scale(test_df[ , predictors]),  # entering normalized train and test datasets
                cl=train_df[ , prediction_var], k=k, prob=TRUE)
-  pred_probs <- attr(preds, 'prob')  # general pred prob (prob for win and loss mixed and mashed)
-  pred_probs[pred=='FALSE'] <- 1 - pred_probs[pred=='FALSE']  # pred prob for win classifcation
+  pred_probs <- attr(preds, 'prob')  # win/loss pred prob (mixed and mashed)
+  pred_probs[preds=='FALSE'] <- 1 - pred_probs[preds=='FALSE']  # win pred prob
   return(pred_probs)
 }
 
@@ -86,6 +86,26 @@ create_pred_probs_nnet <- function(train_df, test_df, formula, n_hidden_nodes=NU
 }
 
 
+
+## this function returns vector of prediction probabilities on test dataset
+## using ridge, lasso, or elastic net regression method;
+## - ridge regression settings: alpha = 0, lambda = non-zero
+## - lasso regression settings: alpha = 1, lambda = 0
+## - elastic net settings: alpha = 0 ~ 1, lambda = non-zero
+## http://machinelearningmastery.com/penalized-regression-in-r/
+## https://drsimonj.svbtle.com/ridge-regression-with-glmnet
+create_pred_probs_glmnet <- function(train_df, test_df, formula, lambda, alpha, ...) {
+  prediction_var <- get_prediction_var_fr_formula(formula)
+  predictors <- get_predictors_fr_formula(formula)
+  train_df[[prediction_var]] <- as.factor(train_df[[prediction_var]])
+  model <- glmnet(x=as.matrix(train_df[ , predictors]), 
+                  y=train_df[ , prediction_var], 
+                  family='binomial', alpha=alpha, lambda=lambda)
+  pred_probs <- predict(model, newx=as.matrix(test_df[ , predictors]), type='response')
+  return(pred_probs)
+}
+
+
 ## this function returns vector of prediction probabilities on test dataset
 ## using machine learning method specified
 create_pred_probs <- function(train_df, test_df, formula, method, ...) {
@@ -104,6 +124,8 @@ create_pred_probs <- function(train_df, test_df, formula, method, ...) {
     pred_probs <- create_pred_probs_rf(train_df, test_df, formula, ...)
   } else if (method=='nnet') {
     pred_probs <- create_pred_probs_nnet(train_df, test_df, formula, ...)
+  } else if (method=='glmnet') {
+    pred_probs <- create_pred_probs_glmnet(train_df, test_df, formula, ...)
   } else {
     stop(paste0("Unable to handle method: ", method))
   }
@@ -152,7 +174,7 @@ create_byssn_cv_pred_df <- function(data_df, formula, method, ...) {
     ## save results by appending to vectors
     pred_probs_vec <- c(pred_probs_vec, pred_probs)
     target_pred_season_vec <- c(target_pred_season_vec, cv_test_data_df[['season']])
-    actual_outcome_vec <- c(actual_outcome_vec, cv_test_data_df[[prediction_var]])
+    actual_outcome_vec <- c(actual_outcome_vec, as.character(cv_test_data_df[[prediction_var]]))
     
     ## run progress bar  
     progress_bar$step()
