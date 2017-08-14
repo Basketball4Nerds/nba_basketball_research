@@ -1,5 +1,16 @@
 ############ GENERAL/HELPER/MISCELLANEOUS FUNCTIONS ################
 
+## this function returns TRUE if all vectors entered are equal
+## https://stackoverflow.com/a/30850544
+check_equal_vectors <- function(...) {
+  vec_lst <- list(...)
+  vec_classes <- unlist(lapply(vec_lst, class))
+  if (length(unique(vec_classes)) > 1)
+    stop('Input vectors are of different data types')
+  return(length(unique(vec_lst))==1)
+}
+
+
 ## this function returns predictor variables from formula
 get_predictors_fr_formula <- function (formula) {
   return(all.vars(formula[[3]]))

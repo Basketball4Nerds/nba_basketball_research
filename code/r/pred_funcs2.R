@@ -133,6 +133,32 @@ create_pred_probs <- function(train_df, test_df, formula, method, ...) {
 }
 
 
+
+## this function takes in df that contains a prob column
+## and adds prediction cols based on the prob threshold
+add_pred_by_thres <- function(df, prob_col='prob', 
+                              thres_vec=seq(0.5, 0.9, by=0.1)) {
+  for (thres in thres_vec) {
+    pred_col <- paste0('pred_thres', gsub('0\\.', '.', as.character(thres)))
+    df[[pred_col]] <- ifelse(df[[prob_col]] > thres, TRUE,
+                             ifelse(df[[prob_col]] < 1 - thres, FALSE, NA))
+  }
+  return(df)
+}
+# df <- add_pred_by_thres(df, prob_col='prob', thres_vec=seq(0.5, 0.9, by=0.1))
+# df$pred_thres.5 <- ifelse(df$prob > 0.5, TRUE, 
+#                           ifelse(df$prob < 0.5, FALSE, NA))
+# df$pred_thres.6 <- ifelse(df$prob > 0.6, TRUE,
+#                           ifelse(df$prob < 0.4, FALSE, NA))
+# df$pred_thres.7 <- ifelse(df$prob > 0.7, TRUE,
+#                           ifelse(df$prob < 0.3, FALSE, NA))
+# df$pred_thres.8 <- ifelse(df$prob > 0.8, TRUE,
+#                           ifelse(df$prob < 0.2, FALSE, NA))
+# df$pred_thres.9 <- ifelse(df$prob > 0.9, TRUE,
+#                           ifelse(df$prob < 0.1, FALSE, NA))
+
+
+
 ## this function takes data, performs leave-one-season-out
 ## cross validation, and returns df that contains model results
 ## by season
@@ -186,16 +212,8 @@ create_byssn_cv_pred_df <- function(data_df, formula, method, ...) {
                        prob=pred_probs_vec)
   
   ## add model prediction by threshold
-  ret_df$pred_thres.5 <- ifelse(ret_df$prob > 0.5, TRUE, 
-                                ifelse(ret_df$prob < 0.5, FALSE, NA))
-  ret_df$pred_thres.6 <- ifelse(ret_df$prob > 0.6, TRUE,
-                                ifelse(ret_df$prob < 0.4, FALSE, NA))
-  ret_df$pred_thres.7 <- ifelse(ret_df$prob > 0.7, TRUE,
-                                ifelse(ret_df$prob < 0.3, FALSE, NA))
-  ret_df$pred_thres.8 <- ifelse(ret_df$prob > 0.8, TRUE,
-                                ifelse(ret_df$prob < 0.2, FALSE, NA))
-  ret_df$pred_thres.9 <- ifelse(ret_df$prob > 0.9, TRUE,
-                                ifelse(ret_df$prob < 0.1, FALSE, NA))
+  ret_df <- add_pred_by_thres(ret_df, prob_col='prob',
+                              thres_vec=seq(0.5, 0.9, by=0.1))
   
   ## return
   return(ret_df)

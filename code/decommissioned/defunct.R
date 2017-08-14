@@ -1933,3 +1933,34 @@ prp(model)
 ## consider using gbm
 
 ##########
+
+
+
+
+####
+head(nb_cv_pred_df$actual)
+head(knn100_cv_pred_df$actual)
+head(rf_cv_pred_df$actual)
+head(nnet3_cv_pred_df$actual)
+head(ridge1_cv_pred_df$actual)
+head(ridge2_cv_pred_df$actual)
+head(lasso_cv_pred_df$actual)
+head(enet1_cv_pred_df$actual)
+head(enet2_cv_pred_df$actual)
+
+# nb_cv_pred_df$actual <- as.logical(nb_cv_pred_df$actual)
+# knn5_cv_pred_df$actual <- as.logical(knn5_cv_pred_df$actual - 1)
+# knn10_cv_pred_df$actual <- as.logical(knn10_cv_pred_df$actual - 1)
+# knn20_cv_pred_df$actual <- as.logical(knn20_cv_pred_df$actual - 1)
+# knn50_cv_pred_df$actual <- as.logical(knn50_cv_pred_df$actual - 1)
+# knn100_cv_pred_df$actual <- as.logical(knn100_cv_pred_df$actual - 1)
+# rf_cv_pred_df$actual <- as.logical(rf_cv_pred_df$actual)
+# nnet1_cv_pred_df$actual <- as.logical(nnet1_cv_pred_df$actual - 1)
+# nnet2_cv_pred_df$actual <- as.logical(nnet2_cv_pred_df$actual - 1)
+# nnet3_cv_pred_df$actual <- as.logical(nnet3_cv_pred_df$actual - 1)
+# ridge1_cv_pred_df$actual <- as.logical(ridge1_cv_pred_df$actual - 1)
+# ridge2_cv_pred_df$actual <- as.logical(ridge2_cv_pred_df$actual - 1)
+# lasso_cv_pred_df$actual <- as.logical(lasso_cv_pred_df$actual - 1)
+# enet1_cv_pred_df$actual <- as.logical(enet1_cv_pred_df$actual - 1)
+# enet2_cv_pred_df$actual <- as.logical(enet2_cv_pred_df$actual - 1)
+####

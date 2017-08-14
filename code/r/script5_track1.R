@@ -229,6 +229,8 @@ nnet1_perf_by_thres_df
 nnet2_perf_by_thres_df 
 nnet3_perf_by_thres_df 
 
+## nnet3 selected
+
 
 
 #### ridge logistic regression ####
@@ -296,5 +298,44 @@ enet2_perf_by_thres_df
 #### model ensemble (glm, nb, knn, rf, nnet)
 
 ## collect probs from different models
-glm1_cv_pred_df$prob, 
-head(enet1_cv_pred_df)
+ens_cv_pred_df <- data.frame(
+  glm_prob = glm1_cv_pred_df$prob, 
+  nb_prob = nb_cv_pred_df$prob, 
+  knn_prob = knn100_cv_pred_df$prob,
+  rf_prob = rf_cv_pred_df$prob,
+  nnet_prob = nnet3_cv_pred_df$prob
+)
+
+## check that the values in the "actual" column match
+## across all cv pred perf dfs
+check_equal_vectors(glm1_cv_pred_df$actual,
+                    nb_cv_pred_df$actual,
+                    knn100_cv_pred_df$actual,
+                    rf_cv_pred_df$actual,
+                    nnet3_cv_pred_df$actual)
+
+## append the actual outcome variable as a column
+ens_cv_pred_df$actual <- glm1_cv_pred_df$actual
+ens_cv_pred_df$season <- glm1_cv_pred_df$season
+
+## average the different models' probs
+ens_cv_pred_df$prob <- 
+  (ens_cv_pred_df$glm_prob + 
+  ens_cv_pred_df$nb_prob +
+  ens_cv_pred_df$knn_prob +
+  ens_cv_pred_df$rf_prob +
+  ens_cv_pred_df$nnet_prob) / 5
+
+## add prediction by threshold
+ens_cv_pred_df <- add_pred_by_thres(ens_cv_pred_df, 
+                                    prob_col='prob', 
+                                    thres_vec=seq(0.5, 0.9, by=0.1))
+head(ens_cv_pred_df)
+
+## evaludate average performance by threshold
+ens_perf_by_thres_df <- create_bythres_cv_perf_agg_df(ens_cv_pred_df)
+ens_perf_by_thres_df
+
+
+
+####
