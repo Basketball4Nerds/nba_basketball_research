@@ -338,4 +338,11 @@ ens_perf_by_thres_df
 
 
 
-####
+#### majority votes performance 
+
+## skip this part for now
+
+# ens_cv_pred_df[1:100, 1:8]
+# pred_win_by_maj_vote()
+# list_files_of_pattern_str(str_pattern='vote')
+
