@@ -30,7 +30,7 @@ calc_exp_val <- function(wgr_amt, moneyline_odds, w_prob, rnd_dgt=3) {
   ## calculate probability of loss
   l_prob <- 1 - w_prob
   
-  ## calculate win payout profit (in case of met bet)
+  ## calculate win payout profit in case of correct bet,
   ## not including the initially wagered bet amount
   w_payout <- calc_moneyline_payout_profit(wgr_amt, moneyline_odds)
   

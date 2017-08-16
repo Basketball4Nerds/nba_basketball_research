@@ -221,6 +221,10 @@ write.csv(master, './data/master_backup.csv', row.names=FALSE)
 spreads <- spreads[ , c('season', 'date', 'team', 'o_team', 'bookmaker_line', 'bookmaker_payout')]
 moneylines <- moneylines[ , c('season', 'date', 'team', 'o_team', 'bookmaker_ml')]
 
+# filter out missing rows
+spreads <- spreads[complete.cases(spreads), ]
+moneylines <- moneylines[complete.cases(moneylines), ]
+
 # add game outcome column to dfs
 join_cols <- c('date', 'team', 'o_team')
 spreads <- left_join(spreads, master[ , c(join_cols, 'won', 'pMrgn')], by=join_cols)

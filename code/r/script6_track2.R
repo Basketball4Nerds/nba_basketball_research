@@ -39,7 +39,40 @@ trk2_predictors <- c('line', 'wpc_site', 'j5', 'oeff_cumperf_site', 'oeffA_cumpe
 ## create win prob df
 trk2_wprob_df <- create_wprob_df(train_complete, predictors=trk2_predictors)
 
-## 
-head(trk2_wprob_df)
 
+## join with the original moneylines data
+trk2_wprob_df <- left_join(moneylines, trk2_wprob_df, by=c('season', 'date', 'team', 'o_team'))
+
+
+## filter for complete cases
+trk2_wprob_df <- trk2_wprob_df[complete.cases(trk2_wprob_df), ]
+
+
+## add expected value col (favorable to bet if EV > 0)
+trk2_wprob_df$expval <- calc_exp_val(wgr_amt=100, 
+                                     moneyline_odds=trk2_wprob_df$bookmaker_ml, 
+                                     w_prob=trk2_wprob_df$wprob)
+
+
+## place bet if EV is above certain threshold
+min_expval_thres <- 20
+trk2_wprob_df$pred <- ifelse(trk2_wprob_df$expval > min_expval_thres, TRUE, FALSE)
+
+
+## add wager amount
+trk2_wprob_df <- add_betamt_col(trk2_wprob_df)
+
+
+## add earning column
+trk2_wprob_df <- add_earning_col(trk2_wprob_df, pred_col='pred', 
+                                 bet_amt_col='bet_amt', payout_col='bookmaker_ml')
+
+
+## quick view of wprob_dfs
+head(trk2_wprob_df, 50)
+
+
+## calculate total bet amount and total earning by season
+sum(trk2_wprob_df$bet_amt)
+sum(trk2_wprob_df$earning)
 

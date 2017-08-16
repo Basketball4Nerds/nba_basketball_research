@@ -19,9 +19,11 @@ head(trk2_pvotes_df)
 
 
 #### calculating the earnings for moneylines
-x <- head(moneylines, 50)
+# x <- head(moneylines, 50)
+x <- moneylines
 
 ## add prediction columns to dfs
+set.seed(123)
 x$pred <- sample(c(TRUE,FALSE), 50, TRUE)
 
 ## add wager amount column
@@ -38,7 +40,8 @@ sum(x$earning)
 
 
 #### calculating the earnings for moneylines
-x <- head(moneylines, 50)
+# x <- head(moneylines, 50)
+x <- moneylines
 
 ## add implied win prob col
 #x$implied_wprob <- calc_implied_win_prob_fr_line(x$bookmaker_ml)
@@ -47,13 +50,14 @@ x <- head(moneylines, 50)
 # x$min_wprob_for_brkevn <- calc_win_prob_for_zero_EV(x$bookmaker_ml, rnd_dgt=3)
 
 ## add our own win probability
-x$wprob <- round(runif(n=50, min=0, max=1), 3)
+set.seed(123)
+x$wprob <- round(runif(n=nrow(moneylines), min=0, max=1), 3)
 
 ## calculate expected value (favorable to bet if EV > 0)
 x$expval <- calc_exp_val(wgr_amt=100, moneyline_odds=x$bookmaker_ml, w_prob=x$wprob)
 
 ## place bet if EV is above certain threshold
-x$pred <- ifelse(x$expval > 20, TRUE, FALSE)
+x$pred <- ifelse(x$expval >= 100, TRUE, FALSE)
 
 ## add wager amount
 x$bet_amt[!is.na(x$pred)] <- 100

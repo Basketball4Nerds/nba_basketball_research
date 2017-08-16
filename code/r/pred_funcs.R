@@ -292,7 +292,8 @@ convert_to_predictive_votes_df <- function(predictive_df, cols) {
 
 
 ## this function creates win probability df
-create_wprob_df <- function(predictive_df, predictors, wprob_col='wprob', base_cols=c('date', 'team', 'o_team')) {
+create_wprob_df <- function(predictive_df, predictors, wprob_col='wprob', 
+                            base_cols=c('season', 'date', 'team', 'o_team')) {
   
   ## create predictive_votes_df
   pvotes_df <- convert_to_predictive_votes_df(predictive_df[ , c(base_cols, predictors)], cols=predictors)
@@ -307,3 +308,10 @@ create_wprob_df <- function(predictive_df, predictors, wprob_col='wprob', base_c
   return(wprob_df)
 }
 
+
+## this function add bet amount col
+add_betamt_col <- function(df, bet_amt=100, pred_col='pred', betamt_col='bet_amt') {
+  df[[betamt_col]][!is.na(df[[pred_col]])] <- bet_amt
+  df[[betamt_col]][!df[[pred_col]]] <- 0
+  return(df)
+}
