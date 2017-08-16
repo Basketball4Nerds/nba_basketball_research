@@ -97,6 +97,10 @@ dbWriteTable(mydb, value=totals_parsed, name="totals", append=TRUE, row.names=FA
 dbWriteTable(mydb, value=moneylines_parsed, name="moneylines", append=TRUE, row.names=FALSE)
 
 
+## close connection to db
+close_all_db_cons()
+
+
 ## move raw dataset files into different directories (to mark successful data upload to db)
 move_files_to_another_dir(from_dir='./data/raw_in_queue/games', to_dir='./data/raw_stored_in_db/games')
 move_files_to_another_dir(from_dir='./data/raw_in_queue/spreads', to_dir='./data/raw_stored_in_db/spreads')
@@ -108,6 +112,15 @@ move_files_to_another_dir(from_dir='./data/raw_in_queue/moneylines', to_dir='./d
 remove('games', 'spreads', 'totals', 'moneylines',
        'spreads_parsed', 'totals_parsed', 'moneylines_parsed')
 
+
+## connect to db again
+mydb <- dbConnect(MySQL(), 
+                  user=DB_USER, 
+                  password=DB_PASS, 
+                  dbname=DB_NAME,
+                  host=DB_HOST)
+
+
 ## load complete data from db
 games <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM games;'), n=-1))
 spreads <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM spreads;'), n=-1))
@@ -115,9 +128,8 @@ totals <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM totals;'), n=-
 moneylines <- suppressWarnings(fetch(dbSendQuery(mydb, 'SELECT * FROM moneylines;'), n=-1))
 
 
-## close connection to db
-all_cons <- dbListConnections(MySQL())
-for(con in all_cons) dbDisconnect(con)
+## close database connections
+close_all_db_cons()
 
 
 ## proper data types for date and season

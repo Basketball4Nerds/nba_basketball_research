@@ -213,3 +213,19 @@ write.csv(master, './data/master_backup.csv', row.names=FALSE)
 # master <- read.csv('./data/master_backup.csv', stringsAsFactors=FALSE)
 # master$date <- as.Date(master$date)
 
+
+
+## prepare spreads and moneyline columns (for later use)
+
+# filter out extra columns
+spreads <- spreads[ , c('season', 'date', 'team', 'o_team', 'bookmaker_line', 'bookmaker_payout')]
+moneylines <- moneylines[ , c('season', 'date', 'team', 'o_team', 'bookmaker_ml')]
+
+# add game outcome column to dfs
+join_cols <- c('date', 'team', 'o_team')
+spreads <- left_join(spreads, master[ , c(join_cols, 'won', 'pMrgn')], by=join_cols)
+moneylines <- left_join(moneylines, master[ , c(join_cols, 'won')], by=join_cols)
+
+# change pMrgn col name to p_mrgn
+names(spreads)[names(spreads)=='pMrgn'] <- 'p_mrgn'
+names(moneylines)[names(moneylines)=='pMrgn'] <- 'p_mrgn'

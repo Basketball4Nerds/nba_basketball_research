@@ -240,7 +240,11 @@ get_rnk_population_lst <- function(rnkd_vec_lst) {
 }
 
 
-## this function takes in a list of vectors and returns
+## this function takes in predictive_df and a vector of predictors
+## and returns a list of vectors, where the first element of the list
+## contains predictors that performed best in each season, 
+## second element contains predictors that performed second best in each season,
+## and so forth and so on
 get_pred_perf_rnk_plcmnt_lst <- function(predictive_df, 
                                          predictors, 
                                          rank_method=c('pred_acc', 'smry_stat_sprd'), 

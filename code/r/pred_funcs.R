@@ -116,28 +116,6 @@ pred_win_by_site <- function(site) {
 }
 
 
-# ## this fucntion checks validity of wpa_df under the following premise:
-# ## given the same metric and min_diff, there must be a fewer number of 
-# ## predictions made for higher min_n
-# is_valid_wpa_df <- function(wpa_df) {
-#   
-#   ## split wpa_df into a list of dfs using metric and min_diff
-#   wpa_df_lst <- split(wpa_df, list(wpa_df$metric, wpa_df$min_diff))
-#   
-#   ## check validity by checking there exists a lower n_pred for a higher min_n
-#   valid_cond_lst <- lapply(wpa_df_lst, function(x) {
-#     x <- sortByCol(x, col='min_n')
-#     is.sorted(rev(x$n_pred))
-#   })
-#   
-#   ## convert list of validity conditions to vector
-#   valid_conds <- unlist(valid_cond_lst)
-#   
-#   ## return TRUE if all validity conditions are TRUE
-#   return(all(valid_conds))
-# }
-
-
 ## this function makes win prediction based on a given metric column and predictive_df;
 ## it is capable of making predictions based on the following metrics: 
 ## oeff, oeffA, FGP, FGPA, rqP, rqPA, pos, posA, wpc, j, rst, line, site, mtchmrgn
@@ -152,7 +130,7 @@ pred_win_by_metric_col <- function(predictive_df, metric_col, min_diff=NULL, min
   
   ## make prediction
   # case when higher metric val predicts win
-  if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc', 'j', 'rst', 'mtchmrgn', 'home')) {
+  if (metric %in% c('oeff', 'FGP', 'rqP', 'pos', 'wpc', 'j', 'rst', 'mtchmrgn')) {
     pred <- pred_win_higher_val(x=predictive_df[[metric_col]], min_diff=min_diff)
   } 
   
@@ -161,7 +139,12 @@ pred_win_by_metric_col <- function(predictive_df, metric_col, min_diff=NULL, min
     pred <- pred_win_lower_val(x=predictive_df[[metric_col]], min_diff=min_diff)
   } 
   
-  # case when home-team is predicted to win
+  ## case when home team is predicted to win
+  else if (metric=='home') {
+    pred <- as.logical(predictive_df[[metric_col]])
+  }
+  
+  # case when home team is predicted to win
   else if (metric=='site') {
     pred <- pred_win_by_site(site=predictive_df$site)
   }
@@ -238,6 +221,28 @@ create_win_pred_acc_df <- function(predictive_df, metric_cols, min_diff=NULL, mi
 }
 
 
+## this function takes in a list/df of prediction vectors and 
+## returns a resultant probability vector whose probability
+## is calculated by (# of TRUE) / (# of all votes)
+calc_wprob_fr_pred_votes_obj <- function(pred_obj, rnd_dgt=3) {
+  
+  ## get a vector of win prediction vote counts
+  w_pred_vote_cnts <- Reduce('+', lapply(pred_obj, is.true))
+  
+  ## get a vector of total vote counts
+  if (is.list(pred_obj)) {
+    total_vote_cnts <- length(pred_obj)
+  } else if (is.data.frame(pred_obj)) {
+    total_vote_cnts <- ncol(pred_obj)    
+  }
+  
+  ## make win prediction by majority vote
+  probs <- round(w_pred_vote_cnts / total_vote_cnts, rnd_dgt)
+  
+  ## return
+  return(probs)
+}
+
 
 ## this function takes in a list/df of prediction vectors and 
 ## returns a resultant prediction vector by "majority vote" method
@@ -268,3 +273,37 @@ pred_win_by_maj_vote <- function(pred_obj, maj_vote_cnt=NULL) {
   ## return
   return(w_preds)
 }
+
+
+
+## this function takes predictive_df (whose each metric column is a metric difference
+## in performance between a team and its opponent) and converts the df
+## to predictive_votes_df, where each metric column contains prediction values, TRUE or FALSE;
+convert_to_predictive_votes_df <- function(predictive_df, cols) {
+  
+  ## for each col specified, make win/loss prediction
+  for (col in cols) {
+    predictive_df[[col]] <- pred_win_by_metric_col(predictive_df, metric_col=col)
+  }
+  
+  ## return
+  return(predictive_df)
+}
+
+
+## this function creates win probability df
+create_wprob_df <- function(predictive_df, predictors, wprob_col='wprob', base_cols=c('date', 'team', 'o_team')) {
+  
+  ## create predictive_votes_df
+  pvotes_df <- convert_to_predictive_votes_df(predictive_df[ , c(base_cols, predictors)], cols=predictors)
+  
+  ## add win probability calculated by number of votes
+  pvotes_df$wprob <- calc_wprob_fr_pred_votes_obj(pvotes_df[ , predictors]) 
+  
+  ## select only base cols and win prob col
+  wprob_df <- pvotes_df[ , c(base_cols, wprob_col)]  
+  
+  ## return
+  return(wprob_df)
+}
+

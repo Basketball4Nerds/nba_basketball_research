@@ -93,7 +93,7 @@ plot_wpa(posA_wpa_df)
 quantile(train$j10, na.rm=TRUE)
 j_wpa_df <- create_win_pred_acc_df(train, 
                                    metric_cols=j_cols, 
-                                   min_diff=c(20, 40, 60))
+                                   min_diff=c(10, 20, 40, 60))
 plot_wpa(j_wpa_df)
 
 

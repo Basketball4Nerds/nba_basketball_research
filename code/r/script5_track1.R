@@ -58,6 +58,7 @@ g <- get_pred_perf_rnk_plcmnt_lst(train,
                                   predictors=rqPA_cumperf_cols, 
                                   rank_method='pred_acc', min_n=5)
 lapply(g, table)[[1]]
+lapply(g, table)[[2]]
 # rqPA_cumperf_oeffQntlRnk picked
 
 
