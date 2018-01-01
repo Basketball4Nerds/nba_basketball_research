@@ -1,6 +1,6 @@
-data/*
+analysis/data/*csv
 credentials/*
-code/decommissioned/*
+analysis/code/decommissioned/*
 .RData
 .RHistory
 .Rproj.user
