@@ -1,11 +1,12 @@
-analysis/data/*csv
+README.html
+data/*
 credentials/*
-analysis/code/decommissioned/*
-.RData
-.RHistory
-.Rproj.user
-.metadata
-.DS_Store
+*.RData
+*.RHistory
+*.Rproj.user
+*.Rproj
+*.metadata
+*.DS_Store
 *~
 *#
 
