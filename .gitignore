@@ -4,10 +4,9 @@ credentials/*
 *.RData
 *.RHistory
 *.Rproj.user
-*.Rproj
 *.metadata
 *.DS_Store
 *~
 *#
-
-
+*.csv
+.Rproj.user
