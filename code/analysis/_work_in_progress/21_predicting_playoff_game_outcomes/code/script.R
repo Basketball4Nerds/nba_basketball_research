@@ -51,17 +51,12 @@ ps_z_2018 <- ps_games_2018 %>%
   select(select_vars)
 
 
-team = 'TOR'
+
+team = 'BOS'
 opponent = 'CLE'
 # 
-team = 'BOS'
-opponent = 'PHI'
-# 
-team = 'HOU'
-opponent = 'UTA'
-# 
 team = 'GSW'
-opponent = 'NOP'
+opponent = 'HOU'
 
 
 sort(unique(rs_games$slugTeam))

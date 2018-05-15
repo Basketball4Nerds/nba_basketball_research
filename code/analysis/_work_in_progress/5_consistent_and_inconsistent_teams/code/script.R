@@ -1,122 +1,189 @@
-#### load regular season games
-games <- read.csv("../../../data/processed/regular_season_games_master.csv", stringsAsFactors=FALSE)
-games$outcome <- ifelse(games$won, 'won', 'lost')
-games$site <- ifelse(games$site=='H', 'home', 'away')
 
-
-
-#### load libraries
+## load libraries
+library(nbastatR)
+library(tidyverse)
 library(ggplot2)
 library(gridExtra)
 library(psych)
-library(plyr)
-library(dplyr)
 library(BBmisc)
-library(reshape2)
-library(tidyr)  # tidyr is successor to reshape2
 library(data.table)  # for setDT()
 library(knitr)
 library(kableExtra)
+library(glue)
 
 
-
-#### subset 2016 season
-games2016 <- subset(games, season==2016)
-
-
-
-#### scored point mean and sd
-agg <- games2016 %>% 
-  group_by(team) %>%
-  summarize(rqP_mean = round(mean(rqP), 2),
-            rqP_sd = round(sd(rqP), 2))
-agg <- as.data.frame(agg)
-agg <- sortByCol(agg, col='rqP_sd')
-agg
-kable(agg, 'html')
-head(agg)
-tail(agg)
+## load data
+rs_team_gamelogs_2017 <- get_game_logs(seasons=2018, 
+                               result_type='team',
+                               season_types='Regular Season')
+rs_player_gamelogs_2017 <- get_game_logs(seasons=2018, 
+                                 result_type='player',
+                                 season_types='Regular Season')
 
 
-
-####
-knicks2016 <- subset(games2016, team=='Knicks')
-cavaliers2016 <- subset(games2016, team=='Cavaliers')
-
-ggplot(knicks2016, aes(x=date, y=rqP)) + 
-  geom_point(aes(color=site)) + 
-  geom_line(group=1) + 
-  theme(axis.text.x = element_text(angle=45, hjust=1)) + 
-  scale_y_continuous(limits=c(70, 145)) + 
-  ylab('regular-quarter points') + 
-  ggtitle("New York Knicks 2016 Regular Season: Regular-Quarter Points")
-
-ggplot(cavaliers2016, aes(x=date, y=p)) + 
-  geom_point(aes(color=site)) + 
-  geom_line(group=1) + 
-  ylab('points') + 
-  theme(axis.text.x = element_text(angle=45, hjust=1)) +
-  scale_y_continuous(limits=c(70, 145)) + 
-  ylab('regular-quarter points') + 
-  ggtitle("Cleveland Cavaliers 2016 Regular Season: Regular-Quarter Points")
-
-
-
-#### points variation by site
-agg <- games2016 %>% 
-  group_by(team, site) %>%
-  summarize(rqP_mean = round(mean(rqP), 2),
-            rqP_sd = round(sd(rqP), 2))
-agg <- dcast(setDT(agg), team ~ site, value.var=c('rqP_mean', 'rqP_sd'))
-agg <- agg[ , c('team', 'rqP_mean_home', 'rqP_mean_away', 'rqP_sd_home', 'rqP_sd_away')]
-agg <- 
-  agg %>%
+## aggregate team points mean and sd
+team_agg <- rs_team_gamelogs_2017 %>% 
+  
+  ## normalize for per-240-minutes
   mutate(
-    rqP_mean_diff = rqP_mean_home - rqP_mean_away,
-    rqP_sd_diff = rqP_sd_home - rqP_sd_away
-  )
-head(agg)
-View(sortByCol(agg, col='rqP_mean_diff'))
+    ptsTeam = ptsTeam / minutesTeam * 240
+  ) %>%
+  
+  ## group by team
+  group_by(slugTeam) %>%
+  
+  ## get mean and sd
+  summarize(
+    pts_mean = round(mean(ptsTeam), 2),
+    pts_sd = round(sd(ptsTeam), 2)
+  ) %>%
+    
+  ## as df
+  as.data.frame() %>%
+
+  ## sort by column
+  arrange(pts_sd)
+
+
+## view aggregation
+View(team_agg)
+tail(team_agg)
+
+## export to html
+kable(team_agg, 'html')
+
+
+## pts variation by game outcome
+team_agg2 <- rs_team_gamelogs_2017 %>% 
+
+  ## normalize for per-240-minutes
+  mutate(
+    ptsTeam = ptsTeam / minutesTeam * 240
+  ) %>%
+  
+  ## group by team and outcome
+  group_by(slugTeam, outcomeGame) %>%
+  
+  ## get mean and sd
+  summarize(
+    pts_mean = round(mean(ptsTeam), 2),
+    pts_sd = round(sd(ptsTeam), 2)
+  ) %>%
+
+  ## as data table (needed for the next step)
+  setDT() %>%
+  
+  ##   
+  dcast(slugTeam ~ outcomeGame, value.var=c('pts_mean', 'pts_sd')) %>%
+  
+  ## create difference columns
+  mutate(
+    pts_mean_diff = pts_mean_W - pts_mean_L,
+    pts_sd_abs_diff = abs(pts_sd_W - pts_sd_L)
+  ) %>%
+
+  ## sort by column
+  arrange(pts_mean_diff)
+
+
+## view aggregation
+View(team_agg2)
+
+
+## export to html
+kable(team_agg2, 'html')
+
+
+## pts variation by game location
+team_agg3 <- rs_team_gamelogs_2017 %>% 
+  
+  ## normalize for per-240-minutes
+  mutate(
+    ptsTeam = ptsTeam / minutesTeam * 240
+  ) %>%
+  
+  ## group by team and site
+  group_by(slugTeam, locationGame) %>%
+  
+  ## get mean and sd
+  summarize(
+    pts_mean = round(mean(ptsTeam), 2),
+    pts_sd = round(sd(ptsTeam), 2)
+  ) %>%
+  
+  ## as data table (needed for the next step)
+  setDT() %>%
+  
+  ##   
+  dcast(slugTeam ~ locationGame, value.var=c('pts_mean', 'pts_sd')) %>%
+  
+  ## create difference columns
+  mutate(
+    pts_mean_diff = pts_mean_H - pts_mean_A,
+    pts_sd_abs_diff = abs(pts_sd_H - pts_sd_A)
+  ) %>%
+  
+  ## sort by column
+  arrange(pts_mean_diff)
+
+
+## view aggregation
+team_agg3
+
+
+
+## pts variation by game outcome and location
+team_agg4 <- rs_team_gamelogs_2017 %>% 
+  
+  ## normalize for per-240-minutes
+  mutate(
+    ptsTeam = ptsTeam / minutesTeam * 240
+  ) %>%
+  
+  ## group by team and site and outcome
+  group_by(slugTeam, locationGame, outcomeGame) %>%
+  
+  ## get mean and sd
+  summarize(
+    pts_mean = round(mean(ptsTeam), 2),
+    pts_sd = round(sd(ptsTeam), 2)
+  ) %>%
+  
+  ## as data table (needed for the next step)
+  setDT() %>%
+  
+  ##   
+  dcast(slugTeam ~ locationGame + outcomeGame, value.var=c('pts_mean', 'pts_sd')) %>%
+  
+
+## view aggregation
+team_agg4
 
 
 
 
-ggplot(celtics2016, aes(x=date, y=rqP)) + 
-  geom_point(aes(color=outcome)) + 
-  geom_line(group=1) + 
-  ylab('points') + 
-  theme(axis.text.x = element_text(angle=45, hjust=1)) +
-  scale_y_continuous(limits=c(70, 145)) + 
-  facet_grid(site ~ .)
 
-ggplot(cavaliers2016, aes(x=date, y=rqP)) + 
-  geom_point(aes(color=outcome)) + 
-  geom_line(group=1) + 
-  ylab('points') + 
-  theme(axis.text.x = element_text(angle=45, hjust=1)) +
-  scale_y_continuous(limits=c(70, 145)) + 
-  facet_grid(site ~ .)
+#### plot
+pts_range <- range(rs_team_gamelogs_2017$ptsTeam)
 
 
-agg <- x %>% 
-  group_by(team, site) %>%
-  summarize(p_mean = round(mean(p), 2),
-            p_sd = round(sd(p), 2))
-agg <- as.data.frame(agg)
-agg
+SAC2017 <- rs_team_gamelogs_2017 %>%
+  filter(slugTeam=='SAC') %>%
+  mutate(var = glue("{outcomeGame} @ {locationGame}"))
+GSW2017 <- rs_team_gamelogs_2017 %>%
+  filter(slugTeam=='GSW') %>%
+  mutate(var = glue("{outcomeGame} @ {locationGame}"))
 
-x <- dcast(setDT(y), team ~ site, value.var=c("p_mean", "p_sd"))
+ggplot(GSW2017, aes(x=dateGame, y=ptsTeam)) + 
+  geom_point(aes(color=var)) + 
+  theme(axis.text.x = element_text(angle=45, hjust=1)) + 
+  scale_y_continuous(limits=pts_range) + 
+  ylab('48-minutes adjusted points') + 
+  ggtitle("GSW 2017-18 Regular Season 48-Minutes-Adjusted Points")
 
-
-
-
-
-## find teams that do great at home but poorly at away
-## find teams 
-
-
-x <- mean(celtics2016$p[celtics2016$site=='home'])
-y <- sd(celtics2016$p[celtics2016$site=='home'])
-
-a <- mean(celtics2016$p[celtics2016$site=='away'])
-b <- sd(celtics2016$p[celtics2016$site=='away'])
+ggplot(SAC2017, aes(x=dateGame, y=ptsTeam)) + 
+  geom_point(aes(color=var)) + 
+  theme(axis.text.x = element_text(angle=45, hjust=1)) + 
+  scale_y_continuous(limits=pts_range) + 
+  ylab('48-minutes adjusted points') + 
+  ggtitle("SAC 2017-18 Regular Season 48-Minutes-Adjusted Points")

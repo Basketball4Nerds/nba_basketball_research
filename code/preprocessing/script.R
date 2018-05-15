@@ -1,6 +1,4 @@
 
-
-
 ## set database credentials
 source('../../credentials/aws_db_credentials.R')
 
