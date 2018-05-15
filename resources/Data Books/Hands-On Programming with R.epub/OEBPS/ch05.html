@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:pls="http://www.w3.org/2005/01/pronunciation-lexicon" xmlns:ssml="http://www.w3.org/2001/10/synthesis" xmlns:svg="http://www.w3.org/2000/svg"><head><title>Chapter 5. Modifying Values</title><link rel="stylesheet" type="text/css" href="core.css"/><meta name="generator" content="DocBook XSL Stylesheets V1.76.1"/><link rel="up" href="pt02.html" title="Part II. Project 2: Playing Cards"/><link rel="prev" href="ch04.html" title="Chapter 4. R Notation"/><link rel="next" href="ch06.html" title="Chapter 6. Environments"/></head><body><section class="chapter" title="Chapter 5. Modifying Values" epub:type="chapter" id="MODIFY"><div class="titlepage"><div><div><h2 class="title">Chapter 5. Modifying Values</h2></div></div></div><p>Are you ready to play some games with your virtual deck? Not so fast! The point system in your deck of cards doesn’t align well with many card games. For example, in war and poker, aces are usually scored higher than kings. They’d have a point value of 14, not 1.</p><p>In this task, you will change the point system of your deck three times to match three different games: war, hearts, and blackjack. Each of these games will teach you something different about modifying the values inside of a data set. Start by making a copy of <code class="literal">deck</code> that you can manipulate.<a id="id443641" class="indexterm"/> This will ensure that you always have a pristine copy of <code class="literal">deck</code> to fall back on (should things go awry):</p><pre class="programlisting">deck2 <code class="o">&lt;-</code> deck</pre><div class="sect1" title="Changing Values in Place"><div class="titlepage"><div><div><h2 class="title" style="clear: both" id="_changing_values_in_place">Changing Values in Place</h2></div></div></div><p>You can use R’s notation system to modify values within an R object.<a id="id443694" class="indexterm"/><a id="id463327" class="indexterm"/><a id="id463335" class="indexterm"/><a id="id463343" class="indexterm"/><a id="id463350" class="indexterm"/><a id="id463358" class="indexterm"/> First, describe the value (or values) you wish to modify. Then use the assignment operator <code class="literal">&lt;-</code> to overwrite those values. R will update the selected values <span class="emphasis"><em>in the original object</em></span>. Let’s put this into action with a real example:</p><pre class="programlisting">vec <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">0</code><code class="p">,</code> <code class="m">0</code><code class="p">,</code> <code class="m">0</code><code class="p">,</code> <code class="m">0</code><code class="p">,</code> <code class="m">0</code><code class="p">,</code> <code class="m">0</code><code class="p">)</code>
+vec
+<code class="c1">##  0 0 0 0 0 0</code></pre><p>Here’s how you can select the first value of <code class="literal">vec</code>:</p><pre class="programlisting">vec<code class="p">[</code><code class="m">1</code><code class="p">]</code>
+<code class="c1">##  0</code></pre><p>And here is how you can modify it:</p><pre class="programlisting">vec<code class="p">[</code><code class="m">1</code><code class="p">]</code> <code class="o">&lt;-</code> <code class="m">1000</code>
+vec
+<code class="c1">## 1000    0    0    0    0    0</code></pre><p>You can replace multiple values at once as long as the number of new values equals the number of selected<a id="id507046" class="indexterm"/> values:</p><pre class="programlisting">vec<code class="p">[</code>c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">3</code><code class="p">,</code> <code class="m">5</code><code class="p">)]</code> <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">1</code><code class="p">,</code> <code class="m">1</code><code class="p">)</code>
+vec
+<code class="c1">##  1 0 1 0 1 0</code>
+
+vec<code class="p">[</code><code class="m">4</code><code class="o">:</code><code class="m">6</code><code class="p">]</code> <code class="o">&lt;-</code> vec<code class="p">[</code><code class="m">4</code><code class="o">:</code><code class="m">6</code><code class="p">]</code> <code class="o">+</code> <code class="m">1</code>
+vec
+<code class="c1">## 1 0 1 1 2 1</code></pre><p>You can also create values that do not yet exist in your object.<a id="id459608" class="indexterm"/> R will expand the object to accommodate the new values:</p><pre class="programlisting">vec<code class="p">[</code><code class="m">7</code><code class="p">]</code> <code class="o">&lt;-</code> <code class="m">0</code>
+vec
+<code class="c1">## 1 0 1 1 2 1 0</code></pre><p>This provides a great way to add new variables to your data set:</p><pre class="programlisting">deck2<code class="o">$</code>new <code class="o">&lt;-</code> <code class="m">1</code><code class="o">:</code><code class="m">52</code>
+
+head<code class="p">(</code>deck2<code class="p">)</code>
+<code class="c1">##   face   suit value new</code>
+<code class="c1">##   king spades    13   1</code>
+<code class="c1">##  queen spades    12   2</code>
+<code class="c1">##   jack spades    11   3</code>
+<code class="c1">##    ten spades    10   4</code>
+<code class="c1">##   nine spades     9   5</code>
+<code class="c1">##  eight spades     8   6</code></pre><p>You can also remove columns from a data frame (and elements from a list) by assigning them<a id="id498315" class="indexterm"/><a id="id498321" class="indexterm"/><a id="id498302" class="indexterm"/> the symbol <code class="literal">NULL</code>:</p><pre class="programlisting">deck2<code class="o">$</code>new <code class="o">&lt;-</code> <code class="kc">NULL</code>
+
+head<code class="p">(</code>deck2<code class="p">)</code>
+<code class="c1">##   face   suit value</code>
+<code class="c1">##   king spades    13</code>
+<code class="c1">##  queen spades    12</code>
+<code class="c1">##   jack spades    11</code>
+<code class="c1">##    ten spades    10</code>
+<code class="c1">##   nine spades     9</code>
+<code class="c1">##  eight spades     8</code></pre><p>In the game of war, aces are king (figuratively speaking). They receive the highest value of all the cards, which would be something like 14. Every other card gets the value that it already has in <code class="literal">deck</code>. To play war, you just need to change the values of your aces from 1 to 14.</p><p>As long as you haven’t shuffled your deck, you know just where the aces are. They appear every 13 cards. Hence, you can describe them with R’s notation system:</p><pre class="programlisting">deck2<code class="p">[</code>c<code class="p">(</code><code class="m">13</code><code class="p">,</code> <code class="m">26</code><code class="p">,</code> <code class="m">39</code><code class="p">,</code> <code class="m">52</code><code class="p">),</code> <code class="p">]</code>
+<code class="c1">##  face     suit value</code>
+<code class="c1">##   ace   spades     1</code>
+<code class="c1">##   ace    clubs     1</code>
+<code class="c1">##   ace diamonds     1</code>
+<code class="c1">##   ace   hearts     1</code></pre><p>You can single out just the <span class="emphasis"><em>values</em></span> of the aces by subsetting the columns dimension of <code class="literal">deck2</code>. Or, even better, you can subset the column vector <code class="literal">deck2$value</code>:</p><pre class="programlisting">deck2<code class="p">[</code>c<code class="p">(</code><code class="m">13</code><code class="p">,</code> <code class="m">26</code><code class="p">,</code> <code class="m">39</code><code class="p">,</code> <code class="m">52</code><code class="p">),</code> <code class="m">3</code><code class="p">]</code>
+<code class="c1">## 1 1 1 1</code>
+
+deck2<code class="o">$</code>value<code class="p">[</code>c<code class="p">(</code><code class="m">13</code><code class="p">,</code> <code class="m">26</code><code class="p">,</code> <code class="m">39</code><code class="p">,</code> <code class="m">52</code><code class="p">)]</code>
+<code class="c1">## 1 1 1 1</code></pre><p>Now all you have to do is assign a new set of values to these old values. The set of new values will have to be the same size as the set of values that you are replacing. So you could save <code class="literal">c(14, 14, 14, 14)</code> into the ace values, or you could just save <span class="strong"><strong><code class="literal">14</code></strong></span> and rely on R’s recycling rules to expand <code class="literal">14</code> to <code class="literal">c(14, 14, 14, 14)</code>:</p><pre class="programlisting">deck2<code class="o">$</code>value<code class="p">[</code>c<code class="p">(</code><code class="m">13</code><code class="p">,</code> <code class="m">26</code><code class="p">,</code> <code class="m">39</code><code class="p">,</code> <code class="m">52</code><code class="p">)]</code> <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">14</code><code class="p">,</code> <code class="m">14</code><code class="p">,</code> <code class="m">14</code><code class="p">,</code> <code class="m">14</code><code class="p">)</code>
+
+<code class="c1"># or</code>
+
+deck2<code class="o">$</code>value<code class="p">[</code>c<code class="p">(</code><code class="m">13</code><code class="p">,</code> <code class="m">26</code><code class="p">,</code> <code class="m">39</code><code class="p">,</code> <code class="m">52</code><code class="p">)]</code> <code class="o">&lt;-</code> <code class="m">14</code></pre><p>Notice that the values change <span class="emphasis"><em>in place</em></span>. You don’t end up with a modified <span class="emphasis"><em>copy</em></span> of <code class="literal">deck2</code>; the new values will appear inside <code class="literal">deck2</code>:</p><pre class="programlisting">head<code class="p">(</code>deck2<code class="p">,</code> <code class="m">13</code><code class="p">)</code>
+<code class="c1">##   face   suit value</code>
+<code class="c1">##   king spades    13</code>
+<code class="c1">##  queen spades    12</code>
+<code class="c1">##   jack spades    11</code>
+<code class="c1">##    ten spades    10</code>
+<code class="c1">##   nine spades     9</code>
+<code class="c1">##  eight spades     8</code>
+<code class="c1">##  seven spades     7</code>
+<code class="c1">##    six spades     6</code>
+<code class="c1">##   five spades     5</code>
+<code class="c1">##   four spades     4</code>
+<code class="c1">##  three spades     3</code>
+<code class="c1">##    two spades     2</code>
+<code class="c1">##    ace spades    14</code></pre><p>The same technique will work whether you store your data in a vector, matrix, array, list, or data frame. Just describe the values that you want to change with R’s notation system, then assign over those values with R’s assignment operator.</p><p>Things worked very easily in this example because you knew exactly where each ace was. The cards were sorted in an orderly manner and an ace appeared every 13 rows.</p><p>But what if the deck had been shuffled? You could look through all the cards and note the locations of the aces, but that would be tedious. If your data frame were larger, it might be impossible:</p><pre class="programlisting">deck3 <code class="o">&lt;-</code> shuffle<code class="p">(</code>deck<code class="p">)</code></pre><p>Where are the aces now?</p><pre class="programlisting">head<code class="p">(</code>deck3<code class="p">)</code>
+<code class="c1">##  face     suit value</code>
+<code class="c1">## queen    clubs    12</code>
+<code class="c1">##  king    clubs    13</code>
+<code class="c1">##   ace   spades     1   # an ace</code>
+<code class="c1">##  nine    clubs     9</code>
+<code class="c1">## seven   spades     7</code>
+<code class="c1">## queen diamonds    12</code></pre><p>Why not ask R to find the aces for you? You can do this with logical subsetting. Logical subsetting provides a way to do targeted extraction and modification with R objects, a sort of search-and-destroy mission inside your own data sets.</p></div><div class="sect1" title="Logical Subsetting"><div class="titlepage"><div><div><h2 class="title" style="clear: both" id="_logical_subsetting">Logical Subsetting</h2></div></div></div><p>Do you remember R’s logical index system, <a class="xref" href="ch04.html#LOGICALS" title="Logical Values">Logical Values</a>? To recap, you can select values with a vector of <code class="literal">TRUE</code>s and <code class="literal">FALSE</code>s. The vector must be the same length as the dimension that you wish to subset. R will return every element that matches a TRUE:<a id="id373090" class="indexterm"/><a id="id373085" class="indexterm"/><a id="id373066" class="indexterm"/><a id="id373072" class="indexterm"/><a id="id373094" class="indexterm"/></p><pre class="programlisting">vec
+<code class="c1">## 1 0 1 1 2 1 0</code>
+
+vec<code class="p">[</code>c<code class="p">(</code><code class="kc">FALSE</code><code class="p">,</code> <code class="kc">FALSE</code><code class="p">,</code> <code class="kc">FALSE</code><code class="p">,</code> <code class="kc">FALSE</code><code class="p">,</code> <code class="kc">TRUE</code><code class="p">,</code> <code class="kc">FALSE</code><code class="p">,</code> <code class="kc">FALSE</code><code class="p">)]</code>
+<code class="c1">## 2</code></pre><p>At first glance, this system might seem impractical. Who wants to type out long vectors of TRUEs and FALSEs? No one. But you don’t have to. You can let a logical test create a vector of TRUEs and FALSEs for you.<a id="id373102" class="indexterm"/></p><div class="sect2" title="Logical Tests"><div class="titlepage"><div><div><h3 class="title" id="_logical_tests">Logical Tests</h3></div></div></div><p>A logical test is a comparison like “is one less than two?”, <code class="literal">1 &lt; 2</code>, or “is three greater than four?”, <code class="literal">3 &gt; 4</code>. R provides seven logical operators that you can use to make comparisons, shown in <a class="xref" href="ch05.html#TABLE-NOTATION-LOGICAL" title="Table 5-1. R’s logical operators">Table 5-1</a>.<a id="id498434" class="indexterm"/></p><div class="table"><a id="TABLE-NOTATION-LOGICAL"/><div class="table-title">Table 5-1. R’s logical operators</div><div class="table-contents"><table style="width: 90%; border-collapse: collapse; border-top: 0.5pt solid ; border-bottom: 0.5pt solid ; border-left: 0.5pt solid ; border-right: 0.5pt solid ; "><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/></colgroup><thead><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; ">Operator</td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; ">Syntax</td><td style="border-bottom: 0.5pt solid ; ">Tests</td></tr></thead><tbody><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">&gt;</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">a &gt; b</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is a greater than b?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">&gt;=</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">a &gt;= b</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is a greater than or equal to b?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">&lt;</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">a &lt; b</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is a less than b?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">&lt;=</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">a &lt;= b</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is a less than or equal to b?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">==</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">a == b</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is a equal to b?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">!=</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">a != b</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is a not equal to b?</p></td></tr><tr><td style="border-right: 0.5pt solid ; "><p><code class="literal">%in%</code></p></td><td style="border-right: 0.5pt solid ; "><p><code class="literal">a %in% c(a, b, c)</code></p></td><td><p>Is a in the group c(a, b, c)?</p></td></tr></tbody></table></div></div><p>Each operator returns a <code class="literal">TRUE</code> or a <code class="literal">FALSE</code>. If you use an operator to compare vectors, R will do element-wise comparisons—just like it does with the arithmetic operators:<a id="id438215" class="indexterm"/><a id="id466106" class="indexterm"/><a id="id466114" class="indexterm"/><a id="id466121" class="indexterm"/><a id="id438222" class="indexterm"/><a id="id438229" class="indexterm"/><a id="id438236" class="indexterm"/><a id="id438243" class="indexterm"/><a id="id438249" class="indexterm"/></p><pre class="programlisting"><code class="m">1</code> <code class="o">&gt;</code> <code class="m">2</code>
+<code class="c1">## FALSE</code>
+
+<code class="m">1</code> <code class="o">&gt;</code> c<code class="p">(</code><code class="m">0</code><code class="p">,</code> <code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">)</code>
+<code class="c1">## TRUE FALSE FALSE</code>
+
+c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">3</code><code class="p">)</code> <code class="o">==</code> c<code class="p">(</code><code class="m">3</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">1</code><code class="p">)</code>
+<code class="c1">## FALSE  TRUE FALSE</code></pre><p><code class="literal">%in%</code> is the only operator that does not do normal element-wise execution. <code class="literal">%in%</code> tests whether the value(s) on the left side are in the vector on the right side. If you provide a vector on the left side, <code class="literal">%in%</code> will <span class="emphasis"><em>not</em></span> pair up the values on the left with the values on the right and then do element-wise tests. Instead, <code class="literal">%in%</code> will independently test whether each value on the left is <span class="emphasis"><em>somewhere</em></span> in the vector on the right:</p><pre class="programlisting"><code class="m">1</code> <code class="o">%in%</code> c<code class="p">(</code><code class="m">3</code><code class="p">,</code> <code class="m">4</code><code class="p">,</code> <code class="m">5</code><code class="p">)</code>
+<code class="c1">## FALSE</code>
+
+c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">)</code> <code class="o">%in%</code> c<code class="p">(</code><code class="m">3</code><code class="p">,</code> <code class="m">4</code><code class="p">,</code> <code class="m">5</code><code class="p">)</code>
+<code class="c1">## FALSE FALSE</code>
+
+c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">3</code><code class="p">)</code> <code class="o">%in%</code> c<code class="p">(</code><code class="m">3</code><code class="p">,</code> <code class="m">4</code><code class="p">,</code> <code class="m">5</code><code class="p">)</code>
+<code class="c1">## FALSE FALSE  TRUE</code>
+
+c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">3</code><code class="p">,</code> <code class="m">4</code><code class="p">)</code> <code class="o">%in%</code> c<code class="p">(</code><code class="m">3</code><code class="p">,</code> <code class="m">4</code><code class="p">,</code> <code class="m">5</code><code class="p">)</code>
+<code class="c1">## FALSE FALSE  TRUE  TRUE</code></pre><p>Notice that you test for equality with a double equals sign, <code class="literal">==</code>, and not a single equals sign, <code class="literal">=</code>, which is another way to write <code class="literal">&lt;-</code>. It is easy to forget and use <code class="literal">a = b</code> to test if <code class="literal">a</code> equals <code class="literal">b</code>. Unfortunately, you’ll be in for a nasty surprise. R won’t return a <code class="literal">TRUE</code> or <code class="literal">FALSE</code>, because it won’t have to: <code class="literal">a</code> <span class="emphasis"><em>will</em></span> equal <code class="literal">b</code>, because you just ran the equivalent of <code class="literal">a &lt;- b</code>.<a id="id491656" class="indexterm"/><a id="id372308" class="indexterm"/><a id="id372314" class="indexterm"/><a id="id372321" class="indexterm"/><a id="id372328" class="indexterm"/><a id="id372334" class="indexterm"/></p><div class="warning" title="= is an assignment operator" epub:type="warning"><h3 class="title"><code class="literal">=</code> is an assignment operator</h3><p>Be careful not to confuse <code class="literal">=</code> with <code class="literal">==</code>. <code class="literal">=</code> does the same thing as <code class="literal">&lt;-</code>: it assigns a value to an object.</p></div><p>You can compare any two R objects with a logical operator; however, logical operators make the most sense if you compare two objects of the same data type. If you compare objects of different data types, R will use its coercion rules to coerce the objects to the same type before it makes the comparison.<a id="id372378" class="indexterm"/></p><div class="sidebar"><div class="sidebar-title">Exercise</div><p>Extract the <code class="literal">face</code> column of <code class="literal">deck2</code> and test whether each value is equal to <code class="literal">ace</code>. As a challenge, use R to quickly count how many cards are equal to <code class="literal">ace</code>.</p></div><p>You can extract the <code class="literal">face</code> column with R’s <code class="literal">$</code> notation:</p><pre class="programlisting">deck2<code class="o">$</code>face
+<code class="c1">##  "king"  "queen" "jack"  "ten"   "nine"</code>
+<code class="c1">##  "eight" "seven" "six"   "five"  "four"</code>
+<code class="c1">##  "three" "two"   "ace"   "king"  "queen"</code>
+<code class="c1">##  "jack"  "ten"   "nine"  "eight" "seven"</code>
+<code class="c1">##  "six"   "five"  "four"  "three" "two"</code>
+<code class="c1">##  "ace"   "king"  "queen" "jack"  "ten"</code>
+<code class="c1">##  "nine"  "eight" "seven" "six"   "five"</code>
+<code class="c1">##  "four"  "three" "two"   "ace"   "king"</code>
+<code class="c1">##  "queen" "jack"  "ten"   "nine"  "eight"</code>
+<code class="c1">##  "seven" "six"   "five"  "four"  "three"</code>
+<code class="c1">##  "two"   "ace"</code></pre><p>Next, you can use the <code class="literal">==</code> operator to test whether each value is equal to <code class="literal">ace</code>. In the following code, R will use its recycling rules to indivuidually compare every value of <code class="literal">deck2$face</code> to <code class="literal">"ace"</code>. Notice that the quotation marks are important. If you leave them out, R will try to find an object named <code class="literal">ace</code> to compare against <code class="literal">deck2$face</code>:</p><pre class="programlisting">deck2<code class="o">$</code>face <code class="o">==</code> <code class="s">"ace"</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE  TRUE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE  TRUE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE  TRUE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE  TRUE</code></pre><p>You can use <code class="literal">sum</code> to quickly count the number of <code class="literal">TRUE</code>s in the previous vector. Remember that R will coerce logicals to numerics when you do math with them. R will turn <code class="literal">TRUE</code>s into ones and <code class="literal">FALSE</code>s into zeroes. As a result, sum will count the number of <code class="literal">TRUE</code>s:</p><pre class="programlisting">sum<code class="p">(</code>deck2<code class="o">$</code>face <code class="o">==</code> <code class="s">"ace"</code><code class="p">)</code>
+<code class="c1">## 4</code></pre><p>You can use this method to spot and then change the aces in your deck—even if you’ve shuffled your cards. First, build a logical test that identifies the aces in your shuffled deck:</p><pre class="programlisting">deck3<code class="o">$</code>face <code class="o">==</code> <code class="s">"ace"</code></pre><p>Then use the test to single out the ace point values. Since the test returns a logical vector, you can use it as an index:</p><pre class="programlisting">deck3<code class="o">$</code>value<code class="p">[</code>deck3<code class="o">$</code>face <code class="o">==</code> <code class="s">"ace"</code><code class="p">]</code>
+<code class="c1">##  1 1 1 1</code></pre><p>Finally, use assignment to change the ace values in <code class="literal">deck3</code>:</p><pre class="programlisting">deck3<code class="o">$</code>value<code class="p">[</code>deck3<code class="o">$</code>face <code class="o">==</code> <code class="s">"ace"</code><code class="p">]</code> <code class="o">&lt;-</code> <code class="m">14</code>
+
+head<code class="p">(</code>deck3<code class="p">)</code>
+<code class="c1">##  face     suit value</code>
+<code class="c1">## queen    clubs    12</code>
+<code class="c1">##  king    clubs    13</code>
+<code class="c1">##   ace   spades    14  # an ace</code>
+<code class="c1">##  nine    clubs     9</code>
+<code class="c1">## seven   spades     7</code>
+<code class="c1">## queen diamonds    12</code></pre><p>To summarize, you can use a logical test to select values within an object.</p><p>Logical subsetting is a powerful technique because it lets you quickly identify, extract, and modify individual values in your data set. When you work with logical subsetting, you do not need to know <span class="emphasis"><em>where</em></span> in your data set a value exists. You only need to know how to describe the value with a logical test.</p><p>Logical subsetting is one of the things R does best. In fact, logical subsetting is a key component of vectorized programming, a coding style that lets you write fast and efficient R code, which we will study in <a class="xref" href="ch10.html" title="Chapter 10. Speed">Chapter 10</a>.</p><p>Let’s put logical subsetting to use with a new game: hearts. In hearts, every card has a value of zero:</p><pre class="programlisting">deck4 <code class="o">&lt;-</code> deck
+deck4<code class="o">$</code>value <code class="o">&lt;-</code> <code class="m">0</code>
+
+head<code class="p">(</code>deck4<code class="p">,</code> <code class="m">13</code><code class="p">)</code>
+<code class="c1">##   face   suit value</code>
+<code class="c1">##   king spades     0</code>
+<code class="c1">##  queen spades     0</code>
+<code class="c1">##   jack spades     0</code>
+<code class="c1">##    ten spades     0</code>
+<code class="c1">##   nine spades     0</code>
+<code class="c1">##  eight spades     0</code>
+<code class="c1">##  seven spades     0</code>
+<code class="c1">##    six spades     0</code>
+<code class="c1">##   five spades     0</code>
+<code class="c1">##   four spades     0</code>
+<code class="c1">##  three spades     0</code>
+<code class="c1">##    two spades     0</code>
+<code class="c1">##    ace spades     0</code></pre><p>except cards in the suit of hearts and the queen of spades. Each card in the suit of hearts has a value of 1. Can you find these cards and replace their values? Give it a try.</p><div class="sidebar"><div class="sidebar-title">Exercise</div><p>Assign a value of <code class="literal">1</code> to every card in <code class="literal">deck4</code> that has a suit of hearts.</p></div><p>To do this, first write a test that identifies cards in the <code class="literal">hearts</code> suit:</p><pre class="programlisting">deck4<code class="o">$</code>suit <code class="o">==</code> <code class="s">"hearts"</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE</code>
+<code class="c1">##   TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE</code>
+<code class="c1">##   TRUE  TRUE  TRUE</code></pre><p>Then use your test to select the values of these cards:</p><pre class="programlisting">deck4<code class="o">$</code>value<code class="p">[</code>deck4<code class="o">$</code>suit <code class="o">==</code> <code class="s">"hearts"</code><code class="p">]</code>
+<code class="c1">## 0 0 0 0 0 0 0 0 0 0 0 0 0</code></pre><p>Finally, assign a new number to these values:</p><pre class="programlisting">deck4<code class="o">$</code>value<code class="p">[</code>deck4<code class="o">$</code>suit <code class="o">==</code> <code class="s">"hearts"</code><code class="p">]</code> <code class="o">&lt;-</code> <code class="m">1</code></pre><p>Now all of your <code class="literal">hearts</code> cards have been updated:</p><pre class="programlisting">deck4<code class="o">$</code>value<code class="p">[</code>deck4<code class="o">$</code>suit <code class="o">==</code> <code class="s">"hearts"</code><code class="p">]</code>
+<code class="c1">## 1 1 1 1 1 1 1 1 1 1 1 1 1</code></pre><p>In hearts, the queen of spades has the most unusual value of all: she’s worth 13 points. It should be simple to change her value, but she’s surprisingly hard to find. You could find all of the <span class="emphasis"><em>queens</em></span>:</p><pre class="programlisting">deck4<code class="p">[</code>deck4<code class="o">$</code>face <code class="o">==</code> <code class="s">"queen"</code><code class="p">,</code> <code class="p">]</code>
+<code class="c1">##   face     suit value</code>
+<code class="c1">##  queen   spades     0</code>
+<code class="c1">##  queen    clubs     0</code>
+<code class="c1">##  queen diamonds     0</code>
+<code class="c1">##  queen   hearts     1</code></pre><p>But that’s three cards too many. On the other hand, you could find all of the cards in <span class="emphasis"><em>spades</em></span>:</p><pre class="programlisting">deck4<code class="p">[</code>deck4<code class="o">$</code>suit <code class="o">==</code> <code class="s">"spades"</code><code class="p">,</code> <code class="p">]</code>
+<code class="c1">##   face   suit value</code>
+<code class="c1">##   king spades     0</code>
+<code class="c1">##  queen spades     0</code>
+<code class="c1">##   jack spades     0</code>
+<code class="c1">##    ten spades     0</code>
+<code class="c1">##   nine spades     0</code>
+<code class="c1">##  eight spades     0</code>
+<code class="c1">##  seven spades     0</code>
+<code class="c1">##    six spades     0</code>
+<code class="c1">##   five spades     0</code>
+<code class="c1">##   four spades     0</code>
+<code class="c1">##  three spades     0</code>
+<code class="c1">##    two spades     0</code>
+<code class="c1">##    ace spades     0</code></pre><p>But that’s 12 cards too many. What you really want to find is all of the cards that have both a face value equal to queen and a suit value equal to spades. You can do that with a <span class="emphasis"><em>Boolean operator</em></span>. Boolean operators combine multiple logical tests together into a single test.</p></div><div class="sect2" title="Boolean Operators"><div class="titlepage"><div><div><h3 class="title" id="_boolean_operators">Boolean Operators</h3></div></div></div><p>Boolean operators are things like <span class="emphasis"><em>and</em></span> (<code class="literal">&amp;</code>) and <span class="emphasis"><em>or</em></span> (<code class="literal">|</code>). They collapse the results of multiple logical tests into a single <code class="literal">TRUE</code> or <code class="literal">FALSE</code>. R has six boolean operators, shown in <a class="xref" href="ch05.html#TABLE-NOTATION-BOOLEAN" title="Table 5-2. R’s Boolean operators">Table 5-2</a>.<a id="id458938" class="indexterm"/><a id="id458946" class="indexterm"/><a id="id458952" class="indexterm"/><a id="id458958" class="indexterm"/><a id="id458964" class="indexterm"/><a id="id458970" class="indexterm"/><a id="id458976" class="indexterm"/><a id="id458983" class="indexterm"/><a id="id458991" class="indexterm"/></p><div class="table"><a id="TABLE-NOTATION-BOOLEAN"/><div class="table-title">Table 5-2. R’s Boolean operators</div><div class="table-contents"><table style="width: 90%; border-collapse: collapse; border-top: 0.5pt solid ; border-bottom: 0.5pt solid ; border-left: 0.5pt solid ; border-right: 0.5pt solid ; "><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/></colgroup><thead><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; ">Operator</td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; ">Syntax</td><td style="border-bottom: 0.5pt solid ; ">Tests</td></tr></thead><tbody><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">&amp;</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">cond1 &amp; cond2</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Are both <code class="literal">cond1</code> and <code class="literal">cond2</code> true?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">|</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">cond1 pipe cond2</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is one or more of <code class="literal">cond1</code> and <code class="literal">cond2</code> true?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">xor</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">xor(cond1, cond2)</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is exactly one of <code class="literal">cond1</code> and <code class="literal">cond2</code> true?</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">!</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">!cond1</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Is <code class="literal">cond1</code> false? (e.g., <code class="literal">!</code> flips the results of a logical test)</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">any</code></p></td><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; "><p><code class="literal">any(cond1, cond2, cond3, …)</code></p></td><td style="border-bottom: 0.5pt solid ; "><p>Are any of the conditions true?</p></td></tr><tr><td style="border-right: 0.5pt solid ; "><p><code class="literal">all</code></p></td><td style="border-right: 0.5pt solid ; "><p><code class="literal">all(cond1, cond2, cond3, …)</code></p></td><td><p>Are all of the conditions true?</p></td></tr></tbody></table></div></div><p>To use a Boolean operator, place it between two <span class="emphasis"><em>complete</em></span> logical tests. R will execute each logical test and then use the Boolean operator to combine the results into a single <code class="literal">TRUE</code> or <code class="literal">FALSE</code>, <a class="xref" href="ch05.html#FIGURE-NOTATION-BOOLEAN" title="Figure 5-1. R will evaluate the expressions on each side of a Boolean operator separately, and then combine the results into a single TRUE or FALSE. If you do not supply a complete test to each side of the operator, R will return an error.">Figure 5-1</a>.</p><div class="warning" title="The most common mistake with Boolean operators" epub:type="warning"><h3 class="title">The most common mistake with Boolean operators</h3><p>It is easy to forget to put a complete test on either side of a Boolean operator. In English, it is efficient to say “Is <span class="emphasis"><em>x</em></span> greater than two and less than nine?” But in R, you need to write the equivalent of “Is <span class="emphasis"><em>x</em></span> greater than two and <span class="emphasis"><em>is x</em></span> less than nine?” This is shown in <a class="xref" href="ch05.html#FIGURE-NOTATION-BOOLEAN" title="Figure 5-1. R will evaluate the expressions on each side of a Boolean operator separately, and then combine the results into a single TRUE or FALSE. If you do not supply a complete test to each side of the operator, R will return an error.">Figure 5-1</a>.</p></div><div class="figure"><a id="FIGURE-NOTATION-BOOLEAN"/><div class="figure-contents"><div class="mediaobject"><img src="images/hopr_0501.png" alt="boolean operators"/></div></div><div class="figure-title">Figure 5-1. R will evaluate the expressions on each side of a Boolean operator separately, and then combine the results into a single TRUE or FALSE. If you do not supply a complete test to each side of the operator, R will return an error.</div></div><p>When used with vectors, Boolean operators will follow the same element-wise execution as arithmetic and logical operators:<a id="id513051" class="indexterm"/><a id="id513027" class="indexterm"/></p><pre class="programlisting">a <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">3</code><code class="p">)</code>
+b <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">3</code><code class="p">)</code>
+c <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">4</code><code class="p">)</code>
+
+a <code class="o">==</code> b
+<code class="c1">##  TRUE TRUE TRUE</code>
+
+b <code class="o">==</code> c
+<code class="c1">##  TRUE  TRUE FALSE</code>
+
+a <code class="o">==</code> b <code class="o">&amp;</code> b <code class="o">==</code> c
+<code class="c1">##  TRUE  TRUE FALSE</code></pre><p>Could you use a Boolean operator to locate the queen of spades in your deck? Of course you can. You want to test each card to see if it is both a queen <span class="emphasis"><em>and</em></span> a spade.<a id="id478677" class="indexterm"/> You can write this test in R with:</p><pre class="programlisting">deck4<code class="o">$</code>face <code class="o">==</code> <code class="s">"queen"</code> <code class="o">&amp;</code> deck4<code class="o">$</code>suit <code class="o">==</code> <code class="s">"spades"</code>
+<code class="c1">##  FALSE  TRUE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE FALSE FALSE FALSE FALSE</code>
+<code class="c1">##  FALSE FALSE FALSE</code></pre><p>I’ll save the results of this test to its own object. That will make the results easier to work with:</p><pre class="programlisting">queenOfSpades <code class="o">&lt;-</code> deck4<code class="o">$</code>face <code class="o">==</code> <code class="s">"queen"</code> <code class="o">&amp;</code> deck4<code class="o">$</code>suit <code class="o">==</code> <code class="s">"spades"</code></pre><p>Next, you can use the test as an index to select the value of the queen of spades. Make sure the test actually selects the correct value:</p><pre class="programlisting">deck4<code class="p">[</code>queenOfSpades<code class="p">,</code> <code class="p">]</code>
+<code class="c1">##  face   suit value</code>
+<code class="c1">## queen spades     0</code>
+
+deck4<code class="o">$</code>value<code class="p">[</code>queenOfSpades<code class="p">]</code>
+<code class="c1">## 0</code></pre><p>Now that you’ve found the queen of spades, you can update her value:</p><pre class="programlisting">deck4<code class="o">$</code>value<code class="p">[</code>queenOfSpades<code class="p">]</code> <code class="o">&lt;-</code> <code class="m">13</code>
+
+deck4<code class="p">[</code>queenOfSpades<code class="p">,</code> <code class="p">]</code>
+<code class="c1">##  face   suit value</code>
+<code class="c1">## queen spades     13</code></pre><p>Your deck is now ready to play hearts.</p><div class="sidebar"><div class="sidebar-title">Exercise</div><p>If you think you have the hang of logical tests, try converting these sentences into tests written with R code. To help you out, I’ve defined some R objects after the sentences that you can use these to test your answers:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Is w positive?
+</li><li class="listitem">
+Is x greater than 10 and less than 20?
+</li><li class="listitem">
+Is object y the word February?
+</li><li class="listitem">
+Is <span class="emphasis"><em>every</em></span> value in z a day of the week?
+</li></ul></div><pre class="programlisting">w <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">-1</code><code class="p">,</code> <code class="m">0</code><code class="p">,</code> <code class="m">1</code><code class="p">)</code>
+x <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">5</code><code class="p">,</code> <code class="m">15</code><code class="p">)</code>
+y <code class="o">&lt;-</code> <code class="s">"February"</code>
+z <code class="o">&lt;-</code> c<code class="p">(</code><code class="s">"Monday"</code><code class="p">,</code> <code class="s">"Tuesday"</code><code class="p">,</code> <code class="s">"Friday"</code><code class="p">)</code></pre></div><p>Here are some model answers. If you got stuck, be sure to re-read how R evaluates logical tests that use Boolean values:</p><pre class="programlisting">w <code class="o">&gt;</code> <code class="m">0</code>
+<code class="m">10</code> <code class="o">&lt;</code> x <code class="o">&amp;</code> x <code class="o">&lt;</code> <code class="m">20</code>
+y <code class="o">==</code> <code class="s">"February"</code>
+all<code class="p">(</code>z <code class="o">%in%</code> c<code class="p">(</code><code class="s">"Monday"</code><code class="p">,</code> <code class="s">"Tuesday"</code><code class="p">,</code> <code class="s">"Wednesday"</code><code class="p">,</code> <code class="s">"Thursday"</code><code class="p">,</code> <code class="s">"Friday"</code><code class="p">,</code>
+  <code class="s">"Saturday"</code><code class="p">,</code> <code class="s">"Sunday"</code><code class="p">))</code></pre><p>Let’s consider one last game, blackjack. In blackjack, each number card has a value equal to its face value. Each face card (king, queen, or jack) has a value of 10. Finally, each ace has a value of 11 or 1, depending on the final results of the game.</p><p>Let’s begin with a fresh copy of <code class="literal">deck</code>—that way the number cards (<code class="literal">two</code> through <code class="literal">ten</code>) will start off with the correct value:</p><pre class="programlisting">deck5 <code class="o">&lt;-</code> deck
+
+head<code class="p">(</code>deck5<code class="p">,</code> <code class="m">13</code><code class="p">)</code>
+<code class="c1">##   king spades    13</code>
+<code class="c1">##  queen spades    12</code>
+<code class="c1">##   jack spades    11</code>
+<code class="c1">##    ten spades    10</code>
+<code class="c1">##   nine spades     9</code>
+<code class="c1">##  eight spades     8</code>
+<code class="c1">##  seven spades     7</code>
+<code class="c1">##    six spades     6</code>
+<code class="c1">##   five spades     5</code>
+<code class="c1">##   four spades     4</code>
+<code class="c1">##  three spades     3</code>
+<code class="c1">##    two spades     2</code>
+<code class="c1">##    ace spades     1</code></pre><p>You can change the value of the face cards in one fell swoop with <code class="literal">%in%</code>:</p><pre class="programlisting">facecard <code class="o">&lt;-</code> deck5<code class="o">$</code>face <code class="o">%in%</code> c<code class="p">(</code><code class="s">"king"</code><code class="p">,</code> <code class="s">"queen"</code><code class="p">,</code> <code class="s">"jack"</code><code class="p">)</code>
+
+deck5<code class="p">[</code>facecard<code class="p">,</code> <code class="p">]</code>
+<code class="c1">##   face     suit value</code>
+<code class="c1">##   king   spades    13</code>
+<code class="c1">##  queen   spades    12</code>
+<code class="c1">##   jack   spades    11</code>
+<code class="c1">##   king    clubs    13</code>
+<code class="c1">##  queen    clubs    12</code>
+<code class="c1">##   jack    clubs    11</code>
+<code class="c1">##   king diamonds    13</code>
+<code class="c1">##  queen diamonds    12</code>
+<code class="c1">##   jack diamonds    11</code>
+<code class="c1">##   king   hearts    13</code>
+<code class="c1">##  queen   hearts    12</code>
+<code class="c1">##   jack   hearts    11</code>
+
+deck5<code class="o">$</code>value<code class="p">[</code>facecard<code class="p">]</code> <code class="o">&lt;-</code> <code class="m">10</code>
+
+head<code class="p">(</code>deck5<code class="p">,</code> <code class="m">13</code><code class="p">)</code>
+<code class="c1">##   face   suit value</code>
+<code class="c1">##   king spades    10</code>
+<code class="c1">##  queen spades    10</code>
+<code class="c1">##   jack spades    10</code>
+<code class="c1">##    ten spades    10</code>
+<code class="c1">##   nine spades     9</code>
+<code class="c1">##  eight spades     8</code>
+<code class="c1">##  seven spades     7</code>
+<code class="c1">##    six spades     6</code>
+<code class="c1">##   five spades     5</code>
+<code class="c1">##   four spades     4</code>
+<code class="c1">##  three spades     3</code>
+<code class="c1">##    two spades     2</code>
+<code class="c1">##    ace spades     1</code></pre><p>Now you just need to fix the ace values—or do you? It is hard to decide what value to give the aces because their exact value will change from hand to hand. At the end of each hand, an ace will equal 11 if the sum of the player’s cards does not exceed 21. Otherwise, the ace will equal 1. The actual value of the ace will depend on the other cards in the player’s hand. This is a case of missing information. At the moment, you do not have enough information to assign a correct point value to the ace cards.</p></div></div><div class="sect1" title="Missing Information"><div class="titlepage"><div><div><h2 class="title" style="clear: both" id="MISSING">Missing Information</h2></div></div></div><p>Missing information problems happen frequently in data science. Usually, they are more straightforward: you don’t know a value because the measurement was lost, corrupted, or never taken to begin with. R has a way to help you manage these missing values.<a id="id439580" class="indexterm"/><a id="id495207" class="indexterm"/><a id="id488320" class="indexterm"/></p><p>The <code class="literal">NA</code> character is a special symbol in R. It stands for “not available” and can be used as a placeholder for missing information. R will treat NA exactly as you should want missing information treated. For example, what result would you expect if you add 1 to a piece of missing information?</p><pre class="programlisting"><code class="m">1</code> <code class="o">+</code> <code class="kc">NA</code>
+<code class="c1">## NA</code></pre><p>R will return a second piece of missing information. It would not be correct to say that <code class="literal">1 + NA = 1</code> because there is a good chance that the missing quantity is not zero. You do not have enough information to determine the result.</p><p>What if you tested whether a piece of missing information is equal to 1?</p><pre class="programlisting"><code class="kc">NA</code> <code class="o">==</code> <code class="m">1</code>
+<code class="c1">## NA</code></pre><p>Again, your answer would be something like “I do not know if this is equal to one,” that is, <code class="literal">NA</code>. Generally, <code class="literal">NA</code>s will propagate whenever you use them in an R operation or function. This can save you from making errors based on missing data.</p><div class="sect2" title="na.rm"><div class="titlepage"><div><div><h3 class="title" id="_na_rm">na.rm</h3></div></div></div><p>Missing values can help you work around holes in your data sets, but they can also create some frustrating problems.<a id="id495278" class="indexterm"/><a id="id495283" class="indexterm"/><a id="id495292" class="indexterm"/> Suppose, for example, that you’ve collected 1,000 observations and wish to take their average with R’s <code class="literal">mean</code> function. If even one of the values is <code class="literal">NA</code>, your result will be <code class="literal">NA</code>:</p><pre class="programlisting">c<code class="p">(</code><code class="kc">NA</code><code class="p">,</code> <code class="m">1</code><code class="o">:</code><code class="m">50</code><code class="p">)</code>
+<code class="c1">## NA  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16</code>
+<code class="c1">## 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33</code>
+<code class="c1">## 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50</code>
+
+mean<code class="p">(</code>c<code class="p">(</code><code class="kc">NA</code><code class="p">,</code> <code class="m">1</code><code class="o">:</code><code class="m">50</code><code class="p">))</code>
+<code class="c1">## NA</code></pre><p>Understandably, you may prefer a different behavior. Most R functions come with the optional argument, <code class="literal">na.rm</code>, which stands for <code class="literal">NA</code> remove. R will ignore <code class="literal">NA</code>s when it evaluates a function if you add the argument <code class="literal">na.rm = TRUE</code>:</p><pre class="programlisting">mean<code class="p">(</code>c<code class="p">(</code><code class="kc">NA</code><code class="p">,</code> <code class="m">1</code><code class="o">:</code><code class="m">50</code><code class="p">),</code> na.rm <code class="o">=</code> <code class="kc">TRUE</code><code class="p">)</code>
+<code class="c1">## 25.5</code></pre></div><div class="sect2" title="is.na"><div class="titlepage"><div><div><h3 class="title" id="_is_na">is.na</h3></div></div></div><p>On occasion, you may want to identify the <code class="literal">NA</code>s in your data set with a logical test, but that too creates a problem.<a id="id483434" class="indexterm"/><a id="id483441" class="indexterm"/> How would you go about it? If something is a missing value, any logical test that uses it will return a missing value, even this test:</p><pre class="programlisting"><code class="kc">NA</code> <code class="o">==</code> <code class="kc">NA</code>
+<code class="c1">## NA</code></pre><p>Which means that tests like this won’t help you find missing values:</p><pre class="programlisting">c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">3</code><code class="p">,</code> <code class="kc">NA</code><code class="p">)</code> <code class="o">==</code> <code class="kc">NA</code>
+<code class="c1">## NA NA NA NA</code></pre><p>But don’t worry too hard; R supplies a special function that can test whether a value is an <code class="literal">NA</code>. The function is sensibly named <code class="literal">is.na</code>:</p><pre class="programlisting">is.na<code class="p">(</code><code class="kc">NA</code><code class="p">)</code>
+<code class="c1">## TRUE</code>
+
+vec <code class="o">&lt;-</code> c<code class="p">(</code><code class="m">1</code><code class="p">,</code> <code class="m">2</code><code class="p">,</code> <code class="m">3</code><code class="p">,</code> <code class="kc">NA</code><code class="p">)</code>
+is.na<code class="p">(</code>vec<code class="p">)</code>
+<code class="c1">## FALSE FALSE FALSE  TRUE</code></pre><p>Let’s set all of your ace values to <code class="literal">NA</code>. This will accomplish two things. First, it will remind you that you do not know the final value of each ace. Second, it will prevent you from accidentally scoring a hand that has an ace before you determine the ace’s final value.</p><p>You can set your ace values to <code class="literal">NA</code> in the same way that you would set them to a number:</p><pre class="programlisting">deck5<code class="o">$</code>value<code class="p">[</code>deck5<code class="o">$</code>face <code class="o">==</code> <code class="s">"ace"</code><code class="p">]</code> <code class="o">&lt;-</code> <code class="kc">NA</code>
+
+head<code class="p">(</code>deck5<code class="p">,</code> <code class="m">13</code><code class="p">)</code>
+<code class="c1">##   face   suit value</code>
+<code class="c1">##   king spades    10</code>
+<code class="c1">##  queen spades    10</code>
+<code class="c1">##   jack spades    10</code>
+<code class="c1">##    ten spades    10</code>
+<code class="c1">##   nine spades     9</code>
+<code class="c1">##  eight spades     8</code>
+<code class="c1">##  seven spades     7</code>
+<code class="c1">##    six spades     6</code>
+<code class="c1">##   five spades     5</code>
+<code class="c1">##   four spades     4</code>
+<code class="c1">##  three spades     3</code>
+<code class="c1">##    two spades     2</code>
+<code class="c1">##    ace spades    NA</code></pre><p>Congratulations. Your deck is now ready for a game of blackjack.</p></div></div><div class="sect1" title="Summary"><div class="titlepage"><div><div><h2 class="title" style="clear: both" id="_summary_5">Summary</h2></div></div></div><p>You can modify values in place inside an R object when you combine R’s notation syntax with the assignment operator, <code class="literal">&lt;-</code>. This lets you update your data and clean your data sets.</p><p>When you work with large data sets, modifying and retrieving values creates a logistical problem of its own. How can you search through the data to find the values that you want to modify or retrieve? As an R user, you can do this with logical subsetting. Create a logical test with logical and Boolean operators and then use the test as an index in R’s bracket notation. R will return the values that you are looking for, even if you do not know where they are.</p><p>Retrieving individual values will not be your only concern as an R programmer. You’ll also need to retrieve entire data sets themselves; for example, you may call one in a function. <a class="xref" href="ch06.html" title="Chapter 6. Environments">Chapter 6</a> will teach you how R looks up and saves data sets and other R objects in its environment system. You’ll then use this knowledge to fix the <code class="literal">deal</code> and <code class="literal">shuffle</code> functions.</p></div></section></body></html>
