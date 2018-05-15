@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid_id" version="2.0">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+        <dc:identifier opf:scheme="calibre" id="calibre_id">2</dc:identifier>
+        <dc:identifier opf:scheme="uuid" id="uuid_id">df5ec5a8-94fe-4bad-883c-606a0d755fef</dc:identifier>
+        <dc:title>Hadoop For Dummies</dc:title>
+        <dc:creator opf:file-as="Unknown" opf:role="aut">Dirk deRoos, Paul C. Zikopoulos</dc:creator>
+        <dc:contributor opf:file-as="calibre" opf:role="bkp">calibre (1.32.0) [http://calibre-ebook.com]</dc:contributor>
+        <dc:date>2014-04-10T00:57:31+00:00</dc:date>
+        <dc:publisher>John Wiley &amp; Sons</dc:publisher>
+        <dc:language>eng</dc:language>
+        <dc:subject>hadoop</dc:subject>
+        <dc:subject>dummies</dc:subject>
+        <meta content="{&quot;Dirk deRoos, Paul C. Zikopoulos&quot;: &quot;&quot;}" name="calibre:author_link_map"/>
+        <meta content="2014-04-17T15:02:38.011000+00:00" name="calibre:timestamp"/>
+        <meta content="Hadoop For Dummies" name="calibre:title_sort"/>
+    </metadata>
+    <guide>
+        <reference href="Hadoop For Dummies - Dirk deRoos, Paul C. Zikopoulos.jpg" title="Cover" type="cover"/>
+    </guide>
+</package>

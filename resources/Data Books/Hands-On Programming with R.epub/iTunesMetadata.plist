@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>artistName</key>
+	<string>Garrett Grolemund</string>
+	<key>book-info</key>
+	<dict>
+		<key>cover-image-hash</key>
+		<string>7697AE61B982DC6B69C95C1E36395529</string>
+		<key>cover-image-path</key>
+		<string>OEBPS/images/cover.png.jpg</string>
+		<key>mime-type</key>
+		<string>application/epub+zip</string>
+		<key>package-file-hash</key>
+		<string>055DBBDD38D0FBA83E1F593327B6459A</string>
+		<key>publisher-unique-id</key>
+		<string>urn:isbn:9781449359010</string>
+		<key>unique-id</key>
+		<integer>8760557621640699996</integer>
+		<key>update-level</key>
+		<integer>2</integer>
+	</dict>
+	<key>itemName</key>
+	<string>Hands-On Programming with R</string>
+	<key>playlistName</key>
+	<string>Hands-On Programming with R</string>
+	<key>releaseDate</key>
+	<string>2014</string>
+</dict>
+</plist>

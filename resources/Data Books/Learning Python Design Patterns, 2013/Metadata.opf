@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid_id">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+        <dc:identifier opf:scheme="calibre" id="calibre_id">1212</dc:identifier>
+        <dc:identifier opf:scheme="uuid" id="uuid_id">560e96dd-ad65-48ef-8538-ef37b500c909</dc:identifier>
+        <dc:title>Learning Python Design Patterns</dc:title>
+        <dc:creator opf:file-as="Zlobin, Gennadiy" opf:role="aut">Gennadiy Zlobin</dc:creator>
+        <dc:contributor opf:file-as="calibre" opf:role="bkp">calibre (0.9.42) [http://calibre-ebook.com]</dc:contributor>
+        <dc:date>2013-11-24T14:00:00+00:00</dc:date>
+        <dc:description>&lt;p class="description"&gt;This book takes a tutorial-based and user-friendly approach to covering Python design patterns. Its concise presentation means that in a short space of time, you will get a good introduction to various design patterns.If you are an intermediate level Python user, this book is for you. Prior knowledge of Python programming is essential. Some knowledge of UML is also required to understand the UML diagrams which are used to describe some design patterns.&lt;/p&gt;</dc:description>
+        <dc:publisher>Packt Publishing Ltd</dc:publisher>
+        <dc:identifier opf:scheme="GOOGLE">zOotAgAAQBAJ</dc:identifier>
+        <dc:identifier opf:scheme="ISBN">9781783283385</dc:identifier>
+        <dc:language>eng</dc:language>
+        <dc:subject>Computers</dc:subject>
+        <dc:subject>Programming Languages</dc:subject>
+        <dc:subject>Python</dc:subject>
+        <dc:subject>Data Modeling &amp; Design</dc:subject>
+        <dc:subject>Data Processing</dc:subject>
+        <meta content="{&quot;Gennadiy Zlobin&quot;: &quot;&quot;}" name="calibre:author_link_map"/>
+        <meta content="0.0" name="calibre:rating"/>
+        <meta content="2014-01-12T12:09:08+00:00" name="calibre:timestamp"/>
+        <meta content="Learning Python Design Patterns" name="calibre:title_sort"/>
+    </metadata>
+    <guide>
+        <reference href="Learning Python Design Patterns - Gennadiy Zlobin.jpg" title="Cover" type="cover"/>
+    </guide>
+</package>
