@@ -1,5 +1,5 @@
 ## set database credentials
-source('../../credentials/aws_db_credentials.R')
+source('../../../credentials/aws_db_credentials.R')
 
 
 ## load libraries
@@ -14,7 +14,7 @@ library(randomForest)
 
 
 ## import custom functions
-source('../helper/calc_pred_acc.R')
+source('../../helper/calc_pred_acc.R')
 
 
 ## load PostgreSQL driver
@@ -29,18 +29,41 @@ con <- dbConnect(drv, host=host, port=port, dbname=db_name, user=db_user, passwo
 ## list available tables
 dbListTables(con)
 
-## get pregame performance data
+## read data
 spreads <- dbReadTable(conn=con, name='spreads')
-gamelogs <- dbReadTable(conn=con, name='team_gamelogs')
+team_gamelogs_master_df <- dbReadTable(conn=con, name='team_gamelogs_master_df')
+team_gamelogs_df <- dbReadTable(conn=con, name='team_gamelogs')
 
 p_spreads <- spreads %>%
   select(season, game_date, team_abbr, opponent_abbr, pinnacle_line, pinnacle_payout) %>%
   rename(
     line = pinnacle_line, 
     payout = pinnacle_payout
-  )
+  ) %>%
+  mutate(game_date = as.Date(game_date))
 
-names(gamelogs)
+names(team_gamelogs_master_df)
 calc_moneyline_payout_profit(moneyline_odds = p_spreads$payout[1])
 
 head(p_spreads)
+
+names(p_spreads)
+str(team_gamelogs_master_df)
+str(p_spreads)
+class(team_gamelogs_master_df$game_date)
+
+x <- left_join(p_spreads, team_gamelogs_master_df, 
+               by = c('game_date', 'team_abbr', 'opponent_abbr', 'season')) %>%
+  select(season, game_date, team_abbr, opponent_abbr, line, payout, ptsmrgn)
+head(x)
+
+'BOS' %in% sort(unique(team_gamelogs_master_df$team_abbr))
+
+sum(is.na(x$ptsmrgn))
+
+team_gamelogs_df %>%
+  filter(game_date=='NOV 01, 2006') 
+
+head(x, 20)
+head(p_spreads)
+dim(p_spreads)
