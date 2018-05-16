@@ -1,3 +1,5 @@
+## clear environment
+rm(list = ls())
 
 ## set database credentials
 source('../../credentials/aws_db_credentials.R')
@@ -17,14 +19,13 @@ drv <- dbDriver("PostgreSQL")
 con <- dbConnect(drv, host=host, port=port, dbname=db_name, user=db_user, password=db_pass)
 
 ## remove password from environment
-rm(db_pass) 
+#rm(db_pass) 
 
 ## list available tables
 dbListTables(con)
 
-
-## read tables into dfs
-team_gamelogs_df <- dbReadTable(con, 'team_gamelogs')
+## read data
+team_gamelogs_master_df <- dbReadTable(conn=con, name='team_gamelogs_master_df')
 
 
 ## set vector of post-game metrics
@@ -33,102 +34,12 @@ post_game_metrics <- c('fgm', 'fga', 'fgp', 'fg2m', 'fg2a', 'fg2p', 'fg3m', 'fg3
 
 
 ## set vector of post-game metrics that need to be normalized per 240 minutes
-post_game_metrics_for_240_min_nrm <- setdiff(post_game_metrics, c('fgp', 'fg2p', 'fg3p', 'ftp'))
-
-
-## create team gamelogs master
-team_gamelogs_df <- team_gamelogs_df %>%
-
-  ## drop after-game win/loss records
-  select(-one_of(c('win', 'loss', 'w_pct'))) %>%
-  
-  mutate(
-    
-    ## format date     
-    game_date = as.Date(game_date, format='%b %d, %Y'),
-    
-    ## get season slug
-    season = case_when(
-      month(game_date) %in% c(10, 11, 12) ~ year(game_date),
-      month(game_date) %in% c(1, 2, 3, 4, 5, 6) ~ year(game_date) - 1
-    ),
-    season = glue("{season}-{substr(season+1, 3, 4)}"),
-    
-    ## get team abbreviation from matchup (whichever team that's listed first)
-    team_abbr = gsub(' @.*| vs.*', '', matchup),
-    
-    ## get opponent abbreviation from matchup (whichever team that's listed second)
-    opponent_abbr = gsub('.*@ |.*vs\\. ', '', matchup),
-    
-    ## get game location info from 
-    game_location = case_when(
-      grepl('vs\\.', matchup) ~ 'H',
-      grepl('@', matchup) ~ 'A'
-    ),
-    
-    ## get 2-point shots made, attempted, and percentage
-    fg2m = fgm - fg3m,
-    fg2a = fga - fg3a,
-    fg2_pct = round(fg2m / fg2a, 3)
-    
-  ) %>%
-
-  ## look at game logs from 2006 only
-  filter(game_date >= '2006-09-01') %>%
-  
-  ## sort by date and game id
-  arrange(game_date, game_id) %>%
-  
-  ## rename columns
-  rename(
-    game_outcome = wl,
-    fgp = fg_pct,    
-    fg2p = fg2_pct,    
-    fg3p = fg3_pct,   
-    ftp = ft_pct
-  ) %>%
-  
-  ## normalize performance for per 240 minutes
-  mutate_at(
-    vars(post_game_metrics_for_240_min_nrm),
-    funs(. / min * 240)
-  ) 
-
-
-## regular expression to select metrics for opponent's performance
-#metric_cols_regex_match <- "^fg(2|3)?[map]$|^ft[map]$|^[od]*reb$|^ast$|^stl$|^blk$|^tov$|^pf$|^pts$"
-
-
-## make partial copy of team gamelogs to perform join
-team_gamelogs_partial_copy_df <- team_gamelogs_df %>%
-  select(-one_of('team_id', 'matchup', 'game_outcome', 'min', 'game_location')) %>%
-  rename_at(
-    vars(post_game_metrics), 
-    funs(sprintf('%s_alwd', .))
-  ) %>%
-  rename(
-    team_abbr=opponent_abbr,
-    opponent_abbr=team_abbr    
-  )
-
-
-## create team gamelog master dataset (that includes opponent's performance metrics)
-team_gamelogs_master_df <- 
-  
-  ## add raw opponent performance
-  left_join(team_gamelogs_df, 
-            team_gamelogs_partial_copy_df, 
-            by=c('game_id', 'game_date', 'season', 'team_abbr', 'opponent_abbr')) %>%
-  
-  mutate(
-
-    ## add point margin column
-    ptsmrgn = pts - pts_alwd
-  )
-
-
-## remove team gamelogs partial copy df
-rm(team_gamelogs_partial_copy_df)
+post_game_metrics_for_240_min_nrm <- 
+  post_game_metrics %>%
+  setdiff(x=., y=c('fgp', 'fg2p', 'fg3p', 'ftp')) %>%
+  sprintf("%s_alwd", .) %>%
+  c(post_game_metrics_for_240_min_nrm, .)
+post_game_metrics_for_240_min_nrm
 
 
 ## define regex pattern for post-game performance metrics
@@ -137,6 +48,15 @@ post_game_metrics_regex <- glue("^{post_game_metrics}(_alwd)?$") %>% str_c(., co
 
 ## create df with only pre-game performance metrics
 pregame_perf_df <- team_gamelogs_master_df %>%
+
+  ## look at game logs from 2006 only
+  filter(game_date >= '2006-09-01') %>%
+  
+  ## normalize performance for per 240 minutes
+  mutate_at(
+    vars(post_game_metrics_for_240_min_nrm),
+    funs(. / min * 240)
+  ) %>%
 
   ## general rolling and cumulative means
   group_by(season, team_abbr) %>%
@@ -169,7 +89,7 @@ pregame_perf_df <- team_gamelogs_master_df %>%
   mutate_at(
     vars(matches(post_game_metrics_regex)),
     funs(rollmean10_gen = lag(rollmean(., k=10, fill=NA, align='right'), n=1))
-  ) %>% 
+  ) %>%
 
   ## general cumulative average  
   mutate_at(
@@ -266,6 +186,11 @@ rm(pregame_perf_partial_copy_df)
 dim(pregame_perf_master_df)
 names(pregame_perf_master_df)
 
+
+## remove existing
+# dbExecute(conn=con, statement="DROP TABLE pregame_perf_master_df")
+
+
 ## write to database
 dbWriteTable(conn=con, name='pregame_perf_master_df', value=pregame_perf_master_df)
 
@@ -276,7 +201,3 @@ dbListTables(conn=con)
 
 ## disconnect from datatabase
 dbDisconnect(conn=con)
-
-
-## write to flat file
-#write.csv(pre)
