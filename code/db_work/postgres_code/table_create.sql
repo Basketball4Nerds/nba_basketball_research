@@ -1,12 +1,12 @@
 -- Create the player_gamelogs table
 drop table if exists player_gamelogs;
-create table player_gamelogs(season_id TEXT, player_id INT, game_id INT, game_date TEXT, matchup TEXT, wl TEXT,
+create table player_gamelogs( player_id INT, game_id INT, game_date TEXT, matchup TEXT, wl TEXT,
        min INT, fgm INT, fga INT, fg_pct DOUBLE PRECISION, fg3m INT, fg3a INT, fg3_pct DOUBLE PRECISION, ftm INT,
        fta INT ,ft_pct DOUBLE PRECISION, oreb INT, dreb INT, reb INT, ast INT, stl INT, blk INT, tov INT, pf INT,
-       pts INT, plus_minus INT, vid_available INT, home TEXT, away TEXT);
+       pts INT, plus_minus INT, vid_available INT, season_id TEXT);
 
 -- run in psql command line
-\copy player_gamelogs from '/Users/Dan/Desktop/nba4nerds/db_flat/player_gamelogs.csv'  DELIMITER ',' CSV HEADER;
+\copy player_gamelogs from '/Users/Dan/Desktop/db_flat_nba/player_gamelogs_all.csv'  DELIMITER ',' CSV HEADER;
 
 
 -----------------------------------------------------------------------------------------------------------------
