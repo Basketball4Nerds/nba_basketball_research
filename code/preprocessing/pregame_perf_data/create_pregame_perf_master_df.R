@@ -2,7 +2,7 @@
 rm(list = ls())
 
 ## set database credentials
-source('../../credentials/aws_db_credentials.R')
+source('../../../credentials/aws_db_credentials.R')
 
 ## load libraries
 library(RPostgreSQL)
@@ -37,8 +37,7 @@ post_game_metrics <- c('fgm', 'fga', 'fgp', 'fg2m', 'fg2a', 'fg2p', 'fg3m', 'fg3
 post_game_metrics_for_240_min_nrm <- 
   post_game_metrics %>%
   setdiff(x=., y=c('fgp', 'fg2p', 'fg3p', 'ftp')) %>%
-  sprintf("%s_alwd", .) %>%
-  c(post_game_metrics_for_240_min_nrm, .)
+  c(., sprintf("%s_alwd", .))
 post_game_metrics_for_240_min_nrm
 
 
@@ -59,8 +58,8 @@ pregame_perf_df <- team_gamelogs_master_df %>%
   ) %>%
 
   ## general rolling and cumulative means
-  group_by(season, team_abbr) %>%
-  arrange(season, team_abbr, game_date) %>%
+  group_by(season, team_id) %>%
+  arrange(season, team_id, game_date) %>%
   
   mutate(
     
@@ -98,8 +97,8 @@ pregame_perf_df <- team_gamelogs_master_df %>%
   ) %>% 
   
   ## site-specific rolling and cumulative means
-  group_by(season, team_abbr, game_location) %>%
-  arrange(season, team_abbr, game_location, game_date) %>%
+  group_by(season, team_id, game_location) %>%
+  arrange(season, team_id, game_location, game_date) %>%
   
   ## site-specific number of games played (pre-game)  
   mutate(
@@ -151,7 +150,7 @@ pregame_perf_df <- team_gamelogs_master_df %>%
 pregame_perf_partial_copy_df <- pregame_perf_df %>%
   
   ## extract pre-game performance and leave out the post-game performance metrics
-  select(game_id, game_date, season, team_abbr, opponent_abbr, 
+  select(game_id, game_date, season, team_id, opponent_id, 
          n_gen, w_gen, l_gen, wp_gen, n_site, w_site, l_site, wp_site, 
          matches('rollmean|cummean')) %>%
 
@@ -164,8 +163,8 @@ pregame_perf_partial_copy_df <- pregame_perf_df %>%
     funs(sprintf('o_%s', .))
   ) %>%
   rename(
-    team_abbr=opponent_abbr,
-    opponent_abbr=team_abbr    
+    team_id=opponent_id,
+    opponent_id=team_id    
   )
 
 
@@ -175,7 +174,7 @@ pregame_perf_master_df <-
   ## add raw opponent performance
   left_join(pregame_perf_df, 
             pregame_perf_partial_copy_df, 
-            by=c('game_id', 'game_date', 'season', 'team_abbr', 'opponent_abbr')) 
+            by=c('game_id', 'game_date', 'season', 'team_id', 'opponent_id')) 
 
 
 ## remove partial copy 
@@ -188,7 +187,7 @@ names(pregame_perf_master_df)
 
 
 ## remove existing
-# dbExecute(conn=con, statement="DROP TABLE pregame_perf_master_df")
+dbExecute(conn=con, statement="DROP TABLE pregame_perf_master_df")
 
 
 ## write to database

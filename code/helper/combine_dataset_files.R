@@ -1,7 +1,7 @@
 ## this function reads multiple dataset files that resides in a directory
 ## and concatenates them into a single dataset;
 ## it exports the concatenated dataset as a csv file if export file path is provided;
-concatenate_dataset_files <- function(dir_path, export_file_path=NULL) {
+combine_dataset_files <- function(dir_path, export_file_path=NULL) {
   
   ## get dataset file names
   raw_file_names <- list.files(dir_path)
@@ -23,5 +23,5 @@ concatenate_dataset_files <- function(dir_path, export_file_path=NULL) {
     write.csv(df, export_file_path, row.names=FALSE)
   
   ## return
-  return(df)
+  # return(df)
 }

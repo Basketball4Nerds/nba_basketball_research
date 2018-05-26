@@ -3,11 +3,6 @@ library(tidyverse)
 library(nbastatR)
 
 
-## get all regular season game logs
-rs_games <- get_game_logs(seasons=1980:2017, 
-                          result_type='team',
-                          season_types='Regular Season')
-
 ## get all playoffs season game logs
 ps_games <- get_game_logs(seasons=1980:2017,
                           result_type='team',
@@ -28,15 +23,11 @@ add_points_margin <- function(games_df) {
 }
 
 
-## add points margin column in the game logs dataset
-rs_games <- add_points_margin(rs_games)
+## add points margin column in the gamelogs dataset
 ps_games <- add_points_margin(ps_games)
 
 
 
-
-library(nbastatR)
-library(tidyverse)
 rs_games_2018 <- get_game_logs(seasons=2018, result_types='team', season_types='Regular Season')
 ps_games_2018 <- get_game_logs(seasons=2018, result_types='team', season_types='Playoffs')
 
@@ -167,4 +158,8 @@ www <- ps_games %>%
   as.data.frame()
 www
 
+
+
+www
+ps_z$ptsMrgn
 

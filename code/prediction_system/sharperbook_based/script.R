@@ -1,3 +1,8 @@
+
+## clear environment
+rm(list = ls())
+
+
 ## set database credentials
 source('../../../credentials/aws_db_credentials.R')
 
@@ -32,7 +37,24 @@ dbListTables(con)
 ## read data
 spreads <- dbReadTable(conn=con, name='spreads')
 team_gamelogs_master_df <- dbReadTable(conn=con, name='team_gamelogs_master_df')
-team_gamelogs_df <- dbReadTable(conn=con, name='team_gamelogs')
+#team_gamelogs_df <- dbReadTable(conn=con, name='team_gamelogs')
+
+
+team_gamelogs_master_df <- team_gamelogs_master_df %>%
+  filter(season >= '1979-80')
+
+x <- team_gamelogs_master_df %>%
+  filter(team_abbr=='PHX')
+tail(x)
+head(x)
+
+
+
+head(p_spreads)
+
+table(team_gamelogs_master_df$team_abbr)
+
+
 
 p_spreads <- spreads %>%
   select(season, game_date, team_abbr, opponent_abbr, pinnacle_line, pinnacle_payout) %>%
@@ -60,10 +82,13 @@ head(x)
 'BOS' %in% sort(unique(team_gamelogs_master_df$team_abbr))
 
 sum(is.na(x$ptsmrgn))
-
+head(p_spreads)
 team_gamelogs_df %>%
   filter(game_date=='NOV 01, 2006') 
 
-head(x, 20)
+head(x, 50)
+x %>% 
+  filter(is.na(ptsmrgn))
+
 head(p_spreads)
 dim(p_spreads)

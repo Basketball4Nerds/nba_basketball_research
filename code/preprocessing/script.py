@@ -7,6 +7,9 @@ from nba_py import team, game, player, constants
 ## get a list of current season's teams info
 team_info_df = pd.DataFrame.from_dict(data=constants.TEAMS, orient='index')
 team_info_df.head()
+team_info_df[(team_info_df.id==1610612746)]
+
+
 
 ## get a df of team ids
 team_list_df = nba_py.team.TeamList(league_id='00').info().dropna()

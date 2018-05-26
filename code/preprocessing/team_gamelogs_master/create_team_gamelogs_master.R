@@ -1,6 +1,9 @@
 
+## clear environment
+remove(list = ls())
+
 ## set database credentials
-source('../../credentials/aws_db_credentials.R')
+source('../../../credentials/aws_db_credentials.R')
 
 ## load libraries
 library(RPostgreSQL)
@@ -93,16 +96,22 @@ team_gamelogs_df <- team_gamelogs_df %>%
   ) 
 
 
+## set vector of post-game metrics
+post_game_metrics <- c('fgm', 'fga', 'fgp', 'fg2m', 'fg2a', 'fg2p', 'fg3m', 'fg3a', 'fg3p', 
+                       'ftm', 'fta', 'ftp', 'oreb', 'dreb', 'reb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts')
+
+
 ## make partial copy of team gamelogs to perform join
 team_gamelogs_partial_copy_df <- team_gamelogs_df %>%
-  select(-one_of('team_id', 'matchup', 'game_outcome', 'min', 'game_location')) %>%
+  select(-one_of('matchup', 'game_outcome', 'min', 'game_location')) %>%
   rename_at(
     vars(post_game_metrics), 
     funs(sprintf('%s_alwd', .))
   ) %>%
   rename(
-    team_abbr=opponent_abbr,
-    opponent_abbr=team_abbr    
+    team_abbr = opponent_abbr,
+    opponent_abbr = team_abbr,
+    opponent_id = team_id
   )
 
 
@@ -118,8 +127,14 @@ team_gamelogs_master_df <-
     
     ## add point margin column
     ptsmrgn = pts - pts_alwd
+  ) %>%
+  
+  ## select relevant columns 
+  select(
+    game_id, team_id, opponent_id, season, game_date, game_location, game_outcome, ptsmrgn, min,
+    post_game_metrics,
+    glue("{post_game_metrics}_alwd")
   )
-
 
 ## remove team gamelogs partial copy df
 rm(team_gamelogs_partial_copy_df)
@@ -128,6 +143,10 @@ rm(team_gamelogs_partial_copy_df)
 ## quick review of gamelogs master df
 head(team_gamelogs_master_df)
 tail(team_gamelogs_master_df)
+
+
+## remove table from database
+dbExecute(conn=con, statement='DROP TABLE team_gamelogs_master_df')
 
 
 ## write to database
